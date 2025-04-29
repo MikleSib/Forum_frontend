@@ -1,94 +1,137 @@
 import React, { useState } from 'react';
-import { Box, Container, TextField, Button, Typography, Link } from '@mui/material';
+import { Container, Typography, TextField, Button, Box, Link, Alert } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import { register } from '../../services/auth';
+import styles from './Auth.module.css';
 
 const Register: React.FC = () => {
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    username: '',
+    password: '',
+    email: '',
+    full_name: '',
+    about_me: ''
+  });
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Здесь будет логика регистрации
-    console.log('Register attempt:', { username, email, password });
+    setError('');
+    setIsLoading(true);
+
+    try {
+      await register(formData);
+      navigate('/login');
+    } catch (error: any) {
+      setError(error.message || 'Не удалось зарегистрироваться');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <Container maxWidth="sm">
-      <Box
-        sx={{
-          marginTop: 8,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-        }}
-      >
-        <Typography component="h1" variant="h5">
+    <Container maxWidth="sm" className={styles.container}>
+      <Box className={styles.formContainer}>
+        <Typography variant="h4" component="h1" gutterBottom>
           Регистрация
         </Typography>
-        <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
+
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+
+        <form onSubmit={handleSubmit}>
           <TextField
-            margin="normal"
-            required
-            fullWidth
-            id="username"
             label="Имя пользователя"
             name="username"
-            autoComplete="username"
-            autoFocus
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-          />
-          <TextField
-            margin="normal"
-            required
+            variant="outlined"
             fullWidth
-            id="email"
+            margin="normal"
+            value={formData.username}
+            onChange={handleChange}
+            required
+          />
+
+          <TextField
             label="Email"
             name="email"
-            autoComplete="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <TextField
-            margin="normal"
-            required
+            type="email"
+            variant="outlined"
             fullWidth
-            name="password"
+            margin="normal"
+            value={formData.email}
+            onChange={handleChange}
+            required
+          />
+
+          <TextField
             label="Пароль"
+            name="password"
             type="password"
-            id="password"
-            autoComplete="new-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          <TextField
-            margin="normal"
-            required
+            variant="outlined"
             fullWidth
-            name="confirmPassword"
-            label="Подтвердите пароль"
-            type="password"
-            id="confirmPassword"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
+            margin="normal"
+            value={formData.password}
+            onChange={handleChange}
+            required
           />
+
+          <TextField
+            label="Полное имя"
+            name="full_name"
+            variant="outlined"
+            fullWidth
+            margin="normal"
+            value={formData.full_name}
+            onChange={handleChange}
+            required
+          />
+
+          <TextField
+            label="О себе"
+            name="about_me"
+            variant="outlined"
+            fullWidth
+            margin="normal"
+            value={formData.about_me}
+            onChange={handleChange}
+            multiline
+            rows={4}
+          />
+
           <Button
             type="submit"
-            fullWidth
             variant="contained"
-            sx={{ mt: 3, mb: 2 }}
+            color="primary"
+            fullWidth
+            size="large"
+            disabled={isLoading}
+            sx={{ mt: 3 }}
           >
-            Зарегистрироваться
+            {isLoading ? 'Регистрация...' : 'Зарегистрироваться'}
           </Button>
-          <Box sx={{ textAlign: 'center' }}>
-            <Link href="/login" variant="body2">
-              {"Уже есть аккаунт? Войдите"}
-            </Link>
+
+          <Box sx={{ mt: 2, textAlign: 'center' }}>
+            <Typography variant="body2">
+              Уже есть аккаунт?{' '}
+              <Link href="/login" underline="hover">
+                Войти
+              </Link>
+            </Typography>
           </Box>
-        </Box>
+        </form>
       </Box>
     </Container>
   );

@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import Profile from './pages/Profile';
+import CreatePost from './pages/CreatePost';
 
 const theme = createTheme({
   palette: {
@@ -83,9 +84,10 @@ function App() {
       <CssBaseline />
       <Router>
         <Routes>
-          <Route element={<MainLayout />}>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/profile" element={<Profile />} />
+          <Route path="/" element={<MainLayout />}>
+            <Route index element={<Dashboard />} />
+            <Route path="profile" element={<Profile />} />
+            <Route path="create-post" element={<CreatePost />} />
           </Route>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />

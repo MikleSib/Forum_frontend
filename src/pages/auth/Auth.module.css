@@ -1,0 +1,41 @@
+.container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+.formContainer {
+  background-color: #fff;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 400px;
+}
+
+.formContainer h1 {
+  text-align: center;
+  margin-bottom: 2rem;
+  color: #333;
+}
+
+.formContainer form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.formContainer .MuiTextField-root {
+  margin-bottom: 1rem;
+}
+
+.formContainer .MuiButton-root {
+  margin-top: 1rem;
+  padding: 0.75rem;
+}
+
+.formContainer .MuiAlert-root {
+  margin-bottom: 1rem;
+} 

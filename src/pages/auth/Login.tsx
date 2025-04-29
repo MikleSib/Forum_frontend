@@ -1,70 +1,129 @@
 import React, { useState } from 'react';
-import { Box, Container, TextField, Button, Typography, Link } from '@mui/material';
+import { Container, Typography, TextField, Button, Box, Link, Alert } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import { login, saveTokens } from '../../services/auth';
+import styles from './Auth.module.css';
 
 const Login: React.FC = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const navigate = useNavigate();
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<{
+    username?: string;
+    password?: string;
+  }>({});
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const validateForm = (): boolean => {
+    const errors: { username?: string; password?: string } = {};
+    let isValid = true;
+
+    if (!username.trim()) {
+      errors.username = 'Имя пользователя обязательно';
+      isValid = false;
+    }
+
+    if (!password) {
+      errors.password = 'Пароль обязателен';
+      isValid = false;
+    } else if (password.length < 6) {
+      errors.password = 'Пароль должен содержать минимум 6 символов';
+      isValid = false;
+    }
+
+    setFieldErrors(errors);
+    return isValid;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Здесь будет логика входа
-    console.log('Login attempt:', { email, password });
+    setError('');
+    setFieldErrors({});
+
+    if (!validateForm()) {
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const response = await login({ username, password });
+      saveTokens(response);
+      navigate('/');
+    } catch (error: any) {
+      setError(error.message || 'Произошла ошибка при входе');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <Container maxWidth="sm">
-      <Box
-        sx={{
-          marginTop: 8,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-        }}
-      >
-        <Typography component="h1" variant="h5">
-          Вход
+    <Container maxWidth="sm" className={styles.container}>
+      <Box className={styles.formContainer}>
+        <Typography variant="h4" component="h1" gutterBottom>
+          Вход в систему
         </Typography>
-        <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
+
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+
+        <form onSubmit={handleSubmit}>
           <TextField
-            margin="normal"
-            required
+            label="Имя пользователя"
+            variant="outlined"
             fullWidth
-            id="email"
-            label="Email"
-            name="email"
-            autoComplete="email"
-            autoFocus
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            margin="normal"
+            value={username}
+            onChange={(e) => {
+              setUsername(e.target.value);
+              setFieldErrors(prev => ({ ...prev, username: undefined }));
+            }}
+            error={!!fieldErrors.username}
+            helperText={fieldErrors.username}
+            required
           />
+
           <TextField
-            margin="normal"
-            required
-            fullWidth
-            name="password"
             label="Пароль"
             type="password"
-            id="password"
-            autoComplete="current-password"
+            variant="outlined"
+            fullWidth
+            margin="normal"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e) => {
+              setPassword(e.target.value);
+              setFieldErrors(prev => ({ ...prev, password: undefined }));
+            }}
+            error={!!fieldErrors.password}
+            helperText={fieldErrors.password}
+            required
           />
+
           <Button
             type="submit"
-            fullWidth
             variant="contained"
-            sx={{ mt: 3, mb: 2 }}
+            color="primary"
+            fullWidth
+            size="large"
+            disabled={isLoading}
+            sx={{ mt: 3 }}
           >
-            Войти
+            {isLoading ? 'Вход...' : 'Войти'}
           </Button>
-          <Box sx={{ textAlign: 'center' }}>
-            <Link href="/register" variant="body2">
-              {"Нет аккаунта? Зарегистрируйтесь"}
-            </Link>
+
+          <Box sx={{ mt: 2, textAlign: 'center' }}>
+            <Typography variant="body2">
+              Нет аккаунта?{' '}
+              <Link href="/register" underline="hover">
+                Зарегистрироваться
+              </Link>
+            </Typography>
           </Box>
-        </Box>
+        </form>
       </Box>
     </Container>
   );

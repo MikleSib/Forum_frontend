@@ -9,68 +9,74 @@ interface PostCardProps {
   title: string;
   content: string;
   imageUrl?: string;
-  author: {
-    name: string;
-    avatar?: string;
-  };
+  author: string;
   date: string;
 }
 
 const PostCard: React.FC<PostCardProps> = ({ title, content, imageUrl, author, date }) => {
+  // Функция для декодирования HTML-сущностей
+  const decodeHtml = (html: string) => {
+    const txt = document.createElement('textarea');
+    txt.innerHTML = html;
+    return txt.value;
+  };
+
   return (
     <Card className={styles.postCard}>
       {imageUrl && (
         <CardMedia
           component="img"
-          className={styles.postImage}
+          height="200"
           image={imageUrl}
           alt={title}
+          className={styles.postImage}
         />
       )}
       <CardContent className={styles.postContent}>
-        <div className={styles.authorSection}>
-          <Avatar 
-            src={author.avatar}
-            className={styles.avatar}
-          >
-            {author.name[0]}
-          </Avatar>
-          <div className={styles.authorInfo}>
+        <Box className={styles.authorSection}>
+          <Avatar className={styles.avatar} />
+          <Box className={styles.authorInfo}>
             <Typography className={styles.authorName}>
-              {author.name}
+              {author}
             </Typography>
             <Typography className={styles.postDate}>
               {new Date(date).toLocaleDateString('ru-RU', {
                 year: 'numeric',
                 month: 'long',
-                day: 'numeric'
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
               })}
             </Typography>
-          </div>
-        </div>
-        <Typography className={styles.postTitle}>
+          </Box>
+        </Box>
+
+        <Typography variant="h5" className={styles.postTitle}>
           {title}
         </Typography>
-        <Typography className={styles.postText}>
-          {content}
-        </Typography>
+
+        <div 
+          className={styles.postText}
+          dangerouslySetInnerHTML={{ __html: decodeHtml(content) }}
+        />
+
+        <CardActions className={styles.postActions}>
+          <Box className={styles.actionButtons}>
+            <IconButton className={styles.actionButton}>
+              <FavoriteIcon />
+            </IconButton>
+            <IconButton className={styles.actionButton}>
+              <CommentIcon />
+            </IconButton>
+            <IconButton className={styles.actionButton}>
+              <ShareIcon />
+            </IconButton>
+          </Box>
+          <Button className={styles.readMoreButton}>
+            Читать далее
+          </Button>
+        </CardActions>
       </CardContent>
-      <div className={styles.postActions}>
-        <div className={styles.actionButtons}>
-          <IconButton className={styles.actionButton}>
-            <FavoriteIcon />
-          </IconButton>
-          <IconButton className={styles.actionButton}>
-            <CommentIcon />
-          </IconButton>
-          <IconButton className={styles.actionButton}>
-            <ShareIcon />
-          </IconButton>
-        </div>
-        <Button variant="outlined" className={styles.readMoreButton}>
-          Подробнее
-        </Button>
-      </div>
     </Card>
   );
 };

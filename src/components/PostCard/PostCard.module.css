@@ -67,6 +67,38 @@
   margin-bottom: 20px;
 }
 
+.postText p {
+  margin-bottom: 1em;
+}
+
+.postText strong {
+  font-weight: 600;
+  color: #333;
+}
+
+.postText em {
+  font-style: italic;
+}
+
+.postText h1, .postText h2, .postText h3, .postText h4, .postText h5, .postText h6 {
+  margin: 1em 0 0.5em;
+  color: #2E7D32;
+  font-weight: 600;
+}
+
+.postText ul, .postText ol {
+  margin: 1em 0;
+  padding-left: 2em;
+}
+
+.postText blockquote {
+  border-left: 3px solid #2E7D32;
+  margin: 1em 0;
+  padding-left: 1em;
+  color: #666;
+  font-style: italic;
+}
+
 .postActions {
   display: flex;
   justify-content: space-between;

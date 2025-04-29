@@ -2,6 +2,8 @@ import React from 'react';
 import { Box, Container, Typography, Avatar, Button, Grid, Paper } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import EditIcon from '@mui/icons-material/Edit';
+import LogoutIcon from '@mui/icons-material/Logout';
+import { useNavigate } from 'react-router-dom';
 
 const Item = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(2),
@@ -11,6 +13,14 @@ const Item = styled(Paper)(({ theme }) => ({
 }));
 
 const Profile: React.FC = () => {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+    navigate('/login');
+  };
+
   return (
     <Container maxWidth="lg">
       <Box sx={{ mt: 4 }}>
@@ -39,9 +49,17 @@ const Profile: React.FC = () => {
                   variant="contained" 
                   color="primary" 
                   startIcon={<EditIcon />}
-                  sx={{ mt: 2 }}
+                  sx={{ mt: 2, mb: 2 }}
                 >
                   Редактировать профиль
+                </Button>
+                <Button 
+                  variant="outlined" 
+                  color="error" 
+                  startIcon={<LogoutIcon />}
+                  onClick={handleLogout}
+                >
+                  Выйти из аккаунта
                 </Button>
               </Box>
             </Item>
@@ -50,7 +68,7 @@ const Profile: React.FC = () => {
           {/* Посты пользователя */}
           <Grid size={{ xs: 12, md: 8 }}>
             <Item>
-              <Typography variant="h6" gutterBottom sx={{ color: 'primary.main' }}>
+              <Typography variant="h6" gutterBottom>
                 Мои посты
               </Typography>
               {/* Здесь будет список постов пользователя */}

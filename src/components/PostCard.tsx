@@ -9,10 +9,7 @@ interface PostCardProps {
   title: string;
   content: string;
   imageUrl?: string;
-  author: {
-    name: string;
-    avatar?: string;
-  };
+  author: string;
   date: string;
 }
 
@@ -40,7 +37,7 @@ const PostCard: React.FC<PostCardProps> = ({ title, content, imageUrl, author, d
       <CardContent>
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
           <Avatar 
-            src={author.avatar} 
+           
             sx={{ 
               width: 40, 
               height: 40, 
@@ -48,11 +45,11 @@ const PostCard: React.FC<PostCardProps> = ({ title, content, imageUrl, author, d
               border: '2px solid #2E7D32'
             }}
           >
-            {author.name[0]}
+            {author[0]}
           </Avatar>
           <Box>
             <Typography variant="subtitle1" fontWeight="500">
-              {author.name}
+              {author}
             </Typography>
             <Typography variant="caption" color="text.secondary">
               {new Date(date).toLocaleDateString('ru-RU', {
