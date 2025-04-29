@@ -1,6 +1,5 @@
 import { RegisterRequest, LoginRequest, AuthResponse, UserProfile } from '../shared/types/auth.types';
-
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+import API_URL from '../config/api';
 
 // Функция для обработки HTTP ошибок
 const handleErrors = async (response: Response) => {
