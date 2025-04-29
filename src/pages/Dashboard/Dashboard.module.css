@@ -1,0 +1,113 @@
+.dashboardHeader {
+  background: linear-gradient(to right, #3a8a3f, #4CAF50);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  color: white;
+  margin-bottom: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.dashboardHeader::after {
+  content: '';
+  position: absolute;
+  width: 150px;
+  height: 150px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  top: -50px;
+  right: -50px;
+  z-index: 0;
+}
+
+.headerContent {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.headerTitle {
+  color: white !important;
+  font-weight: 700 !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.buttonNew {
+  background-color: white !important;
+  color: #2E7D32 !important;
+  font-weight: 600 !important;
+  padding: 8px 16px !important;
+  transition: all 0.3s ease !important;
+}
+
+.buttonNew:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15) !important;
+}
+
+.buttonProfile {
+  background-color: rgba(255, 255, 255, 0.2) !important;
+  color: white !important;
+  font-weight: 500 !important;
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+  transition: all 0.3s ease !important;
+}
+
+.buttonProfile:hover {
+  background-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+.postsContainer {
+  margin-bottom: 20px;
+}
+
+.sidebarContainer {
+  position: sticky;
+  top: 20px;
+}
+
+.sidebarPanel {
+  background-color: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.sidebarTitle {
+  color: #1976D2 !important;
+  font-weight: 600 !important;
+  margin-bottom: 16px !important;
+  position: relative;
+  padding-bottom: 8px;
+}
+
+.sidebarTitle::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 40px;
+  height: 3px;
+  background-color: #1976D2;
+  border-radius: 3px;
+}
+
+.topicItem {
+  background-color: #f5f7fa;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-left: 3px solid transparent;
+}
+
+.topicItem:hover {
+  background-color: #e8f0fe;
+  border-left-color: #1976D2;
+  transform: translateX(4px);
+} 
