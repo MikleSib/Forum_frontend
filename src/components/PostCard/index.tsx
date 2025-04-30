@@ -4,11 +4,12 @@ import FavoriteIcon from '@mui/icons-material/Favorite';
 import CommentIcon from '@mui/icons-material/Comment';
 import ShareIcon from '@mui/icons-material/Share';
 import styles from './PostCard.module.css';
+import { PostImage } from '../../shared/types/post.types';
 
 interface PostCardProps {
   title: string;
   content: string;
-  imageUrl?: string;
+  imageUrl?: PostImage;
   author: string;
   date: string;
 }
@@ -21,13 +22,19 @@ const PostCard: React.FC<PostCardProps> = ({ title, content, imageUrl, author, d
     return txt.value;
   };
 
+  // Функция для форматирования URL изображения
+  const formatImageUrl = (image: PostImage | undefined) => {
+    if (!image || !image.image_url) return '';
+    return `https://рыбный-форум.рф${image.image_url}`;
+  };
+
   return (
     <Card className={styles.postCard}>
       {imageUrl && (
         <CardMedia
           component="img"
           height="200"
-          image={imageUrl}
+          image={formatImageUrl(imageUrl)}
           alt={title}
           className={styles.postImage}
         />

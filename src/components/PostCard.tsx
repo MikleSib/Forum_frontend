@@ -1,88 +1,143 @@
 import React from 'react';
-import { Card, CardContent, CardMedia, Typography, CardActions, Button, Avatar, Box, IconButton } from '@mui/material';
+import { Card, CardContent, CardMedia, Typography, Box, Button, Chip } from '@mui/material';
 import { styled } from '@mui/material/styles';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import CommentIcon from '@mui/icons-material/Comment';
-import ShareIcon from '@mui/icons-material/Share';
+import { PostImage } from '../shared/types/post.types';
+import styles from '../pages/Dashboard/Dashboard.module.css';
 
 interface PostCardProps {
   title: string;
   content: string;
-  imageUrl?: string;
+  imageUrl?: PostImage;
   author: string;
   date: string;
+  comments?: any[];
+  likes?: any[];
 }
 
-const StyledCard = styled(Card)(({ theme }) => ({
-  marginBottom: theme.spacing(2),
-  transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
+const StyledCard = styled(Card)(() => ({
+  overflow: 'hidden',
+  borderRadius: '12px',
+  transition: 'all 0.3s ease',
+  background: 'var(--card-bg)',
+  border: '1px solid #eef2f6',
+  boxShadow: '0 2px 10px rgba(0, 0, 0, 0.05)',
   '&:hover': {
-    transform: 'translateY(-4px)',
-    boxShadow: '0px 4px 12px rgba(0,0,0,0.1)',
+    transform: 'translateY(-5px)',
+    boxShadow: '0 10px 30px rgba(0, 0, 0, 0.1)',
   },
 }));
 
-const PostCard: React.FC<PostCardProps> = ({ title, content, imageUrl, author, date }) => {
+const PostCard: React.FC<PostCardProps> = ({ title, content, imageUrl, author, date, comments = [], likes = [] }) => {
+  // Форматируем URL изображения
+  const formatImageUrl = (image: PostImage | undefined) => {
+    if (!image || !image.image_url) return '';
+    return `https://рыбный-форум.рф${image.image_url}`;
+  };
+
+  // Форматируем дату
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('ru-RU', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+  };
+
+  // Получаем инициалы автора
+  const getInitials = (name: string) => {
+    return name.charAt(0).toUpperCase();
+  };
+
+  // Очищаем HTML-теги из контента
+  const stripHtml = (html: string) => {
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    return doc.body.textContent || '';
+  };
+
+  const cleanContent = stripHtml(content);
+
   return (
-    <StyledCard>
+    <StyledCard className={styles.postCard}>
       {imageUrl && (
         <CardMedia
           component="img"
-          height="240"
-          image={imageUrl}
+          height="200"
+          image={formatImageUrl(imageUrl)}
           alt={title}
           sx={{ objectFit: 'cover' }}
         />
       )}
-      <CardContent>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-          <Avatar 
-           
-            sx={{ 
-              width: 40, 
-              height: 40, 
-              mr: 2,
-              border: '2px solid #2E7D32'
-            }}
-          >
-            {author[0]}
-          </Avatar>
-          <Box>
-            <Typography variant="subtitle1" fontWeight="500">
-              {author}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              {new Date(date).toLocaleDateString('ru-RU', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-              })}
-            </Typography>
-          </Box>
-        </Box>
-        <Typography variant="h6" gutterBottom sx={{ color: 'primary.main' }}>
+      <CardContent className={styles.postCardContent}>
+        <Typography variant="h6" className={styles.postCardTitle}>
           {title}
         </Typography>
-        <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
-          {content}
+        
+        <Typography variant="body2" className={styles.postCardExcerpt}>
+          {cleanContent}
         </Typography>
-      </CardContent>
-      <CardActions sx={{ justifyContent: 'space-between', px: 2, pb: 2 }}>
-        <Box>
-          <IconButton size="small" color="primary">
-            <FavoriteIcon />
-          </IconButton>
-          <IconButton size="small" color="primary">
-            <CommentIcon />
-          </IconButton>
-          <IconButton size="small" color="primary">
-            <ShareIcon />
-          </IconButton>
+        
+        <Box className={styles.postCardFooter}>
+          <Box className={styles.postCardAuthor}>
+            <Box className={styles.authorAvatar}>
+              {getInitials(author)}
+            </Box>
+            <Box>
+              <Typography variant="subtitle2">{author}</Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <AccessTimeIcon sx={{ fontSize: 14, color: 'rgba(44, 51, 51, 0.6)' }} />
+                <Typography className={styles.postCardDate}>
+                  {formatDate(date)}
+                </Typography>
+              </Box>
+            </Box>
+          </Box>
+          
+          <Box sx={{ display: 'flex', gap: '8px' }}>
+            <Chip 
+              icon={<FavoriteIcon sx={{ fontSize: 16 }} />} 
+              label={likes.length > 0 ? likes.length.toString() : "0"} 
+              size="small" 
+              variant={likes.length > 0 ? "filled" : "outlined"}
+              sx={{ 
+                borderColor: 'var(--primary-color)', 
+                color: likes.length > 0 ? 'white' : 'var(--primary-color)',
+                backgroundColor: likes.length > 0 ? 'var(--primary-color)' : 'transparent',
+                '& .MuiChip-icon': { color: likes.length > 0 ? 'white' : 'var(--primary-color)' } 
+              }}
+            />
+            <Chip 
+              icon={<CommentIcon sx={{ fontSize: 16 }} />} 
+              label={comments.length > 0 ? comments.length.toString() : "0"} 
+              size="small" 
+              variant={comments.length > 0 ? "filled" : "outlined"}
+              sx={{ 
+                borderColor: 'var(--secondary-color)', 
+                color: comments.length > 0 ? 'white' : 'var(--secondary-color)',
+                backgroundColor: comments.length > 0 ? 'var(--secondary-color)' : 'transparent',
+                '& .MuiChip-icon': { color: comments.length > 0 ? 'white' : 'var(--secondary-color)' } 
+              }}
+            />
+            <Button 
+              size="small" 
+              sx={{ 
+                ml: 1, 
+                color: 'var(--primary-color)', 
+                borderColor: 'var(--primary-color)',
+                borderRadius: '8px',
+                fontSize: '0.75rem',
+                padding: '2px 8px',
+                minWidth: 'auto'
+              }}
+              variant="outlined"
+            >
+              Читать
+            </Button>
+          </Box>
         </Box>
-        <Button variant="outlined" color="primary" size="small">
-          Подробнее
-        </Button>
-      </CardActions>
+      </CardContent>
     </StyledCard>
   );
 };
