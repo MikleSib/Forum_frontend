@@ -8,6 +8,7 @@ import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import Profile from './pages/Profile';
 import CreatePost from './pages/CreatePost';
+import PostDetail from './pages/PostDetail/index';
 
 const theme = createTheme({
   palette: {
@@ -88,6 +89,7 @@ function App() {
             <Route index element={<Dashboard />} />
             <Route path="profile" element={<Profile />} />
             <Route path="create-post" element={<CreatePost />} />
+            <Route path="post/:id" element={<PostDetail />} />
           </Route>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />

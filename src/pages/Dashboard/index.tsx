@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Box, Container, Typography, Button, Tabs, Tab, Paper, Divider, Chip, InputBase } from '@mui/material';
 import { useNavigate } from 'react-router-dom'; 
 import PostCard from '../../components/PostCard';
@@ -46,35 +46,47 @@ function TabPanel(props: TabPanelProps) {
   );
 }
 
-const Dashboard: React.FC = () => {
+const Dashboard = () => {
   const navigate = useNavigate();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [isAuth, setIsAuth] = useState(false);
   const [tabValue, setTabValue] = useState(0);
+  const [stats, setStats] = useState({
+    posts: 0,
+    users: 45, // Заглушка, в будущем получать с бэкенда
+    newToday: 3 // Заглушка, в будущем получать с бэкенда
+  });
+
+  // Загрузка постов при монтировании компонента
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const postsData = await getPosts();
+      setPosts(postsData);
+      
+      // Обновляем статистику постов
+      setStats(prev => ({
+        ...prev,
+        posts: postsData.length
+      }));
+    } catch (err) {
+      console.error('Ошибка при загрузке данных:', err);
+      setError('Не удалось загрузить данные');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     // Проверяем наличие токена в localStorage
     const token = localStorage.getItem('access_token');
     setIsAuth(!!token);
 
-    // Загрузка постов при монтировании компонента
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const postsData = await getPosts();
-        setPosts(postsData);
-      } catch (err) {
-        console.error('Ошибка при загрузке данных:', err);
-        setError('Не удалось загрузить данные');
-      } finally {
-        setLoading(false);
-      }
-    };
-
+    // Загружаем посты только один раз
     fetchData();
-  }, []);
+  }, [fetchData]);
 
   // Переход на страницу создания поста
   const handleCreatePost = () => {
@@ -84,6 +96,11 @@ const Dashboard: React.FC = () => {
   // Переход на страницу входа
   const handleLogin = () => {
     navigate('/login');
+  };
+
+  // Переход на страницу отдельного поста
+  const handlePostClick = (postId: number) => {
+    navigate(`/post/${postId}`);
   };
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
@@ -173,15 +190,15 @@ const Dashboard: React.FC = () => {
           
           <div className={styles.statsContainer}>
             <div className={styles.statItem}>
-              <span className={styles.statValue}>127</span>
+              <span className={styles.statValue}>{stats.posts}</span>
               <span className={styles.statLabel}>постов</span>
             </div>
             <div className={styles.statItem}>
-              <span className={styles.statValue}>45</span>
+              <span className={styles.statValue}>{stats.users}</span>
               <span className={styles.statLabel}>участников</span>
             </div>
             <div className={styles.statItem}>
-              <span className={styles.statValue}>3</span>
+              <span className={styles.statValue}>{stats.newToday}</span>
               <span className={styles.newLabel}>новых сегодня</span>
             </div>
           </div>
@@ -286,7 +303,7 @@ const Dashboard: React.FC = () => {
                   <Box sx={{ display: 'grid', gap: 3 }}>
                     {posts.map((post) => (
                       <PostCard 
-                        key={post.id} 
+                        key={post.id}
                         title={post.title} 
                         content={post.content} 
                         author={post.author.username} 
@@ -294,6 +311,7 @@ const Dashboard: React.FC = () => {
                         imageUrl={post.images[0]}
                         comments={post.comments}
                         likes={post.likes}
+                        onClick={() => handlePostClick(post.id)}
                       />
                     ))}
                   </Box>
@@ -369,9 +387,9 @@ const Dashboard: React.FC = () => {
               </Box>
               
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                <Chip size="small" label="Всего постов: 127" variant="outlined" />
-                <Chip size="small" label="Пользователей: 45" variant="outlined" />
-                <Chip size="small" label="Новых сегодня: 3" variant="outlined" />
+                <Chip size="small" label={`Всего постов: ${stats.posts}`} variant="outlined" />
+                <Chip size="small" label={`Пользователей: ${stats.users}`} variant="outlined" />
+                <Chip size="small" label={`Новых сегодня: ${stats.newToday}`} variant="outlined" />
               </Box>
             </Paper>
           </Box>

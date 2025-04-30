@@ -15,6 +15,7 @@ interface PostCardProps {
   date: string;
   comments?: any[];
   likes?: any[];
+  onClick?: () => void;
 }
 
 const StyledCard = styled(Card)(() => ({
@@ -30,7 +31,16 @@ const StyledCard = styled(Card)(() => ({
   },
 }));
 
-const PostCard: React.FC<PostCardProps> = ({ title, content, imageUrl, author, date, comments = [], likes = [] }) => {
+const PostCard: React.FC<PostCardProps> = ({ 
+  title, 
+  content, 
+  imageUrl, 
+  author, 
+  date, 
+  comments = [], 
+  likes = [],
+  onClick
+}) => {
   // Форматируем URL изображения
   const formatImageUrl = (image: PostImage | undefined) => {
     if (!image || !image.image_url) return '';
@@ -59,8 +69,14 @@ const PostCard: React.FC<PostCardProps> = ({ title, content, imageUrl, author, d
 
   const cleanContent = stripHtml(content);
 
+  // Обработчик клика на кнопку "Читать"
+  const handleReadButtonClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Предотвращаем всплытие события
+    if (onClick) onClick();
+  };
+
   return (
-    <StyledCard className={styles.postCard}>
+    <StyledCard className={styles.postCard} onClick={onClick} sx={{ cursor: onClick ? 'pointer' : 'default' }}>
       {imageUrl && (
         <CardMedia
           component="img"
@@ -107,6 +123,7 @@ const PostCard: React.FC<PostCardProps> = ({ title, content, imageUrl, author, d
                 backgroundColor: likes.length > 0 ? 'var(--primary-color)' : 'transparent',
                 '& .MuiChip-icon': { color: likes.length > 0 ? 'white' : 'var(--primary-color)' } 
               }}
+              onClick={(e) => e.stopPropagation()} // Предотвращаем всплытие события
             />
             <Chip 
               icon={<CommentIcon sx={{ fontSize: 16 }} />} 
@@ -119,6 +136,7 @@ const PostCard: React.FC<PostCardProps> = ({ title, content, imageUrl, author, d
                 backgroundColor: comments.length > 0 ? 'var(--secondary-color)' : 'transparent',
                 '& .MuiChip-icon': { color: comments.length > 0 ? 'white' : 'var(--secondary-color)' } 
               }}
+              onClick={(e) => e.stopPropagation()} // Предотвращаем всплытие события
             />
             <Button 
               size="small" 
@@ -132,6 +150,7 @@ const PostCard: React.FC<PostCardProps> = ({ title, content, imageUrl, author, d
                 minWidth: 'auto'
               }}
               variant="outlined"
+              onClick={handleReadButtonClick}
             >
               Читать
             </Button>
