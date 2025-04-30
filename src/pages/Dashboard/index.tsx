@@ -144,13 +144,23 @@ const Dashboard = () => {
             </Box>
             
             {isAuth ? (
-              <Button 
-                variant="contained"
-                className={styles.buttonProfile}
-                href="/profile"
-              >
-                Профиль
-              </Button>
+              <Box sx={{ display: 'flex', gap: 2 }}>
+                <Button 
+                  variant="contained"
+                  className={styles.buttonNew}
+                  startIcon={<AddIcon />}
+                  onClick={handleCreatePost}
+                >
+                  Создать пост
+                </Button>
+                <Button 
+                  variant="contained"
+                  className={styles.buttonProfile}
+                  href="/profile"
+                >
+                  Профиль
+                </Button>
+              </Box>
             ) : (
               <Button 
                 variant="contained"

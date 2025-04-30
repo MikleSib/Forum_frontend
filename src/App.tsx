@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -80,6 +80,10 @@ const theme = createTheme({
 });
 
 function App() {
+  useEffect(() => {
+    document.title = 'Рыболовный форум';
+  }, []);
+  
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
