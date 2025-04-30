@@ -86,29 +86,40 @@ const PostDetail: React.FC = () => {
       minute: '2-digit'
     });
   };
-
+  const [isLikeProcessing, setIsLikeProcessing] = useState(false);
   // Обработка лайка
   const handleLikeToggle = async () => {
-    if (!isAuth || !id) return;
+    if (!isAuth || !id || isLikeProcessing) return;
     
     try {
-      setLiked(prevLiked => {
-        const newLikedState = !prevLiked;
-        
-        // Обновляем счетчик лайков
-        setLikesCount(prevCount => newLikedState ? prevCount + 1 : prevCount - 1);
-        
-        // Отправляем запрос на сервер
-        if (newLikedState) {
-          likePost(id);
-        } else {
-          unlikePost(id);
-        }
-        
-        return newLikedState;
-      });
+      setIsLikeProcessing(true);
+      
+      const newLikedState = !liked;
+      
+      // Обновляем UI сначала для лучшего UX
+      setLiked(newLikedState);
+      setLikesCount(prevCount => newLikedState ? prevCount + 1 : prevCount - 1);
+      
+      // Отправляем запрос на сервер
+      let success;
+      if (newLikedState) {
+        success = await likePost(id);
+      } else {
+        success = await unlikePost(id);
+      }
+      
+      // Если запрос не удался, возвращаем UI в исходное состояние
+      if (!success) {
+        setLiked(!newLikedState);
+        setLikesCount(prevCount => !newLikedState ? prevCount + 1 : prevCount - 1);
+      }
     } catch (err) {
       console.error('Ошибка при обработке лайка:', err);
+      // Возвращаем состояние в случае ошибки
+      setLiked(liked);
+      setLikesCount(prevCount => liked ? prevCount : prevCount - 1);
+    } finally {
+      setIsLikeProcessing(false);
     }
   };
 
