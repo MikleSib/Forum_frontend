@@ -1,7 +1,7 @@
 import { Post, Category, CreatePostRequest, CreatePostResponse, Comment } from '../shared/types/post.types';
 import { getAccessToken } from './auth';
 
-const API_URL = 'https://xn----9sbyncijf1ah6ec.xn--p1ai';
+const API_URL = 'https://рыбный-форум.рф/api';
 
 // Функция для обработки HTTP ошибок
 const handleErrors = async (response: Response) => {
