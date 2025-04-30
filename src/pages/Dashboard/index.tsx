@@ -144,12 +144,13 @@ const Dashboard = () => {
             </Box>
             
             {isAuth ? (
-              <Box sx={{ display: 'flex', gap: 2 }}>
+              <Box sx={{ display: 'flex', gap: 2, width: { xs: '100%', sm: 'auto' } }}>
                 <Button 
                   variant="contained"
                   className={styles.buttonNew}
                   startIcon={<AddIcon />}
                   onClick={handleCreatePost}
+                  sx={{ flex: { xs: 1, sm: 'none' } }}
                 >
                   Создать пост
                 </Button>
@@ -157,6 +158,7 @@ const Dashboard = () => {
                   variant="contained"
                   className={styles.buttonProfile}
                   href="/profile"
+                  sx={{ flex: { xs: 1, sm: 'none' } }}
                 >
                   Профиль
                 </Button>
@@ -166,6 +168,7 @@ const Dashboard = () => {
                 variant="contained"
                 className={styles.buttonNew}
                 onClick={handleLogin}
+                sx={{ width: { xs: '100%', sm: 'auto' } }}
               >
                 Войти
               </Button>
@@ -174,7 +177,13 @@ const Dashboard = () => {
         </div>
         
         {/* Нижняя часть шапки с навигацией */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Box sx={{ 
+          display: 'flex', 
+          flexDirection: { xs: 'column', md: 'row' }, 
+          justifyContent: 'space-between', 
+          alignItems: { xs: 'flex-start', md: 'center' },
+          gap: { xs: 2, md: 0 }
+        }}>
           <div className={styles.headerNavigation}>
             <a href="#" className={`${styles.navLink} ${styles.activeNavLink}`}>
               <FeedIcon sx={{ fontSize: 18 }} />
@@ -216,8 +225,12 @@ const Dashboard = () => {
       </Box>
       
       {/* Основной контент */}
-      <Box sx={{ p: 3 }}>
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 320px' }, gap: 3 }}>
+      <Box sx={{ p: { xs: 2, sm: 3 } }}>
+        <Box sx={{ 
+          display: 'grid', 
+          gridTemplateColumns: { xs: '1fr', md: '1fr 320px' }, 
+          gap: { xs: 2, md: 3 } 
+        }}>
           {/* Левая колонка */}
           <Box sx={{ display: 'flex', flexDirection: 'column' }}>
             {/* Вкладки */}
@@ -227,14 +240,16 @@ const Dashboard = () => {
                 onChange={handleTabChange} 
                 aria-label="dashboard tabs"
                 variant="fullWidth"
+                scrollButtons="auto"
+                allowScrollButtonsMobile
                 sx={{
                   '& .MuiTab-root': {
-                    fontSize: '1rem',
+                    fontSize: { xs: '0.85rem', sm: '1rem' },
                     textTransform: 'none',
                     fontWeight: 500,
                     color: 'var(--text-dark)',
                     transition: 'all 0.3s',
-                    py: 2,
+                    py: { xs: 1.5, sm: 2 },
                     '&:hover': {
                       color: 'var(--primary-color)',
                       backgroundColor: 'rgba(0, 88, 122, 0.04)',
@@ -251,17 +266,17 @@ const Dashboard = () => {
                 }}
               >
                 <Tab 
-                  icon={<FeedIcon />} 
+                  icon={<FeedIcon sx={{ fontSize: { xs: 18, sm: 24 } }} />} 
                   label="Лента" 
                   iconPosition="start"
                 />
                 <Tab 
-                  icon={<MapIcon />} 
+                  icon={<MapIcon sx={{ fontSize: { xs: 18, sm: 24 } }} />} 
                   label="Карта рыболовных мест" 
                   iconPosition="start"
                 />
                 <Tab 
-                  icon={<DirectionsBoatIcon />} 
+                  icon={<DirectionsBoatIcon sx={{ fontSize: { xs: 18, sm: 24 } }} />} 
                   label="Рыбалка" 
                   iconPosition="start"
                 />
@@ -271,22 +286,36 @@ const Dashboard = () => {
             {/* Контент на вкладках */}
             <Paper className={styles.postsContainer} elevation={0}>
               <TabPanel value={tabValue} index={0}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                <Box sx={{ 
+                  display: 'flex', 
+                  flexDirection: { xs: 'column', sm: 'row' },
+                  justifyContent: 'space-between', 
+                  alignItems: { xs: 'flex-start', sm: 'center' }, 
+                  gap: { xs: 2, sm: 0 },
+                  mb: 3 
+                }}>
                   <Typography variant="h5" sx={{ fontWeight: 600, color: 'var(--primary-color)' }}>
                     Последние публикации
                   </Typography>
-                  <Box sx={{ display: 'flex', gap: 1 }}>
+                  <Box sx={{ display: 'flex', gap: 1, width: { xs: '100%', sm: 'auto' } }}>
                     <Chip 
                       icon={<TrendingUpIcon />} 
                       label="Популярные" 
                       variant="outlined" 
-                      sx={{ color: 'var(--primary-color)', borderColor: 'var(--primary-color)' }}
+                      sx={{ 
+                        color: 'var(--primary-color)', 
+                        borderColor: 'var(--primary-color)',
+                        flex: { xs: 1, sm: 'none' }
+                      }}
                     />
                     <Chip 
                       icon={<FiberNewIcon />} 
                       label="Новые" 
                       color="primary" 
-                      sx={{ backgroundColor: 'var(--primary-color)' }}
+                      sx={{ 
+                        backgroundColor: 'var(--primary-color)',
+                        flex: { xs: 1, sm: 'none' }
+                      }}
                     />
                   </Box>
                 </Box>

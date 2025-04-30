@@ -83,7 +83,10 @@ const PostCard: React.FC<PostCardProps> = ({
           height="200"
           image={formatImageUrl(imageUrl)}
           alt={title}
-          sx={{ objectFit: 'cover' }}
+          sx={{ 
+            objectFit: 'cover',
+            height: { xs: '160px', sm: '200px' }
+          }}
         />
       )}
       <CardContent className={styles.postCardContent}>
@@ -111,7 +114,13 @@ const PostCard: React.FC<PostCardProps> = ({
             </Box>
           </Box>
           
-          <Box sx={{ display: 'flex', gap: '8px' }}>
+          <Box sx={{ 
+            display: 'flex', 
+            gap: '8px',
+            flexWrap: { xs: 'wrap', sm: 'nowrap' },
+            justifyContent: { xs: 'flex-end', sm: 'flex-start' },
+            mt: { xs: 1, sm: 0 }
+          }}>
             <Chip 
               icon={<FavoriteIcon sx={{ fontSize: 16 }} />} 
               label={likes.length > 0 ? likes.length.toString() : "0"} 
@@ -141,7 +150,7 @@ const PostCard: React.FC<PostCardProps> = ({
             <Button 
               size="small" 
               sx={{ 
-                ml: 1, 
+                ml: { xs: 0, sm: 1 }, 
                 color: 'var(--primary-color)', 
                 borderColor: 'var(--primary-color)',
                 borderRadius: '8px',
