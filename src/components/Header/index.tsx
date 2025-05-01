@@ -108,7 +108,39 @@ const Header: React.FC = () => {
                 </Typography>
               </Box>
             </Box>
+            {/* Кнопка "Войти" для мобильной версии */}
             {!isAuth && (
+              <Box sx={{ display: { xs: 'block', md: 'none' }, width: '100%' }}>
+                <Button
+                  variant="contained"
+                  onClick={handleLogin}
+                  fullWidth
+                  sx={{
+                    bgcolor: '#F0AA24',
+                    color: '#0F1817',
+                    borderRadius: '58px',
+                    minWidth: '120px',
+                    height: '40px',
+                    fontWeight: 700,
+                    '&:hover': {
+                      bgcolor: '#E09A14'
+                    }
+                  }}
+                >
+                  Войти
+                </Button>
+              </Box>
+            )}
+          </Box>
+
+          {/* Кнопка "Войти" для ПК версии */}
+          {!isAuth && (
+            <Box sx={{ 
+              display: { xs: 'none', md: 'block' },
+              position: 'absolute',
+              top: 16,
+              right: 0
+            }}>
               <Button
                 variant="contained"
                 onClick={handleLogin}
@@ -121,14 +153,13 @@ const Header: React.FC = () => {
                   fontWeight: 700,
                   '&:hover': {
                     bgcolor: '#E09A14'
-                  },
-                  width: { xs: '100%', md: 'auto' }
+                  }
                 }}
               >
                 Войти
               </Button>
-            )}
-          </Box>
+            </Box>
+          )}
           {isAuth && user && (
             <Box sx={{ 
               position: { xs: 'static', md: 'absolute' },
@@ -210,36 +241,41 @@ const Header: React.FC = () => {
                 alignSelf: 'stretch'
               }} 
             />
-            <Link to="/news" style={{ textDecoration: 'none', width: { xs: '100%', md: 'auto' } }}>
-              <Button 
-                sx={{ 
-                  color: { 
-                    xs: '#FFFFFF',
-                    md: isCurrentPath('/news') ? '#0F1817' : '#FFFFFF'
-                  },
-                  bgcolor: { 
-                    xs: 'transparent', 
-                    md: isCurrentPath('/news') ? '#D9D9D9' : 'rgba(255,255,255,0.1)' 
-                  },
-                  '&:hover': {
-                    bgcolor: { xs: 'transparent', md: 'rgba(255,255,255,0.3)' }
-                  },
-                  fontWeight: { 
-                    xs: 500,
-                    md: isCurrentPath('/news') ? 700 : 500
-                  },
-                  px: 3,
-                  py: 1,
-                  borderRadius: { xs: 0, md: '58px' },
-                  fontSize: '1rem',
-                  height: { xs: '32px', md: 'auto' },
-                  minWidth: { xs: 'auto', md: '120px' },
-                  flex: { xs: 1, md: 0 }
-                }}
-              >
-                Новости
-              </Button>
-            </Link>
+            <Box sx={{ 
+              flex: { xs: 1, md: 'none' },
+              display: 'flex'
+            }}>
+              <Link to="/news" style={{ textDecoration: 'none' }}>
+                <Button 
+                  sx={{ 
+                    color: { 
+                      xs: '#FFFFFF',
+                      md: isCurrentPath('/news') ? '#0F1817' : '#FFFFFF'
+                    },
+                    bgcolor: { 
+                      xs: 'transparent', 
+                      md: isCurrentPath('/news') ? '#D9D9D9' : 'rgba(65, 40, 40, 0.1)' 
+                    },
+                    '&:hover': {
+                      bgcolor: { xs: 'transparent', md: 'rgba(255,255,255,0.3)' }
+                    },
+                    fontWeight: { 
+                      xs: 500,
+                      md: isCurrentPath('/news') ? 700 : 500
+                    },
+                    px: 3,
+                    py: 1,
+                    borderRadius: { xs: 0, md: '58px' },
+                    fontSize: '1rem',
+                    height: { xs: '32px', md: 'auto' },
+                    minWidth: { xs: 'auto', md: '120px' },
+                    flex: { xs: 1, md: 0 }
+                  }}
+                >
+                  Новости
+                </Button>
+              </Link>
+            </Box>
             <Box 
               sx={{ 
                 display: { xs: 'block', md: 'none' }, 
@@ -248,36 +284,41 @@ const Header: React.FC = () => {
                 alignSelf: 'stretch'
               }} 
             />
-            <Link to="/photos" style={{ textDecoration: 'none', width: { xs: '100%', md: 'auto' } }}>
-              <Button 
-                sx={{ 
-                  color: { 
-                    xs: '#FFFFFF',
-                    md: isCurrentPath('/photos') ? '#0F1817' : '#FFFFFF'
-                  },
-                  bgcolor: { 
-                    xs: 'transparent', 
-                    md: isCurrentPath('/photos') ? '#D9D9D9' : 'rgba(255,255,255,0.1)' 
-                  },
-                  '&:hover': {
-                    bgcolor: { xs: 'transparent', md: 'rgba(255,255,255,0.3)' }
-                  },
-                  fontWeight: { 
-                    xs: 500,
-                    md: isCurrentPath('/photos') ? 700 : 500
-                  },
-                  px: 3,
-                  py: 1,
-                  borderRadius: { xs: 0, md: '58px' },
-                  fontSize: '1rem',
-                  height: { xs: '32px', md: 'auto' },
-                  minWidth: { xs: 'auto', md: '120px' },
-                  flex: { xs: 1, md: 0 }
-                }}
-              >
-                Фотографии
-              </Button>
-            </Link>
+            <Box sx={{ 
+              flex: { xs: 1, md: 'none' },
+              display: 'flex'
+            }}>
+              <Link to="/photos" style={{ textDecoration: 'none' }}>
+                <Button 
+                  sx={{ 
+                    color: { 
+                      xs: '#FFFFFF',
+                      md: isCurrentPath('/photos') ? '#0F1817' : '#FFFFFF'
+                    },
+                    bgcolor: { 
+                      xs: 'transparent', 
+                      md: isCurrentPath('/photos') ? '#D9D9D9' : 'rgba(255,255,255,0)' 
+                    },
+                    '&:hover': {
+                      bgcolor: { xs: 'transparent', md: 'rgba(255,255,255,0.3)' }
+                    },
+                    fontWeight: { 
+                      xs: 500,
+                      md: isCurrentPath('/photos') ? 700 : 500
+                    },
+                    px: 3,
+                    py: 1,
+                    borderRadius: { xs: 0, md: '58px' },
+                    fontSize: '1rem',
+                    height: { xs: '32px', md: 'auto' },
+                    minWidth: { xs: 'auto', md: '120px' },
+                    flex: { xs: 1, md: 0 }
+                  }}
+                >
+                  Фотографии
+                </Button>
+              </Link>
+            </Box>
           </Box>
           <Box sx={{ 
             position: { xs: 'static', md: 'absolute' }, 
