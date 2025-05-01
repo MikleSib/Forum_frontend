@@ -19,6 +19,7 @@ const api = axios.create({
 // Добавляем интерцептор для установки токена
 api.interceptors.request.use((config) => {
   const token = userStore.accessToken;
+  console.log('Токен в запросе:', token);
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -41,29 +42,42 @@ api.interceptors.response.use(
         !originalRequest._retry) {
       
       try {
+        console.log('Получена ошибка Invalid token, пробуем обновить токен');
         // Помечаем запрос как повторный
         originalRequest._retry = true;
         
         // Пробуем обновить токен
         const tokens = await refreshToken();
+        console.log('Получены новые токены:', tokens);
         
-        // Сохраняем новые токены
+        // Сохраняем новые токены в localStorage
+        localStorage.setItem('access_token', tokens.access_token);
+        localStorage.setItem('refresh_token', tokens.refresh_token);
+        console.log('Токены сохранены в localStorage');
+        
+        // Сохраняем новые токены в store
         userStore.setAuth({
           access_token: tokens.access_token,
           refresh_token: tokens.refresh_token,
           user: userStore.user!
         });
+        console.log('Токены сохранены в userStore');
         
         // Обновляем токен в заголовке оригинального запроса
         if (originalRequest.headers) {
           originalRequest.headers.Authorization = `Bearer ${tokens.access_token}`;
+          console.log('Новый токен установлен в заголовок запроса:', tokens.access_token);
         }
         
         // Повторяем оригинальный запрос с новым токеном
+        console.log('Повторяем оригинальный запрос с новым токеном');
         return api(originalRequest);
       } catch (refreshError) {
+        console.error('Ошибка при обновлении токена:', refreshError);
         // Если не удалось обновить токен, очищаем данные авторизации
         userStore.clear();
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
         // Перенаправляем на страницу входа
         window.location.href = '/login';
         throw refreshError;
@@ -210,8 +224,7 @@ export const deletePost = async (postId: string): Promise<boolean> => {
 export const likePost = async (postId: string): Promise<boolean> => {
   try {
     const response = await api.post(`/post/${postId}/like`);
-    const data = response.data;
-    return data.success;
+    return true;
   } catch (error) {
     console.error(`Ошибка при лайке поста ${postId}:`, error);
     return false;
@@ -222,8 +235,7 @@ export const likePost = async (postId: string): Promise<boolean> => {
 export const unlikePost = async (postId: string): Promise<boolean> => {
   try {
     const response = await api.delete(`/post/${postId}/like`);
-    const data = response.data;
-    return data.success;
+    return true;
   } catch (error) {
     console.error(`Ошибка при удалении лайка поста ${postId}:`, error);
     return false;
@@ -266,7 +278,7 @@ export const updateComment = async (commentId: string, content: string): Promise
 // Удаление комментария
 export const deleteComment = async (commentId: string): Promise<boolean> => {
   try {
-    const response = await api.delete(`/comment/${commentId}`);
+    const response = await api.delete(`/comment/${commentId}/admin`);
     const data = response.data;
     return data.success;
   } catch (error) {

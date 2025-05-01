@@ -549,29 +549,7 @@ const Dashboard = () => {
               </Paper>
             </div>
             
-            <Paper className={styles.sidebarPanel} elevation={0}>
-              <Typography variant="h5" className={styles.sidebarTitle}>
-                Активность
-              </Typography>
-              
-              <Divider sx={{ mb: 3 }} />
-              
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <AccessTimeIcon fontSize="small" />
-                  Последняя активность
-                </Typography>
-                <Typography variant="body2" sx={{ fontWeight: 600, color: 'var(--primary-color)' }}>
-                  Сегодня, 10:23
-                </Typography>
-              </Box>
-              
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                <Chip size="small" label={`Всего постов: ${stats.posts}`} variant="outlined" />
-                <Chip size="small" label={`Пользователей: ${stats.users}`} variant="outlined" />
-                <Chip size="small" label={`Новых сегодня: ${stats.newToday}`} variant="outlined" />
-              </Box>
-            </Paper>
+
           </Box>
         </Box>
       </Box>

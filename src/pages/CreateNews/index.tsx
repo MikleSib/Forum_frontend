@@ -14,17 +14,28 @@ import {
   IconButton,
   Stack,
   Alert,
+  RadioGroup,
+  FormControlLabel,
+  Radio,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { NewsCategory } from '../../shared/types/news.types';
 import { adminApi } from '../../services/api';
 import { userStore } from '../../shared/store/userStore';
+import API_URL from '../../config/api';
 
 interface NewsContent {
   type: 'text' | 'image' | 'video';
   content: string;
   order: number;
+  imageType?: 'url' | 'file';
+  file?: File;
+  uploadInfo?: {
+    filename: string;
+    size: number;
+    contentType: string;
+  };
 }
 
 const CreateNews: React.FC = () => {
@@ -55,13 +66,57 @@ const CreateNews: React.FC = () => {
     setContents(contents.filter((_, i) => i !== index));
   };
 
-  const handleContentChange = (index: number, field: keyof NewsContent, value: string) => {
+  const handleContentChange = (index: number, field: keyof NewsContent, value: any) => {
     const newContents = [...contents];
-    newContents[index] = {
-      ...newContents[index],
-      [field]: value
-    };
+    if (field === 'type' && value === 'image') {
+      newContents[index] = {
+        ...newContents[index],
+        type: value,
+        imageType: 'url',
+        content: ''
+      };
+    } else {
+      newContents[index] = {
+        ...newContents[index],
+        [field]: value
+      };
+    }
     setContents(newContents);
+  };
+
+  const handleFileChange = async (index: number, file: File) => {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch(`${API_URL}/uploads`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${userStore.accessToken}`
+        },
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error('Ошибка при загрузке файла');
+      }
+
+      const data = await response.json();
+      const newContents = [...contents];
+      newContents[index] = {
+        ...newContents[index],
+        content: `${API_URL}/${data.url}`,
+        file: file,
+        uploadInfo: {
+          filename: data.filename,
+          size: data.size,
+          contentType: data.content_type
+        }
+      };
+      setContents(newContents);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Ошибка при загрузке файла');
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -74,18 +129,82 @@ const CreateNews: React.FC = () => {
         title,
         category,
         contents: contents.map((content, index) => ({
-          ...content,
+          type: content.type,
+          content: content.content,
           order: index
         }))
       });
       
       setSuccess(true);
-      setTimeout(() => {
-        navigate('/news');
-      }, 2000);
+      navigate('/news');
+      
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Произошла ошибка при создании новости');
     }
+  };
+
+  const renderContentInput = (content: NewsContent, index: number) => {
+    if (content.type === 'image') {
+      return (
+        <Box sx={{ width: '100%' }}>
+          <RadioGroup
+            row
+            value={content.imageType || 'url'}
+            onChange={(e) => handleContentChange(index, 'imageType', e.target.value)}
+          >
+            <FormControlLabel value="url" control={<Radio />} label="По ссылке" />
+            <FormControlLabel value="file" control={<Radio />} label="Загрузить файл" />
+          </RadioGroup>
+          
+          {content.imageType === 'file' ? (
+            <Box>
+              <input
+                accept="image/*"
+                type="file"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    handleFileChange(index, file);
+                  }
+                }}
+                style={{ display: 'none' }}
+                id={`image-upload-${index}`}
+              />
+              <label htmlFor={`image-upload-${index}`}>
+                <Button variant="outlined" component="span">
+                  Выбрать изображение
+                </Button>
+              </label>
+              {content.file && (
+                <Typography variant="body2" sx={{ mt: 1 }}>
+                  Выбран файл: {content.file.name}
+                </Typography>
+              )}
+            </Box>
+          ) : (
+            <TextField
+              fullWidth
+              label="URL изображения"
+              value={content.content}
+              onChange={(e) => handleContentChange(index, 'content', e.target.value)}
+              required
+            />
+          )}
+        </Box>
+      );
+    }
+
+    return (
+      <TextField
+        fullWidth
+        label={content.type === 'text' ? 'Текст' : 'URL'}
+        value={content.content}
+        onChange={(e) => handleContentChange(index, 'content', e.target.value)}
+        required
+        multiline={content.type === 'text'}
+        rows={content.type === 'text' ? 3 : 1}
+      />
+    );
   };
 
   return (
@@ -138,13 +257,16 @@ const CreateNews: React.FC = () => {
 
           <Stack spacing={3} sx={{ mb: 4 }}>
             {contents.map((content, index) => (
-              <Box key={index} sx={{ display: 'flex', gap: 2 }}>
+              <Box key={index} sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
                 <FormControl sx={{ width: 150 }}>
                   <InputLabel>Тип контента</InputLabel>
                   <Select
                     value={content.type}
                     label="Тип контента"
-                    onChange={(e) => handleContentChange(index, 'type', e.target.value)}
+                    onChange={(e) => {
+                      const newType = e.target.value as 'text' | 'image' | 'video';
+                      handleContentChange(index, 'type', newType);
+                    }}
                     required
                   >
                     <MenuItem value="text">Текст</MenuItem>
@@ -153,15 +275,7 @@ const CreateNews: React.FC = () => {
                   </Select>
                 </FormControl>
 
-                <TextField
-                  fullWidth
-                  label={content.type === 'text' ? 'Текст' : 'URL'}
-                  value={content.content}
-                  onChange={(e) => handleContentChange(index, 'content', e.target.value)}
-                  required
-                  multiline={content.type === 'text'}
-                  rows={content.type === 'text' ? 3 : 1}
-                />
+                {renderContentInput(content, index)}
 
                 <IconButton 
                   color="error" 

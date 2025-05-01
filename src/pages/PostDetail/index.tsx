@@ -45,6 +45,7 @@ const PostDetail: React.FC = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteCommentId, setDeleteCommentId] = useState<number | null>(null);
+  const [isLikeProcessing, setIsLikeProcessing] = useState(false);
 
   useEffect(() => {
     // Проверяем авторизацию и права администратора
@@ -67,9 +68,8 @@ const PostDetail: React.FC = () => {
           
           // Проверяем, поставил ли пользователь лайк
           if (token && data.likes) {
-            // Здесь нужна логика для проверки, есть ли лайк от текущего пользователя
-            // Например: setLiked(data.likes.some(like => like.user_id === currentUserId));
-            setLiked(false); // Временная заглушка
+            const currentUserId = userStore.user?.id;
+            setLiked(data.likes.some(like => like.user_id === currentUserId));
           }
         } else {
           setError('Пост не найден');
@@ -95,7 +95,7 @@ const PostDetail: React.FC = () => {
       minute: '2-digit'
     });
   };
-  const [isLikeProcessing, setIsLikeProcessing] = useState(false);
+
   // Обработка лайка
   const handleLikeToggle = async () => {
     if (!isAuth || !id || isLikeProcessing) return;
@@ -104,29 +104,26 @@ const PostDetail: React.FC = () => {
       setIsLikeProcessing(true);
       
       const newLikedState = !liked;
-      
-      // Обновляем UI сначала для лучшего UX
-      setLiked(newLikedState);
-      setLikesCount(prevCount => newLikedState ? prevCount + 1 : prevCount - 1);
+      console.log('Текущее состояние лайка:', liked);
+      console.log('Новое состояние лайка:', newLikedState);
       
       // Отправляем запрос на сервер
       let success;
       if (newLikedState) {
         success = await likePost(id);
+        console.log('Результат likePost:', success);
       } else {
         success = await unlikePost(id);
+        console.log('Результат unlikePost:', success);
       }
       
-      // Если запрос не удался, возвращаем UI в исходное состояние
-      if (!success) {
-        setLiked(!newLikedState);
-        setLikesCount(prevCount => !newLikedState ? prevCount + 1 : prevCount - 1);
+      if (success) {
+        // Обновляем состояние только если запрос успешен
+        setLiked(newLikedState);
+        setLikesCount(prevCount => newLikedState ? prevCount + 1 : prevCount - 1);
       }
     } catch (err) {
       console.error('Ошибка при обработке лайка:', err);
-      // Возвращаем состояние в случае ошибки
-      setLiked(liked);
-      setLikesCount(prevCount => liked ? prevCount : prevCount - 1);
     } finally {
       setIsLikeProcessing(false);
     }
@@ -141,13 +138,18 @@ const PostDetail: React.FC = () => {
       const newComment = await createComment(id, commentText);
       
       if (newComment) {
+        // Проверяем наличие данных автора
+        if (!newComment.author && userStore.user) {
+          newComment.author = {
+            id: userStore.user.id,
+            username: userStore.user.username,
+            full_name:  '',
+            about_me:  ''
+          };
+        }
+        
         setComments(prevComments => [...prevComments, newComment]);
         setCommentText('');
-        // Обновляем данные поста после успешного создания комментария
-        const updatedPost = await getPostById(id);
-        if (updatedPost) {
-          setPost(updatedPost);
-        }
       }
     } catch (err) {
       console.error('Ошибка при отправке комментария:', err);
@@ -315,11 +317,17 @@ const PostDetail: React.FC = () => {
         {/* Кнопки действий */}
         <Box className={styles.postActions}>
           <Button
-            variant="outlined"
+            variant={liked ? "contained" : "outlined"}
             startIcon={liked ? <FavoriteIcon /> : <FavoriteBorderIcon />}
             onClick={handleLikeToggle}
             color={liked ? "primary" : "inherit"}
-            disabled={!isAuth}
+            disabled={!isAuth || isLikeProcessing}
+            sx={{
+              transition: 'all 0.2s ease',
+              '&:hover': {
+                transform: 'scale(1.05)',
+              }
+            }}
           >
             {liked ? 'Нравится' : 'Оценить'}
           </Button>
@@ -392,12 +400,12 @@ const PostDetail: React.FC = () => {
                       mr: 1.5
                     }}
                   >
-                    {comment.author.username[0].toUpperCase()}
+                    {comment.author?.username?.[0]?.toUpperCase() || '?'}
                   </Avatar>
                   <Box sx={{ flexGrow: 1 }}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <Typography variant="subtitle2">
-                        {comment.author.username}
+                        {comment.author?.username || 'Пользователь'}
                       </Typography>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <Typography variant="caption" color="text.secondary">

@@ -4,44 +4,37 @@ import axios from 'axios';
 import { userStore } from '../shared/store/userStore';
 
 // Функция для обработки HTTP ошибок с обновлением токена
-export const handleErrors = async (response: Response) => {
-  if (!response.ok) {
-    const error = await response.json();
-    
+export const handleErrors = async (error: any) => {
+  if (axios.isAxiosError(error) && error.config) {
     // Если получили ошибку 401, пробуем обновить токен
-    if (response.status === 401 && error.detail === "Invalid token") {
+    if (error.response?.status === 401 && error.response.data?.detail === "Invalid token") {
       try {
-        await refreshToken();
+        const tokens = await refreshToken();
         // Повторяем исходный запрос с новым токеном
-        const newToken = getAccessToken();
+        const newToken = tokens.access_token;
         if (!newToken) {
           throw new Error('Не удалось получить новый токен');
         }
         
         // Создаем новый запрос с обновленным токеном
-        const newResponse = await fetch(response.url, {
-          method: 'GET', // Используем GET как метод по умолчанию
+        const newResponse = await axios(error.config.url || '', {
+          ...error.config,
           headers: {
-            'Content-Type': 'application/json',
+            ...error.config.headers,
             'Authorization': `Bearer ${newToken}`,
           },
         });
         
-        if (!newResponse.ok) {
-          const newError = await newResponse.json();
-          throw new Error(newError.detail || newError.message || 'Произошла ошибка при повторном запросе');
-        }
-        
-        return newResponse.json();
+        return newResponse.data;
       } catch (refreshError) {
         console.error('Ошибка при обновлении токена:', refreshError);
         throw new Error('Сессия истекла. Пожалуйста, войдите снова.');
       }
     }
     
-    throw new Error(error.detail || error.message || 'Произошла ошибка при обращении к серверу');
+    throw new Error(error.response?.data?.detail || error.message || 'Произошла ошибка при обращении к серверу');
   }
-  return response.json();
+  return error;
 };
 
 // Регистрация пользователя
@@ -134,21 +127,21 @@ export const refreshToken = async (): Promise<AuthResponse> => {
       throw new Error('Refresh token не найден');
     }
 
-    const response = await fetch(`${API_URL}/auth/refresh`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ refresh_token }),
-    });
+    const response = await axios.post(`${API_URL}/auth/refresh`, 
+      { refresh_token },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      }
+    );
 
-    if (!response.ok) {
-      throw new Error('Не удалось обновить токен');
+    if (response.data) {
+      const tokens = response.data;
+      saveTokens(tokens);
+      return tokens;
     }
-
-    const tokens = await response.json();
-    saveTokens(tokens);
-    return tokens;
+    throw new Error('Не удалось обновить токен');
   } catch (error: any) {
     console.error('Ошибка при обновлении токена:', error);
     clearTokens();
