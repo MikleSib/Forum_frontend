@@ -9,6 +9,8 @@ import Register from './pages/auth/Register';
 import Profile from './pages/Profile';
 import CreatePost from './pages/CreatePost';
 import PostDetail from './pages/PostDetail/index';
+import NewsPage from './pages/News';
+import NewsDetail from './pages/News/NewsDetail';
 
 const theme = createTheme({
   palette: {
@@ -94,6 +96,8 @@ function App() {
             <Route path="profile" element={<Profile />} />
             <Route path="create-post" element={<CreatePost />} />
             <Route path="post/:id" element={<PostDetail />} />
+            <Route path="news" element={<NewsPage />} />
+            <Route path="news/:id" element={<NewsDetail />} />
           </Route>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />

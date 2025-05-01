@@ -1,16 +1,7 @@
 import { Post, Category, CreatePostRequest, CreatePostResponse, Comment } from '../shared/types/post.types';
-import { getAccessToken } from './auth';
+import { getAccessToken, handleErrors } from './auth';
 
-const API_URL = 'https://рыбный-форум.рф/api';
-
-// Функция для обработки HTTP ошибок
-const handleErrors = async (response: Response) => {
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || 'Произошла ошибка при обращении к серверу');
-  }
-  return response.json();
-};
+const API_URL = 'http://localhost:8000';
 
 // Функция для добавления заголовка авторизации
 const getAuthHeaders = (): Record<string, string> => {
@@ -21,25 +12,30 @@ const getAuthHeaders = (): Record<string, string> => {
 // Получение всех постов
 export const getPosts = async (): Promise<Post[]> => {
   try {
-    const response = await fetch(`${API_URL}/posts`);
-    if (!response.ok) {
-      throw new Error('Не удалось загрузить посты');
-    }
-    return response.json();
+    const response = await fetch(`${API_URL}/posts`, {
+      headers: {
+        ...getAuthHeaders(),
+      },
+    });
+    return handleErrors(response);
   } catch (error) {
     console.error('Ошибка при получении постов:', error);
-    return [];
+    throw error;
   }
 };
 
 // Получение поста по ID
 export const getPostById = async (id: string): Promise<Post | null> => {
   try {
-    const response = await fetch(`${API_URL}/post/${id}`);
+    const response = await fetch(`${API_URL}/post/${id}`, {
+      headers: {
+        ...getAuthHeaders(),
+      },
+    });
     return handleErrors(response);
   } catch (error) {
     console.error(`Ошибка при получении поста ${id}:`, error);
-    return null;
+    throw error;
   }
 };
 
@@ -55,45 +51,20 @@ export const getCategories = async (): Promise<Category[]> => {
 };
 
 // Создание нового поста
-export const createPost = async (postData: CreatePostRequest): Promise<CreatePostResponse> => {
+export const createPost = async (postData: CreatePostRequest): Promise<CreatePostResponse | null> => {
   try {
-    // Создаем FormData для отправки файлов
-    const formData = new FormData();
-    formData.append('title', postData.title);
-    formData.append('content', postData.content);
-    
-    // Добавляем изображения
-    postData.images.forEach((image, index) => {
-      formData.append('images', image);
-    });
-
-    const response = await fetch(`${API_URL}/post/create`, {
+    const response = await fetch(`${API_URL}/post`, {
       method: 'POST',
       headers: {
+        'Content-Type': 'application/json',
         ...getAuthHeaders(),
       },
-      body: formData,
+      body: JSON.stringify(postData),
     });
-
-    const data = await response.json();
-    
-    // Проверяем наличие сообщения об успехе
-    if (data.message === "Post created successfully") {
-      return {
-        success: true
-      };
-    }
-
-    return {
-      success: false,
-      error: data.message || 'Не удалось создать пост'
-    };
-  } catch (error: any) {
+    return handleErrors(response);
+  } catch (error) {
     console.error('Ошибка при создании поста:', error);
-    return {
-      success: false,
-      error: error.message || 'Не удалось создать пост'
-    };
+    throw error;
   }
 };
 
@@ -188,7 +159,7 @@ export const createComment = async (postId: string, content: string): Promise<Co
     return handleErrors(response);
   } catch (error) {
     console.error(`Ошибка при создании комментария к посту ${postId}:`, error);
-    return null;
+    throw error;
   }
 };
 

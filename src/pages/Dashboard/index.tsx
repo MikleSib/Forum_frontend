@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Box, Container, Typography, Button, Tabs, Tab, Paper, Divider, Chip, InputBase } from '@mui/material';
+import { Box, Container, Typography, Button, Tabs, Tab, Paper, Divider, Chip, InputBase, Grid, List, ListItem, ListItemText, ListItemButton } from '@mui/material';
 import { useNavigate } from 'react-router-dom'; 
 import PostCard from '../../components/PostCard';
 import AddIcon from '@mui/icons-material/Add';
@@ -15,9 +15,15 @@ import SearchIcon from '@mui/icons-material/Search';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import FiberNewIcon from '@mui/icons-material/FiberNew';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import MenuBookIcon from '@mui/icons-material/MenuBook';
+import PetsIcon from '@mui/icons-material/Pets';
+import EventIcon from '@mui/icons-material/Event';
 import styles from './Dashboard.module.css';
 import { getPosts } from '../../services/api';
 import { Post } from '../../shared/types/post.types';
+import { NewsCategory } from '../../shared/types/news.types';
+import { useTheme, useMediaQuery } from '@mui/material';
+import { newsApi } from '../../services/newsApi';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -46,8 +52,23 @@ function TabPanel(props: TabPanelProps) {
   );
 }
 
+interface TopicItem {
+  id: number;
+  name: string;
+  category: NewsCategory;
+}
+
+const TOPIC_ICONS: Record<NewsCategory, React.ReactElement> = {
+  [NewsCategory.NEWS]: <NewspaperIcon sx={{ color: 'var(--primary-color)' }} />,
+  [NewsCategory.GUIDES]: <MenuBookIcon sx={{ color: 'var(--primary-color)' }} />,
+  [NewsCategory.FISH_SPECIES]: <PetsIcon sx={{ color: 'var(--primary-color)' }} />,
+  [NewsCategory.EVENTS]: <EventIcon sx={{ color: 'var(--primary-color)' }} />
+};
+
 const Dashboard = () => {
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -55,38 +76,54 @@ const Dashboard = () => {
   const [tabValue, setTabValue] = useState(0);
   const [stats, setStats] = useState({
     posts: 0,
-    users: 45, // Заглушка, в будущем получать с бэкенда
-    newToday: 3 // Заглушка, в будущем получать с бэкенда
+    users: 45,
+    newToday: 3
+  });
+  const [categoryStats, setCategoryStats] = useState({
+    main: 0,
+    guides: 0,
+    events: 0,
+    fish_species: 0
   });
 
-  // Загрузка постов при монтировании компонента
-  const fetchData = useCallback(async () => {
-    try {
-      setLoading(true);
-      const postsData = await getPosts();
-      setPosts(postsData);
-      
-      // Обновляем статистику постов
-      setStats(prev => ({
-        ...prev,
-        posts: postsData.length
-      }));
-    } catch (err) {
-      console.error('Ошибка при загрузке данных:', err);
-      setError('Не удалось загрузить данные');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const topics: TopicItem[] = [
+    { id: 1, name: "Новости", category: NewsCategory.NEWS },
+    { id: 2, name: "Гайды", category: NewsCategory.GUIDES },
+    { id: 3, name: "Виды рыб", category: NewsCategory.FISH_SPECIES },
+    { id: 4, name: "События", category: NewsCategory.EVENTS },
+  ];
 
   useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [postsData, statsData] = await Promise.all([
+          getPosts(),
+          newsApi.getCategoryStats()
+        ]);
+        
+        setPosts(postsData);
+        setCategoryStats(statsData);
+        
+        // Обновляем статистику постов
+        setStats(prev => ({
+          ...prev,
+          posts: postsData.length
+        }));
+      } catch (err) {
+        console.error('Ошибка при загрузке данных:', err);
+        setError('Не удалось загрузить данные');
+      } finally {
+        setLoading(false);
+      }
+    };
+
     // Проверяем наличие токена в localStorage
     const token = localStorage.getItem('access_token');
     setIsAuth(!!token);
 
-    // Загружаем посты только один раз
     fetchData();
-  }, [fetchData]);
+  }, []);
 
   // Переход на страницу создания поста
   const handleCreatePost = () => {
@@ -107,13 +144,35 @@ const Dashboard = () => {
     setTabValue(newValue);
   };
 
-  const mockTopics = [
-    { id: 1, name: "Пресноводная рыбалка", count: 24 },
-    { id: 2, name: "Морская рыбалка", count: 18 },
-    { id: 3, name: "Снасти и оборудование", count: 15 },
-    { id: 4, name: "Лодки и катера", count: 12 },
-    { id: 5, name: "Рыболовные соревнования", count: 8 }
-  ];
+  const handleTopicClick = (category: NewsCategory) => {
+    navigate(`/news?category=${category}`);
+  };
+
+  const handleNavClick = (path: string) => (e: React.MouseEvent) => {
+    e.preventDefault();
+    navigate(path);
+  };
+
+  const getCategoryCount = (category: NewsCategory): number => {
+    switch (category) {
+      case NewsCategory.NEWS:
+        return categoryStats.main;
+      case NewsCategory.GUIDES:
+        return categoryStats.guides;
+      case NewsCategory.FISH_SPECIES:
+        return categoryStats.fish_species;
+      case NewsCategory.EVENTS:
+        return categoryStats.events;
+      default:
+        return 0;
+    }
+  };
+
+  const getPublicationWord = (count: number): string => {
+    if (count === 1) return 'публикация';
+    if (count > 1 && count < 5) return 'публикации';
+    return 'публикаций';
+  };
 
   return (
     <Container maxWidth={false} sx={{ maxWidth: '1600px', p: 0 }}>
@@ -121,9 +180,9 @@ const Dashboard = () => {
       <Box className={styles.dashboardHeader}>
         {/* Верхняя часть шапки */}
         <div className={styles.headerContent}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, width: { xs: '100%', sm: 'auto' } }}>
             <div className={styles.logoIcon}></div>
-            <Box>
+            <Box sx={{ flex: 1 }}>
               <Typography variant="h3" className={styles.headerTitle}>
                 Рыболовный форум
               </Typography>
@@ -133,24 +192,25 @@ const Dashboard = () => {
             </Box>
           </Box>
           
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Box className={styles.searchInput}>
-              <SearchIcon sx={{ fontSize: 20, color: 'rgba(255, 255, 255, 0.6)' }} />
-              <InputBase
-                placeholder="Поиск по форуму..."
-                inputProps={{ 'aria-label': 'поиск' }}
-                sx={{ color: 'white' }}
-              />
-            </Box>
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: { xs: 'column', sm: 'row' }, 
+            gap: 2, 
+            width: { xs: '100%', sm: 'auto' } 
+          }}>
             
             {isAuth ? (
-              <Box sx={{ display: 'flex', gap: 2, width: { xs: '100%', sm: 'auto' } }}>
+              <Box sx={{ 
+                display: 'flex', 
+                gap: 2, 
+                width: '100%',
+                flexDirection: { xs: 'column', sm: 'row' }
+              }}>
                 <Button 
                   variant="contained"
                   className={styles.buttonNew}
                   startIcon={<AddIcon />}
                   onClick={handleCreatePost}
-                  sx={{ flex: { xs: 1, sm: 'none' } }}
                 >
                   Создать пост
                 </Button>
@@ -158,7 +218,6 @@ const Dashboard = () => {
                   variant="contained"
                   className={styles.buttonProfile}
                   href="/profile"
-                  sx={{ flex: { xs: 1, sm: 'none' } }}
                 >
                   Профиль
                 </Button>
@@ -168,7 +227,7 @@ const Dashboard = () => {
                 variant="contained"
                 className={styles.buttonNew}
                 onClick={handleLogin}
-                sx={{ width: { xs: '100%', sm: 'auto' } }}
+                sx={{ width: '100%' }}
               >
                 Войти
               </Button>
@@ -185,26 +244,23 @@ const Dashboard = () => {
           gap: { xs: 2, md: 0 }
         }}>
           <div className={styles.headerNavigation}>
-            <a href="#" className={`${styles.navLink} ${styles.activeNavLink}`}>
+            <a 
+              href="/" 
+              className={`${styles.navLink} ${styles.activeNavLink}`}
+              onClick={handleNavClick('/')}
+            >
               <FeedIcon sx={{ fontSize: 18 }} />
               Главная
             </a>
-            <a href="#" className={styles.navLink}>
+            <a 
+              href="/news" 
+              className={styles.navLink}
+              onClick={handleNavClick('/news')}
+            >
               <NewspaperIcon sx={{ fontSize: 18 }} />
               Новости
             </a>
-            <a href="#" className={styles.navLink}>
-              <EmojiEventsIcon sx={{ fontSize: 18 }} />
-              Соревнования
-            </a>
-            <a href="#" className={styles.navLink}>
-              <InfoOutlinedIcon sx={{ fontSize: 18 }} />
-              О нас
-            </a>
-            <a href="#" className={styles.navLink}>
-              <HelpOutlineIcon sx={{ fontSize: 18 }} />
-              Помощь
-            </a>
+
           </div>
           
           <div className={styles.statsContainer}>
@@ -382,29 +438,109 @@ const Dashboard = () => {
             <div className={styles.sidebarContainer}>
               <Paper className={styles.sidebarPanel} elevation={0}>
                 <Typography variant="h5" className={styles.sidebarTitle}>
-                  Популярные темы
+                  Популярные новости
                 </Typography>
                 
                 <Divider sx={{ mb: 3 }} />
                 
-                <Box>
-                  {mockTopics.map((topic) => (
-                    <Box key={topic.id} className={styles.topicItem}>
-                      <Box sx={{ flexGrow: 1 }}>
-                        {topic.name}
-                      </Box>
-                      <Chip 
-                        size="small" 
-                        label={topic.count} 
-                        sx={{ 
-                          backgroundColor: 'var(--secondary-color)', 
-                          color: 'white',
-                          fontWeight: 'bold'
-                        }} 
-                      />
-                    </Box>
+                <List>
+                  {topics.map((topic) => (
+                    <ListItem 
+                      key={topic.id} 
+                      disablePadding
+                      sx={{ 
+                        mb: 1.5,
+                        '&:hover': {
+                          transform: 'translateX(4px)',
+                          transition: 'transform 0.2s ease-in-out'
+                        }
+                      }}
+                    >
+                      <ListItemButton 
+                        onClick={() => handleTopicClick(topic.category)}
+                        sx={{
+                          borderRadius: 2,
+                          border: '1px solid',
+                          borderColor: 'divider',
+                          backgroundColor: 'background.paper',
+                          '&:hover': {
+                            backgroundColor: 'rgba(0, 88, 122, 0.04)',
+                            borderColor: 'var(--primary-color)',
+                            boxShadow: '0 2px 8px rgba(0, 88, 122, 0.1)',
+                          }
+                        }}
+                      >
+                        <Box sx={{ 
+                          display: 'flex', 
+                          alignItems: 'center',
+                          gap: 2,
+                          width: '100%'
+                        }}>
+                          <Box sx={{ 
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: 40,
+                            height: 40,
+                            borderRadius: '50%',
+                            backgroundColor: 'rgba(0, 88, 122, 0.08)',
+                          }}>
+                            {TOPIC_ICONS[topic.category]}
+                          </Box>
+                          <ListItemText 
+                            primary={
+                              <Typography 
+                                variant="subtitle1" 
+                                sx={{ 
+                                  fontWeight: 600,
+                                  color: 'var(--text-dark)',
+                                  fontSize: '1rem'
+                                }}
+                              >
+                                {topic.name}
+                              </Typography>
+                            }
+                            secondary={
+                              <Box sx={{ 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                gap: 1,
+                                mt: 0.5
+                              }}>
+                                <Chip 
+                                  size="small" 
+                                  label={getCategoryCount(topic.category).toString()}
+                                  sx={{ 
+                                    backgroundColor: getCategoryCount(topic.category) > 0 
+                                      ? 'var(--secondary-color)' 
+                                      : 'rgba(0, 0, 0, 0.38)',
+                                    color: 'white',
+                                    fontWeight: 'bold',
+                                    height: 24,
+                                    minWidth: 32,
+                                    '& .MuiChip-label': {
+                                      px: 1.5,
+                                      fontSize: '0.875rem'
+                                    }
+                                  }} 
+                                />
+                                <Typography 
+                                  variant="body2" 
+                                  sx={{ 
+                                    color: 'var(--text-secondary)',
+                                    fontSize: '0.875rem'
+                                  }}
+                                >
+                                  {getPublicationWord(getCategoryCount(topic.category))}
+                                </Typography>
+                              </Box>
+                            }
+                          />
+                        </Box>
+                      </ListItemButton>
+                    </ListItem>
                   ))}
-                </Box>
+                </List>
               </Paper>
             </div>
             

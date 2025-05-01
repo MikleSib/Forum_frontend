@@ -20,7 +20,6 @@ import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import CommentIcon from '@mui/icons-material/Comment';
 import SendIcon from '@mui/icons-material/Send';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import PersonIcon from '@mui/icons-material/Person';
 import { getPostById, likePost, unlikePost, createComment } from '../../services/api';
 import { Post, Comment } from '../../shared/types/post.types';
 import styles from './PostDetail.module.css';

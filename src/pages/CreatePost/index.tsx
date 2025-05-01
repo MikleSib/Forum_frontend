@@ -18,6 +18,7 @@ const CreatePost: React.FC = () => {
   const [error, setError] = useState('');
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
   // Обработка загрузки изображений
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -117,19 +118,20 @@ const CreatePost: React.FC = () => {
     try {
       const response = await createPost(postData);
       
-      if (response.success) {
+      if (response?.success) {
         // Очищаем ресурсы превью URL перед перенаправлением
         previewUrls.forEach(url => URL.revokeObjectURL(url));
         
-        // Показываем уведомление об успехе
-        setShowSuccess(true);
+        // Показываем сообщение об успехе
+        setSuccessMessage('Пост успешно создан!');
+        setIsSubmitting(false);
         
-        // Перенаправляем на дашборд через 2 секунды
+        // Перенаправляем на главную страницу через 2 секунды
         setTimeout(() => {
           navigate('/');
         }, 2000);
       } else {
-        setError(response.error || 'Не удалось создать пост');
+        setError(response?.error || 'Не удалось создать пост');
         setIsSubmitting(false);
       }
     } catch (error: any) {
@@ -290,7 +292,7 @@ const CreatePost: React.FC = () => {
         anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
       >
         <Alert severity="success" sx={{ width: '100%' }}>
-          Пост успешно создан!
+          {successMessage}
         </Alert>
       </Snackbar>
     </Container>

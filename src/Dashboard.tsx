@@ -35,7 +35,7 @@ const Dashboard: React.FC = () => {
         <Grid size={{ xs: 12, md: 4 }}>
           <Item>
             <Typography variant="h6" gutterBottom>
-              Популярные темы
+              Популярные новости
             </Typography>
             {/* Здесь будет список популярных тем */}
           </Item>
