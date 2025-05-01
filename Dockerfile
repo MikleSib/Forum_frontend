@@ -18,8 +18,8 @@ RUN npm run build
 # Stage 2: Serve with Nginx
 FROM nginx:alpine
 
-# Копируем собранное приложение (теперь из dist вместо build)
-COPY --from=build /app/dist /usr/share/nginx/html
+# Копируем собранное приложение (из build, как указано в vite.config.ts)
+COPY --from=build /app/build /usr/share/nginx/html
 
 # Копируем конфигурацию nginx
 COPY nginx.conf /etc/nginx/conf.d/default.conf

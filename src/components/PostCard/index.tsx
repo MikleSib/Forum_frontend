@@ -4,17 +4,14 @@ import FavoriteIcon from '@mui/icons-material/Favorite';
 import CommentIcon from '@mui/icons-material/Comment';
 import ShareIcon from '@mui/icons-material/Share';
 import styles from './PostCard.module.css';
-import { PostImage } from '../../shared/types/post.types';
+import type { Post } from '../../shared/types/post.types';
 
-interface PostCardProps {
-  title: string;
-  content: string;
-  imageUrl?: PostImage;
-  author: string;
-  date: string;
+interface Props {
+  post: Post;
+  onClick?: () => void;
 }
 
-const PostCard: React.FC<PostCardProps> = ({ title, content, imageUrl, author, date }) => {
+const PostCard = ({ post, onClick }: Props): React.ReactElement => {
   // Функция для декодирования HTML-сущностей
   const decodeHtml = (html: string) => {
     const txt = document.createElement('textarea');
@@ -23,19 +20,19 @@ const PostCard: React.FC<PostCardProps> = ({ title, content, imageUrl, author, d
   };
 
   // Функция для форматирования URL изображения
-  const formatImageUrl = (image: PostImage | undefined) => {
-    if (!image || !image.image_url) return '';
-    return `https://рыбный-форум.рф${image.image_url}`;
+  const formatImageUrl = (imageUrl: string | undefined) => {
+    if (!imageUrl) return '';
+    return `https://рыбный-форум.рф${imageUrl}`;
   };
 
   return (
-    <Card className={styles.postCard}>
-      {imageUrl && (
+    <Card className={styles.postCard} onClick={onClick} sx={{ cursor: onClick ? 'pointer' : 'default' }}>
+      {post.images?.[0] && (
         <CardMedia
           component="img"
           height="200"
-          image={formatImageUrl(imageUrl)}
-          alt={title}
+          image={formatImageUrl(post.images[0].image_url)}
+          alt={post.title}
           className={styles.postImage}
         />
       )}
@@ -44,10 +41,10 @@ const PostCard: React.FC<PostCardProps> = ({ title, content, imageUrl, author, d
           <Avatar className={styles.avatar} />
           <Box className={styles.authorInfo}>
             <Typography className={styles.authorName}>
-              {author}
+              {post.author.username}
             </Typography>
             <Typography className={styles.postDate}>
-              {new Date(date).toLocaleDateString('ru-RU', {
+              {new Date(post.created_at).toLocaleDateString('ru-RU', {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric',
@@ -59,21 +56,27 @@ const PostCard: React.FC<PostCardProps> = ({ title, content, imageUrl, author, d
         </Box>
 
         <Typography variant="h5" className={styles.postTitle}>
-          {title}
+          {post.title}
         </Typography>
 
         <div 
           className={styles.postText}
-          dangerouslySetInnerHTML={{ __html: decodeHtml(content) }}
+          dangerouslySetInnerHTML={{ __html: decodeHtml(post.content) }}
         />
 
         <CardActions className={styles.postActions}>
           <Box className={styles.actionButtons}>
             <IconButton className={styles.actionButton}>
               <FavoriteIcon />
+              <Typography variant="caption" sx={{ ml: 0.5 }}>
+                {Array.isArray(post.likes) ? post.likes.length : 0}
+              </Typography>
             </IconButton>
             <IconButton className={styles.actionButton}>
               <CommentIcon />
+              <Typography variant="caption" sx={{ ml: 0.5 }}>
+                {post.comments?.length || 0}
+              </Typography>
             </IconButton>
             <IconButton className={styles.actionButton}>
               <ShareIcon />

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Box, Container, Typography, Button, Tabs, Tab, Paper, Divider, Chip, InputBase, Grid, List, ListItem, ListItemText, ListItemButton } from '@mui/material';
+import { Box, Container, Typography, Button, Tabs, Tab, Paper, Divider, Chip, InputBase, Grid, List, ListItem, ListItemText, ListItemButton, ListItemIcon } from '@mui/material';
 import { useNavigate } from 'react-router-dom'; 
 import PostCard from '../../components/PostCard';
 import AddIcon from '@mui/icons-material/Add';
@@ -182,375 +182,96 @@ const Dashboard = () => {
 
   return (
     <Container maxWidth={false} sx={{ maxWidth: '1600px', p: 0 }}>
-      {/* Хедер */}
-      <Box className={styles.dashboardHeader}>
-        {/* Верхняя часть шапки */}
-        <div className={styles.headerContent}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, width: { xs: '100%', sm: 'auto' } }}>
-            <img src={logo} alt="Логотип" style={{ width: '50px', height: '50px' }} />
-            <Box sx={{ flex: 1 }}>
-              <Typography variant="h3" className={styles.headerTitle}>
-                Рыболовный форум
-              </Typography>
-              <Typography variant="body1" className={styles.headerSubtitle}>
-                Сообщество увлеченных рыбалкой
-              </Typography>
-            </Box>
-          </Box>
-          
-          <Box sx={{ 
-            display: 'flex', 
-            flexDirection: { xs: 'column', sm: 'row' }, 
-            gap: 2, 
-            width: { xs: '100%', sm: 'auto' } 
-          }}>
-            
-            {isAuth ? (
-              <Box sx={{ 
-                display: 'flex', 
-                gap: 2, 
-                width: '100%',
-                flexDirection: { xs: 'column', sm: 'row' }
-              }}>
-                <Button 
-                  variant="contained"
-                  className={styles.buttonNew}
-                  startIcon={<AddIcon />}
-                  onClick={handleCreatePost}
-                >
-                  Создать пост
-                </Button>
-                <Button 
-                  variant="contained"
-                  className={styles.buttonProfile}
-                  href="/profile"
-                >
-                  Профиль
-                </Button>
-              </Box>
-            ) : (
-              <Button 
-                variant="contained"
-                className={styles.buttonNew}
-                onClick={handleLogin}
-                sx={{ width: '100%' }}
-              >
-                Войти
-              </Button>
-            )}
-          </Box>
-        </div>
-        
-        {/* Нижняя часть шапки с навигацией */}
-        <Box sx={{ 
-          display: 'flex', 
-          flexDirection: { xs: 'column', md: 'row' }, 
-          justifyContent: 'space-between', 
-          alignItems: { xs: 'flex-start', md: 'center' },
-          gap: { xs: 2, md: 0 }
-        }}>
-          <div className={styles.headerNavigation}>
-            <a 
-              href="/" 
-              className={`${styles.navLink} ${styles.activeNavLink}`}
-              onClick={handleNavClick('/')}
-            >
-              <FeedIcon sx={{ fontSize: 18 }} />
-              Главная
-            </a>
-            <a 
-              href="/news" 
-              className={styles.navLink}
-              onClick={handleNavClick('/news')}
-            >
-              <NewspaperIcon sx={{ fontSize: 18 }} />
-              Новости
-            </a>
-
-          </div>
-          
-          <div className={styles.statsContainer}>
-            <div className={styles.statItem}>
-              <span className={styles.statValue}>{stats.posts}</span>
-              <span className={styles.statLabel}>постов</span>
-            </div>
-            <div className={styles.statItem}>
-              <span className={styles.statValue}>{stats.users}</span>
-              <span className={styles.statLabel}>участников</span>
-            </div>
-            <div className={styles.statItem}>
-              <span className={styles.statValue}>{stats.newToday}</span>
-              <span className={styles.newLabel}>новых сегодня</span>
-            </div>
-          </div>
-        </Box>
-      </Box>
-      
-      {/* Основной контент */}
-      <Box sx={{ p: { xs: 2, sm: 3 } }}>
-        <Box sx={{ 
-          display: 'grid', 
-          gridTemplateColumns: { xs: '1fr', md: '1fr 320px' }, 
-          gap: { xs: 2, md: 3 } 
-        }}>
+      <Box sx={{ mt: 3 }}>
+        {/* Основной контент */}
+        <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', md: 'row' } }}>
           {/* Левая колонка */}
-          <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-            {/* Вкладки */}
-            <Paper className={styles.tabsContainer} elevation={0}>
-              <Tabs 
-                value={tabValue} 
-                onChange={handleTabChange} 
-                aria-label="dashboard tabs"
-                variant="fullWidth"
-                scrollButtons="auto"
-                allowScrollButtonsMobile
-                sx={{
-                  '& .MuiTab-root': {
-                    fontSize: { xs: '0.85rem', sm: '1rem' },
-                    textTransform: 'none',
-                    fontWeight: 500,
-                    color: 'var(--text-dark)',
-                    transition: 'all 0.3s',
-                    py: { xs: 1.5, sm: 2 },
-                    '&:hover': {
-                      color: 'var(--primary-color)',
-                      backgroundColor: 'rgba(0, 88, 122, 0.04)',
-                    },
-                  },
-                  '& .Mui-selected': {
-                    color: 'var(--primary-color) !important',
-                    fontWeight: 600,
-                  },
-                  '& .MuiTabs-indicator': {
-                    backgroundColor: 'var(--primary-color)',
-                    height: 3,
-                  },
-                }}
-              >
-                <Tab 
-                  icon={<FeedIcon sx={{ fontSize: { xs: 18, sm: 24 } }} />} 
-                  label="Лента" 
-                  iconPosition="start"
-                />
-                <Tab 
-                  icon={<MapIcon sx={{ fontSize: { xs: 18, sm: 24 } }} />} 
-                  label="Карта рыболовных мест" 
-                  iconPosition="start"
-                />
-                <Tab 
-                  icon={<DirectionsBoatIcon sx={{ fontSize: { xs: 18, sm: 24 } }} />} 
-                  label="Рыбалка" 
-                  iconPosition="start"
-                />
-              </Tabs>
+          <Box sx={{ flex: '0 0 250px', display: { xs: 'none', md: 'block' } }}>
+            <Paper sx={{ p: 2, mb: 2 }}>
+              <Typography variant="h6" sx={{ mb: 2 }}>Навигация</Typography>
+              <List>
+                <ListItemButton>
+                  <ListItemText primary="Карта рыбных мест" />
+                </ListItemButton>
+                <ListItemButton>
+                  <ListItemText primary="Соревнования" />
+                </ListItemButton>
+                <ListItemButton>
+                  <ListItemText primary="О проекте" />
+                </ListItemButton>
+                <ListItemButton>
+                  <ListItemText primary="Помощь" />
+                </ListItemButton>
+              </List>
             </Paper>
+          </Box>
 
-            {/* Контент на вкладках */}
-            <Paper className={styles.postsContainer} elevation={0}>
-              <TabPanel value={tabValue} index={0}>
-                <Box sx={{ 
-                  display: 'flex', 
-                  flexDirection: { xs: 'column', sm: 'row' },
-                  justifyContent: 'space-between', 
-                  alignItems: { xs: 'flex-start', sm: 'center' }, 
-                  gap: { xs: 2, sm: 0 },
-                  mb: 3 
-                }}>
-                  <Typography variant="h5" sx={{ fontWeight: 600, color: 'var(--primary-color)' }}>
-                    Последние публикации
-                  </Typography>
-                  <Box sx={{ display: 'flex', gap: 1, width: { xs: '100%', sm: 'auto' } }}>
-                    <Chip 
-                      icon={<TrendingUpIcon />} 
-                      label="Популярные" 
-                      variant="outlined" 
-                      sx={{ 
-                        color: 'var(--primary-color)', 
-                        borderColor: 'var(--primary-color)',
-                        flex: { xs: 1, sm: 'none' }
-                      }}
-                    />
-                    <Chip 
-                      icon={<FiberNewIcon />} 
-                      label="Новые" 
-                      color="primary" 
-                      sx={{ 
-                        backgroundColor: 'var(--primary-color)',
-                        flex: { xs: 1, sm: 'none' }
-                      }}
-                    />
-                  </Box>
-                </Box>
-                
-                {loading ? (
-                  <Box sx={{ py: 6, textAlign: 'center' }}>
-                    <Typography variant="h6" sx={{ color: 'var(--text-dark)', opacity: 0.7 }}>
-                      Загрузка постов...
-                    </Typography>
-                  </Box>
-                ) : error ? (
-                  <Box sx={{ py: 6, textAlign: 'center' }}>
-                    <Typography variant="h6" color="error">
-                      {error}
-                    </Typography>
-                  </Box>
-                ) : posts.length === 0 ? (
-                  <Box sx={{ py: 6, textAlign: 'center' }}>
-                    <Typography variant="h6" sx={{ color: 'var(--text-dark)', opacity: 0.7 }}>
-                      Посты не найдены
-                    </Typography>
-                  </Box>
-                ) : (
-                  <Box sx={{ display: 'grid', gap: 3 }}>
-                    {posts.map((post) => (
-                      <PostCard 
-                        key={post.id}
-                        title={post.title} 
-                        content={post.content} 
-                        author={post.author.username} 
-                        date={post.created_at} 
+          {/* Центральная колонка */}
+          <Box sx={{ flex: 1 }}>
+            <Paper sx={{ p: 2, mb: 2 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Typography variant="h6">Последние публикации</Typography>
+                {isAuth && (
+                  <Button
+                    variant="contained"
+                    startIcon={<AddIcon />}
+                    onClick={handleCreatePost}
+                  >
+                    Создать пост
+                  </Button>
+                )}
+              </Box>
+              <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+                <Chip icon={<TrendingUpIcon />} label="Популярные" onClick={() => {}} />
+                <Chip icon={<FiberNewIcon />} label="Новые" onClick={() => {}} />
+                <Chip icon={<AccessTimeIcon />} label="По дате" onClick={() => {}} />
+              </Box>
+              {loading ? (
+                <Typography>Загрузка...</Typography>
+              ) : error ? (
+                <Typography color="error">{error}</Typography>
+              ) : (
+                <Box sx={{ width: '100%' }}>
+                  {posts.map((post) => (
+                    <Box key={post.id} sx={{ mb: 2 }}>
+                      <PostCard
+                        title={post.title}
+                        content={post.content}
                         imageUrl={post.images[0]}
+                        author={post.author.username}
+                        date={post.created_at}
                         comments={post.comments}
                         likes={post.likes}
                         onClick={() => handlePostClick(post.id)}
                       />
-                    ))}
-                  </Box>
-                )}
-              </TabPanel>
-              
-              <TabPanel value={tabValue} index={1}>
-                <Box sx={{ py: 15, textAlign: 'center' }}>
-                  <MapIcon sx={{ fontSize: 60, color: 'var(--primary-color)', opacity: 0.3, mb: 2 }} />
-                  <Typography variant="h5" align="center" sx={{ color: 'var(--text-dark)', opacity: 0.7 }}>
-                    Карта рыболовных мест будет доступна в ближайшее время
-                  </Typography>
+                    </Box>
+                  ))}
                 </Box>
-              </TabPanel>
-              
-              <TabPanel value={tabValue} index={2}>
-                <Box sx={{ py: 15, textAlign: 'center' }}>
-                  <DirectionsBoatIcon sx={{ fontSize: 60, color: 'var(--primary-color)', opacity: 0.3, mb: 2 }} />
-                  <Typography variant="h5" align="center" sx={{ color: 'var(--text-dark)', opacity: 0.7 }}>
-                    Раздел "Рыбалка" находится в разработке
-                  </Typography>
-                </Box>
-              </TabPanel>
+              )}
             </Paper>
           </Box>
-          
-          {/* Правая колонка (сайдбар) */}
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-            <div className={styles.sidebarContainer}>
-              <Paper className={styles.sidebarPanel} elevation={0}>
-                <Typography variant="h5" className={styles.sidebarTitle}>
-                  Популярные новости
-                </Typography>
-                
-                <Divider sx={{ mb: 3 }} />
-                
-                <List>
-                  {topics.map((topic) => (
-                    <ListItem 
-                      key={topic.id} 
-                      disablePadding
-                      sx={{ 
-                        mb: 1.5,
-                        '&:hover': {
-                          transform: 'translateX(4px)',
-                          transition: 'transform 0.2s ease-in-out'
-                        }
-                      }}
-                    >
-                      <ListItemButton 
-                        onClick={() => handleTopicClick(topic.category)}
-                        sx={{
-                          borderRadius: 2,
-                          border: '1px solid',
-                          borderColor: 'divider',
-                          backgroundColor: 'background.paper',
-                          '&:hover': {
-                            backgroundColor: 'rgba(0, 88, 122, 0.04)',
-                            borderColor: 'var(--primary-color)',
-                            boxShadow: '0 2px 8px rgba(0, 88, 122, 0.1)',
-                          }
-                        }}
-                      >
-                        <Box sx={{ 
-                          display: 'flex', 
-                          alignItems: 'center',
-                          gap: 2,
-                          width: '100%'
-                        }}>
-                          <Box sx={{ 
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            width: 40,
-                            height: 40,
-                            borderRadius: '50%',
-                            backgroundColor: 'rgba(0, 88, 122, 0.08)',
-                          }}>
-                            {TOPIC_ICONS[topic.category]}
-                          </Box>
-                          <ListItemText 
-                            primary={
-                              <Typography 
-                                variant="subtitle1" 
-                                sx={{ 
-                                  fontWeight: 600,
-                                  color: 'var(--text-dark)',
-                                  fontSize: '1rem'
-                                }}
-                              >
-                                {topic.name}
-                              </Typography>
-                            }
-                            secondary={
-                              <Box sx={{ 
-                                display: 'flex', 
-                                alignItems: 'center', 
-                                gap: 1,
-                                mt: 0.5
-                              }}>
-                                <Chip 
-                                  size="small" 
-                                  label={(getCategoryCount(topic.category) || 0).toString()}
-                                  sx={{ 
-                                    backgroundColor: getCategoryCount(topic.category) > 0 
-                                      ? 'var(--secondary-color)' 
-                                      : 'rgba(0, 0, 0, 0.38)',
-                                    color: 'white',
-                                    fontWeight: 'bold',
-                                    height: 24,
-                                    minWidth: 32,
-                                    '& .MuiChip-label': {
-                                      px: 1.5,
-                                      fontSize: '0.875rem'
-                                    }
-                                  }} 
-                                />
-                                <Typography 
-                                  variant="body2" 
-                                  sx={{ 
-                                    color: 'var(--text-secondary)',
-                                    fontSize: '0.875rem'
-                                  }}
-                                >
-                                  {getPublicationWord(getCategoryCount(topic.category))}
-                                </Typography>
-                              </Box>
-                            }
-                          />
-                        </Box>
-                      </ListItemButton>
-                    </ListItem>
-                  ))}
-                </List>
-              </Paper>
-            </div>
-            
 
+          {/* Правая колонка */}
+          <Box sx={{ flex: '0 0 300px', display: { xs: 'none', md: 'block' } }}>
+            <Paper sx={{ p: 2, mb: 2 }}>
+              <Typography variant="h6" sx={{ mb: 2 }}>Темы</Typography>
+              <List>
+                {topics.map((topic) => (
+                  <ListItemButton 
+                    key={topic.id}
+                    onClick={() => handleTopicClick(topic.category)}
+                  >
+                    <ListItemIcon>
+                      {TOPIC_ICONS[topic.category]}
+                    </ListItemIcon>
+                    <ListItemText 
+                      primary={topic.name}
+                      secondary={`${getCategoryCount(topic.category)} ${getPublicationWord(getCategoryCount(topic.category))}`}
+                    />
+                  </ListItemButton>
+                ))}
+              </List>
+            </Paper>
           </Box>
         </Box>
       </Box>
