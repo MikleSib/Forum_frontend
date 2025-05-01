@@ -10,7 +10,7 @@ WORKDIR /app
 RUN git clone https://github.com/MikleSib/Forum_frontend.git .
 
 # Устанавливаем все зависимости (включая devDependencies)
-RUN npm ci
+RUN npm install
 
 # Собираем приложение
 RUN npm run build
