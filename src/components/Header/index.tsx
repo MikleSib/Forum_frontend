@@ -213,7 +213,7 @@ const Header: React.FC = () => {
                   },
                   bgcolor: { 
                     xs: 'transparent', 
-                    md: isCurrentPath('/') ? '#D9D9D9' : 'rgba(255,255,255,0.1)' 
+                    md: isCurrentPath('/') ? '#D9D9D9' : 'rgba(255,255,255,0)' 
                   },
                   '&:hover': {
                     bgcolor: { xs: 'transparent', md: 'rgba(255,255,255,0.3)' }
@@ -254,7 +254,7 @@ const Header: React.FC = () => {
                     },
                     bgcolor: { 
                       xs: 'transparent', 
-                      md: isCurrentPath('/news') ? '#D9D9D9' : 'rgba(65, 40, 40, 0.1)' 
+                      md: isCurrentPath('/news') ? '#D9D9D9' : 'rgba(65, 40, 40, 0)' 
                     },
                     '&:hover': {
                       bgcolor: { xs: 'transparent', md: 'rgba(255,255,255,0.3)' }

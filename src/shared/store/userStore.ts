@@ -1,8 +1,12 @@
-interface User {
+export interface User {
   id: number;
-  username: string;
   email: string;
+  username: string;
   is_admin: boolean;
+  firstName?: string;
+  lastName?: string;
+  about?: string;
+  avatar?: string;
 }
 
 interface AuthResponse {
@@ -69,6 +73,10 @@ class UserStore {
 
   get refreshToken(): string | null {
     return this._refreshToken;
+  }
+
+  set user(user: User | null) {
+    this._user = user;
   }
 }
 
