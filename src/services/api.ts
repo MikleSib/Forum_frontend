@@ -1,9 +1,8 @@
 import { Post, Category, CreatePostRequest, CreatePostResponse, Comment } from '../shared/types/post.types';
-import { getAccessToken, handleErrors, refreshToken } from './auth';
+import { refreshToken } from './auth';
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { userStore } from '../shared/store/userStore';
-
-const API_URL = 'https://рыбный-форум.рф/api';
+import API_URL from '../config/api';
 
 interface CustomInternalAxiosRequestConfig extends InternalAxiosRequestConfig {
   _retry?: boolean;

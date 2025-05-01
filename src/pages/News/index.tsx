@@ -1,19 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
-  Container,
   Typography,
   Box,
   Card,
   CardContent,
   CardMedia,
-  Avatar,
-  Chip,
   Grid,
   IconButton,
   useTheme,
   useMediaQuery,
-  Paper,
   Button,
   Stack,
   List,
@@ -26,22 +22,19 @@ import {
 } from '@mui/material';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import FavoriteIcon from '@mui/icons-material/Favorite';
-import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
-import ShareIcon from '@mui/icons-material/Share';
-import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
+import MenuIcon from '@mui/icons-material/Menu';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import AddIcon from '@mui/icons-material/Add';
 import NewspaperIcon from '@mui/icons-material/Newspaper';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import PetsIcon from '@mui/icons-material/Pets';
 import EventIcon from '@mui/icons-material/Event';
-import MenuIcon from '@mui/icons-material/Menu';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import AddIcon from '@mui/icons-material/Add';
 import { NewsCategory, NEWS_CATEGORIES, NewsItem, NewsContent } from '../../shared/types/news.types';
 import { newsApi } from '../../services/newsApi';
 import Header from '../../components/Header';
 import { userStore } from '../../shared/store/userStore';
+
+const DRAWER_WIDTH = 280;
 
 const CATEGORY_ICONS = {
   [NewsCategory.NEWS]: <NewspaperIcon />,
@@ -50,11 +43,8 @@ const CATEGORY_ICONS = {
   [NewsCategory.EVENTS]: <EventIcon />
 };
 
-const DRAWER_WIDTH = 280;
-
 const NewsPage: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<NewsCategory>(NewsCategory.NEWS);
-  const [likedNews, setLikedNews] = useState<number[]>([]);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [news, setNews] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -78,7 +68,7 @@ const NewsPage: React.FC = () => {
     const fetchNews = async () => {
       try {
         setLoading(true);
-        const data = await newsApi.getAllNews();
+        const data = await newsApi.getNews();
         setNews(data);
         setError(null);
       } catch (err) {
@@ -101,14 +91,6 @@ const NewsPage: React.FC = () => {
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
-  };
-
-  const handleLike = (newsId: number) => {
-    setLikedNews(prev => 
-      prev.includes(newsId) 
-        ? prev.filter(id => id !== newsId)
-        : [...prev, newsId]
-    );
   };
 
   const handleNewsClick = (newsId: number) => {

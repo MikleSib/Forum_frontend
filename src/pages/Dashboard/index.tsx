@@ -58,6 +58,12 @@ interface TopicItem {
   category: NewsCategory;
 }
 
+interface CategoryStats {
+  news: number;
+  guides: number;
+  fish_species: number;
+}
+
 const TOPIC_ICONS: Record<NewsCategory, React.ReactElement> = {
   [NewsCategory.NEWS]: <NewspaperIcon sx={{ color: 'var(--primary-color)' }} />,
   [NewsCategory.GUIDES]: <MenuBookIcon sx={{ color: 'var(--primary-color)' }} />,
@@ -79,10 +85,9 @@ const Dashboard = () => {
     users: 45,
     newToday: 3
   });
-  const [categoryStats, setCategoryStats] = useState({
-    main: 0,
+  const [categoryStats, setCategoryStats] = useState<CategoryStats>({
+    news: 0,
     guides: 0,
-    events: 0,
     fish_species: 0
   });
 
@@ -156,13 +161,13 @@ const Dashboard = () => {
   const getCategoryCount = (category: NewsCategory): number => {
     switch (category) {
       case NewsCategory.NEWS:
-        return categoryStats.main;
+        return categoryStats.news;
       case NewsCategory.GUIDES:
         return categoryStats.guides;
       case NewsCategory.FISH_SPECIES:
         return categoryStats.fish_species;
       case NewsCategory.EVENTS:
-        return categoryStats.events;
+        return 0; // Assuming events are not counted in the stats
       default:
         return 0;
     }
@@ -509,7 +514,7 @@ const Dashboard = () => {
                               }}>
                                 <Chip 
                                   size="small" 
-                                  label={getCategoryCount(topic.category).toString()}
+                                  label={(getCategoryCount(topic.category) || 0).toString()}
                                   sx={{ 
                                     backgroundColor: getCategoryCount(topic.category) > 0 
                                       ? 'var(--secondary-color)' 
