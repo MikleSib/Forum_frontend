@@ -118,25 +118,22 @@ const CreatePost: React.FC = () => {
     try {
       const response = await createPost(postData);
       
-      if (response?.success) {
-        // Очищаем ресурсы превью URL перед перенаправлением
-        previewUrls.forEach(url => URL.revokeObjectURL(url));
-        
-        // Показываем сообщение об успехе
-        setSuccessMessage('Пост успешно создан!');
-        setIsSubmitting(false);
-        
-        // Перенаправляем на главную страницу через 2 секунды
-        setTimeout(() => {
-          navigate('/');
-        }, 2000);
-      } else {
-        setError(response?.error || 'Не удалось создать пост');
-        setIsSubmitting(false);
-      }
+      // Очищаем ресурсы превью URL перед перенаправлением
+      previewUrls.forEach(url => URL.revokeObjectURL(url));
+      
+      // Показываем сообщение об успехе
+      setSuccessMessage('Пост успешно создан!');
+      setShowSuccess(true);
+      
+      // Перенаправляем на главную страницу через 2 секунды
+      setTimeout(() => {
+        navigate('/');
+      }, 2000);
+      
     } catch (error: any) {
       console.error('Ошибка при создании поста:', error);
       setError(error.message || 'Произошла ошибка при создании поста');
+    } finally {
       setIsSubmitting(false);
     }
   };

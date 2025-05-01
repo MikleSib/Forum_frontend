@@ -37,9 +37,11 @@ import PetsIcon from '@mui/icons-material/Pets';
 import EventIcon from '@mui/icons-material/Event';
 import MenuIcon from '@mui/icons-material/Menu';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import AddIcon from '@mui/icons-material/Add';
 import { NewsCategory, NEWS_CATEGORIES, NewsItem, NewsContent } from '../../shared/types/news.types';
 import { newsApi } from '../../services/newsApi';
 import Header from '../../components/Header';
+import { userStore } from '../../shared/store/userStore';
 
 const CATEGORY_ICONS = {
   [NewsCategory.NEWS]: <NewspaperIcon />,
@@ -279,6 +281,17 @@ const NewsPage: React.FC = () => {
             >
               {NEWS_CATEGORIES[selectedCategory].title}
             </Typography>
+            
+            {userStore.isAdmin && (
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={() => navigate('/news/create')}
+                sx={{ ml: 2 }}
+              >
+                Создать новость
+              </Button>
+            )}
           </Box>
 
           {loading ? (

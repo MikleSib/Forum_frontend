@@ -1,5 +1,5 @@
 const API_URL = process.env.NODE_ENV === 'production' 
-  ? 'http://localhost:8000'
-  : 'http://localhost:8000';
+  ? 'https://рыбный-форум.рф/api'
+  : 'https://рыбный-форум.рф/api';
 
 export default API_URL; 

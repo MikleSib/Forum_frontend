@@ -11,6 +11,8 @@ import CreatePost from './pages/CreatePost';
 import PostDetail from './pages/PostDetail/index';
 import NewsPage from './pages/News';
 import NewsDetail from './pages/News/NewsDetail';
+import CreateNews from './pages/CreateNews';
+import { userStore } from './shared/store/userStore';
 
 const theme = createTheme({
   palette: {
@@ -98,6 +100,9 @@ function App() {
             <Route path="post/:id" element={<PostDetail />} />
             <Route path="news" element={<NewsPage />} />
             <Route path="news/:id" element={<NewsDetail />} />
+            {userStore.isAdmin && (
+              <Route path="news/create" element={<CreateNews />} />
+            )}
           </Route>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />

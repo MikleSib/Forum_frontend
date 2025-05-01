@@ -11,9 +11,17 @@ export interface LoginRequest {
   password: string;
 }
 
+export interface User {
+  id: number;
+  username: string;
+  email: string;
+  is_admin: boolean;
+}
+
 export interface AuthResponse {
   access_token: string;
   refresh_token: string;
+  user: User;
 }
 
 export interface UserProfile {

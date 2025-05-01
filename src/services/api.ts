@@ -1,23 +1,100 @@
 import { Post, Category, CreatePostRequest, CreatePostResponse, Comment } from '../shared/types/post.types';
-import { getAccessToken, handleErrors } from './auth';
+import { getAccessToken, handleErrors, refreshToken } from './auth';
+import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
+import { userStore } from '../shared/store/userStore';
 
-const API_URL = 'http://localhost:8000';
+const API_URL = 'https://рыбный-форум.рф/api';
 
-// Функция для добавления заголовка авторизации
-const getAuthHeaders = (): Record<string, string> => {
-  const token = getAccessToken();
-  return token ? { 'Authorization': `Bearer ${token}` } : {};
+interface CustomInternalAxiosRequestConfig extends InternalAxiosRequestConfig {
+  _retry?: boolean;
+}
+
+// Создаем инстанс axios с базовой конфигурацией
+const api = axios.create({
+  baseURL: API_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Добавляем интерцептор для установки токена
+api.interceptors.request.use((config) => {
+  const token = userStore.accessToken;
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// Добавляем интерцептор для обработки ошибок
+api.interceptors.response.use(
+  (response) => response,
+  async (error: AxiosError) => {
+    const originalRequest = error.config as CustomInternalAxiosRequestConfig;
+    
+    // Проверяем, что это ошибка 401 и запрос не является повторным
+    if (error.response?.status === 401 && 
+        error.response?.data && 
+        typeof error.response.data === 'object' &&
+        'detail' in error.response.data &&
+        error.response.data.detail === "Invalid token" && 
+        originalRequest &&
+        !originalRequest._retry) {
+      
+      try {
+        // Помечаем запрос как повторный
+        originalRequest._retry = true;
+        
+        // Пробуем обновить токен
+        const tokens = await refreshToken();
+        
+        // Обновляем токен в заголовке оригинального запроса
+        if (originalRequest.headers) {
+          originalRequest.headers.Authorization = `Bearer ${tokens.access_token}`;
+        }
+        
+        // Повторяем оригинальный запрос с новым токеном
+        return api(originalRequest);
+      } catch (refreshError) {
+        // Если не удалось обновить токен, очищаем данные авторизации
+        userStore.clear();
+        throw refreshError;
+      }
+    }
+    
+    return Promise.reject(error);
+  }
+);
+
+// Админские методы
+export const adminApi = {
+  deletePost: async (postId: number): Promise<void> => {
+    if (!userStore.isAdmin) {
+      throw new Error('Недостаточно прав для выполнения операции');
+    }
+    await api.delete(`/post/${postId}/admin`);
+  },
+
+  deleteComment: async (commentId: number): Promise<void> => {
+    if (!userStore.isAdmin) {
+      throw new Error('Недостаточно прав для выполнения операции');
+    }
+    await api.delete(`/comment/${commentId}/admin`);
+  },
+
+  createNews: async (newsData: any): Promise<void> => {
+    if (!userStore.isAdmin) {
+      throw new Error('Недостаточно прав для выполнения операции');
+    }
+    await api.post('/news/', newsData);
+  }
 };
 
 // Получение всех постов
 export const getPosts = async (): Promise<Post[]> => {
   try {
-    const response = await fetch(`${API_URL}/posts`, {
-      headers: {
-        ...getAuthHeaders(),
-      },
-    });
-    return handleErrors(response);
+    const response = await api.get('/posts');
+    return response.data;
   } catch (error) {
     console.error('Ошибка при получении постов:', error);
     throw error;
@@ -27,12 +104,8 @@ export const getPosts = async (): Promise<Post[]> => {
 // Получение поста по ID
 export const getPostById = async (id: string): Promise<Post | null> => {
   try {
-    const response = await fetch(`${API_URL}/post/${id}`, {
-      headers: {
-        ...getAuthHeaders(),
-      },
-    });
-    return handleErrors(response);
+    const response = await api.get(`/post/${id}`);
+    return response.data;
   } catch (error) {
     console.error(`Ошибка при получении поста ${id}:`, error);
     throw error;
@@ -42,8 +115,8 @@ export const getPostById = async (id: string): Promise<Post | null> => {
 // Получение списка категорий
 export const getCategories = async (): Promise<Category[]> => {
   try {
-    const response = await fetch(`${API_URL}/categories`);
-    return handleErrors(response);
+    const response = await api.get('/categories');
+    return response.data;
   } catch (error) {
     console.error('Ошибка при получении категорий:', error);
     return [];
@@ -53,17 +126,35 @@ export const getCategories = async (): Promise<Category[]> => {
 // Создание нового поста
 export const createPost = async (postData: CreatePostRequest): Promise<CreatePostResponse | null> => {
   try {
-    const response = await fetch(`${API_URL}/post`, {
-      method: 'POST',
+    // Создаем FormData для отправки файлов
+    const formData = new FormData();
+    formData.append('title', postData.title);
+    formData.append('content', postData.content);
+    
+    // Добавляем изображения
+    if (postData.images && postData.images.length > 0) {
+      postData.images.forEach((image, index) => {
+        formData.append(`images`, image);
+      });
+    }
+
+    // Добавляем категорию, если она есть
+    if (postData.category_id) {
+      formData.append('category_id', postData.category_id.toString());
+    }
+
+    const response = await api.post('/post/create', formData, {
       headers: {
-        'Content-Type': 'application/json',
-        ...getAuthHeaders(),
+        'Content-Type': 'multipart/form-data',
       },
-      body: JSON.stringify(postData),
     });
-    return handleErrors(response);
+    
+    return response.data;
   } catch (error) {
     console.error('Ошибка при создании поста:', error);
+    if (axios.isAxiosError(error) && error.response) {
+      console.error('Детали ошибки:', error.response.data);
+    }
     throw error;
   }
 };
@@ -84,18 +175,13 @@ export const updatePost = async (postId: string, postData: Partial<CreatePostReq
       });
     }
 
-    const response = await fetch(`${API_URL}/post/${postId}`, {
-      method: 'PATCH',
-      headers: getAuthHeaders(),
-      body: formData,
-    });
-
-    return handleErrors(response);
+    const response = await api.patch(`/post/${postId}`, formData);
+    return response.data;
   } catch (error: any) {
     console.error(`Ошибка при обновлении поста ${postId}:`, error);
     return {
       success: false,
-      error: error.message || 'Не удалось обновить пост'
+      error: error.response?.data?.error || 'Не удалось обновить пост'
     };
   }
 };
@@ -103,11 +189,8 @@ export const updatePost = async (postId: string, postData: Partial<CreatePostReq
 // Удаление поста
 export const deletePost = async (postId: string): Promise<boolean> => {
   try {
-    const response = await fetch(`${API_URL}/post/${postId}`, {
-      method: 'DELETE',
-      headers: getAuthHeaders(),
-    });
-    const data = await handleErrors(response);
+    const response = await api.delete(`/post/${postId}`);
+    const data = response.data;
     return data.success;
   } catch (error) {
     console.error(`Ошибка при удалении поста ${postId}:`, error);
@@ -118,11 +201,8 @@ export const deletePost = async (postId: string): Promise<boolean> => {
 // Лайк поста
 export const likePost = async (postId: string): Promise<boolean> => {
   try {
-    const response = await fetch(`${API_URL}/post/${postId}/like`, {
-      method: 'POST',
-      headers: getAuthHeaders(),
-    });
-    const data = await handleErrors(response);
+    const response = await api.post(`/post/${postId}/like`);
+    const data = response.data;
     return data.success;
   } catch (error) {
     console.error(`Ошибка при лайке поста ${postId}:`, error);
@@ -133,11 +213,8 @@ export const likePost = async (postId: string): Promise<boolean> => {
 // Удаление лайка поста
 export const unlikePost = async (postId: string): Promise<boolean> => {
   try {
-    const response = await fetch(`${API_URL}/post/${postId}/like`, {
-      method: 'DELETE',
-      headers: getAuthHeaders(),
-    });
-    const data = await handleErrors(response);
+    const response = await api.delete(`/post/${postId}/like`);
+    const data = response.data;
     return data.success;
   } catch (error) {
     console.error(`Ошибка при удалении лайка поста ${postId}:`, error);
@@ -148,15 +225,8 @@ export const unlikePost = async (postId: string): Promise<boolean> => {
 // Создание комментария
 export const createComment = async (postId: string, content: string): Promise<Comment | null> => {
   try {
-    const response = await fetch(`${API_URL}/post/${postId}/comment`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...getAuthHeaders(),
-      },
-      body: JSON.stringify({ content }),
-    });
-    return handleErrors(response);
+    const response = await api.post(`/post/${postId}/comment`, { content });
+    return response.data;
   } catch (error) {
     console.error(`Ошибка при создании комментария к посту ${postId}:`, error);
     throw error;
@@ -166,8 +236,8 @@ export const createComment = async (postId: string, content: string): Promise<Co
 // Получение комментариев поста
 export const getPostComments = async (postId: string): Promise<Comment[]> => {
   try {
-    const response = await fetch(`${API_URL}/post/${postId}/comments`);
-    return handleErrors(response);
+    const response = await api.get(`/post/${postId}/comments`);
+    return response.data;
   } catch (error) {
     console.error(`Ошибка при получении комментариев поста ${postId}:`, error);
     return [];
@@ -177,15 +247,8 @@ export const getPostComments = async (postId: string): Promise<Comment[]> => {
 // Обновление комментария
 export const updateComment = async (commentId: string, content: string): Promise<Comment | null> => {
   try {
-    const response = await fetch(`${API_URL}/comment/${commentId}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        ...getAuthHeaders(),
-      },
-      body: JSON.stringify({ content }),
-    });
-    return handleErrors(response);
+    const response = await api.patch(`/comment/${commentId}`, { content });
+    return response.data;
   } catch (error) {
     console.error(`Ошибка при обновлении комментария ${commentId}:`, error);
     return null;
@@ -195,11 +258,8 @@ export const updateComment = async (commentId: string, content: string): Promise
 // Удаление комментария
 export const deleteComment = async (commentId: string): Promise<boolean> => {
   try {
-    const response = await fetch(`${API_URL}/comment/${commentId}`, {
-      method: 'DELETE',
-      headers: getAuthHeaders(),
-    });
-    const data = await handleErrors(response);
+    const response = await api.delete(`/comment/${commentId}`);
+    const data = response.data;
     return data.success;
   } catch (error) {
     console.error(`Ошибка при удалении комментария ${commentId}:`, error);

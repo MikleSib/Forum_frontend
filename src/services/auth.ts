@@ -1,5 +1,7 @@
 import { RegisterRequest, LoginRequest, AuthResponse, UserProfile } from '../shared/types/auth.types';
 import API_URL from '../config/api';
+import axios from 'axios';
+import { userStore } from '../shared/store/userStore';
 
 // Функция для обработки HTTP ошибок с обновлением токена
 export const handleErrors = async (response: Response) => {
@@ -43,46 +45,37 @@ export const handleErrors = async (response: Response) => {
 };
 
 // Регистрация пользователя
-export const register = async (userData: RegisterRequest): Promise<AuthResponse> => {
+export const register = async (data: RegisterRequest): Promise<AuthResponse> => {
   try {
-    const response = await fetch(`${API_URL}/auth/register`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(userData),
-    });
-    return handleErrors(response);
-  } catch (error: any) {
+    const response = await axios.post(`${API_URL}/auth/register`, data);
+    return response.data;
+  } catch (error) {
     console.error('Ошибка при регистрации:', error);
-    throw new Error(error.message || 'Не удалось зарегистрироваться');
+    throw error;
   }
 };
 
 // Вход пользователя
-export const login = async (credentials: LoginRequest): Promise<AuthResponse> => {
+export const login = async (data: LoginRequest): Promise<AuthResponse> => {
   try {
-    const response = await fetch(`${API_URL}/auth/login`, {
-      method: 'POST',
+    const formData = new FormData();
+    formData.append('username', data.username);
+    formData.append('password', data.password);
+
+    const response = await axios.post(`${API_URL}/auth/login`, formData, {
       headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(credentials),
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
     });
 
-    if (!response.ok) {
-      const error = await response.json();
-      // Если сервер вернул 500 ошибку, считаем что это неверные учетные данные
-      if (response.status === 500) {
-        throw new Error('Неверное имя пользователя или пароль');
-      }
-      throw new Error(error.detail || error.message || 'Не удалось войти');
+    if (response.data) {
+      userStore.setAuth(response.data);
     }
 
-    return response.json();
-  } catch (error: any) {
+    return response.data;
+  } catch (error) {
     console.error('Ошибка при входе:', error);
-    throw new Error(error.message || 'Не удалось войти');
+    throw error;
   }
 };
 
@@ -160,5 +153,56 @@ export const refreshToken = async (): Promise<AuthResponse> => {
     console.error('Ошибка при обновлении токена:', error);
     clearTokens();
     throw error;
+  }
+};
+
+export const authApi = {
+  login: async (data: LoginRequest): Promise<AuthResponse> => {
+    try {
+      const response = await axios.post(`${API_URL}/auth/login`, {
+        username: data.username,
+        password: data.password
+      }, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.data) {
+        // Проверяем наличие всех необходимых данных
+        if (!response.data.access_token || !response.data.refresh_token || !response.data.user) {
+          throw new Error('Неверный формат ответа от сервера');
+        }
+
+        // Сохраняем токены в localStorage
+        localStorage.setItem('access_token', response.data.access_token);
+        localStorage.setItem('refresh_token', response.data.refresh_token);
+        
+        // Обновляем состояние в UserStore
+        userStore.setAuth(response.data);
+        
+        console.log('Успешный вход:', {
+          user: response.data.user,
+          tokens: {
+            access: response.data.access_token,
+            refresh: response.data.refresh_token
+          }
+        });
+      }
+
+      return response.data;
+    } catch (error) {
+      console.error('Ошибка при входе:', error);
+      if (axios.isAxiosError(error) && error.response) {
+        console.error('Детали ошибки:', error.response.data);
+      }
+      throw error;
+    }
+  },
+  logout: () => {
+    // Очищаем токены при выходе
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+    userStore.clear();
   }
 }; 

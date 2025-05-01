@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { NewsItem } from '../shared/types/news.types';
 
-const API_URL = 'http://localhost:8000';
+const API_URL = 'https://рыбный-форум.рф/api';
 
 interface CategoryStats {
   main: number;

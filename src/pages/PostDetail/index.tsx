@@ -12,7 +12,11 @@ import {
   CircularProgress,
   IconButton,
   TextField,
-  InputAdornment
+  InputAdornment,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import FavoriteIcon from '@mui/icons-material/Favorite';
@@ -20,8 +24,10 @@ import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import CommentIcon from '@mui/icons-material/Comment';
 import SendIcon from '@mui/icons-material/Send';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import { getPostById, likePost, unlikePost, createComment } from '../../services/api';
+import DeleteIcon from '@mui/icons-material/Delete';
+import { getPostById, likePost, unlikePost, createComment, deletePost, deleteComment } from '../../services/api';
 import { Post, Comment } from '../../shared/types/post.types';
+import { userStore } from '../../shared/store/userStore';
 import styles from './PostDetail.module.css';
 
 const PostDetail: React.FC = () => {
@@ -36,11 +42,15 @@ const PostDetail: React.FC = () => {
   const [comments, setComments] = useState<Comment[]>([]);
   const [submittingComment, setSubmittingComment] = useState(false);
   const [isAuth, setIsAuth] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteCommentId, setDeleteCommentId] = useState<number | null>(null);
 
   useEffect(() => {
-    // Проверяем авторизацию
+    // Проверяем авторизацию и права администратора
     const token = localStorage.getItem('access_token');
     setIsAuth(!!token);
+    setIsAdmin(userStore.isAdmin);
     
     // Загружаем данные поста
     const fetchPost = async () => {
@@ -146,6 +156,31 @@ const PostDetail: React.FC = () => {
     navigate(-1);
   };
 
+  // Обработчик удаления поста
+  const handleDeletePost = async () => {
+    if (!id || !isAdmin) return;
+    
+    try {
+      await deletePost(id);
+      setDeleteDialogOpen(false);
+      navigate('/');
+    } catch (err) {
+      console.error('Ошибка при удалении поста:', err);
+    }
+  };
+
+  // Обработчик удаления комментария
+  const handleDeleteComment = async (commentId: number) => {
+    if (!isAdmin) return;
+    
+    try {
+      await deleteComment(commentId.toString());
+      setComments(prevComments => prevComments.filter(comment => comment.id !== commentId));
+    } catch (err) {
+      console.error('Ошибка при удалении комментария:', err);
+    }
+  };
+
   if (loading) {
     return (
       <Container maxWidth="md" sx={{ py: 8, textAlign: 'center' }}>
@@ -198,7 +233,7 @@ const PostDetail: React.FC = () => {
           </Typography>
           
           <Box sx={{ display: 'flex', alignItems: 'center', mt: 2, mb: 3 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
               <Avatar 
                 sx={{ 
                   bgcolor: 'var(--primary-color)',
@@ -227,7 +262,7 @@ const PostDetail: React.FC = () => {
               </Box>
             </Box>
             
-            <Box sx={{ ml: 'auto' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <Chip 
                 icon={<FavoriteIcon sx={{ fontSize: 16 }} />} 
                 label={likesCount.toString()}
@@ -241,6 +276,15 @@ const PostDetail: React.FC = () => {
                 size="small"
                 color="secondary"
               />
+              {isAdmin && (
+                <IconButton 
+                  color="error" 
+                  onClick={() => setDeleteDialogOpen(true)}
+                  sx={{ ml: 1 }}
+                >
+                  <DeleteIcon />
+                </IconButton>
+              )}
             </Box>
           </Box>
           
@@ -346,13 +390,24 @@ const PostDetail: React.FC = () => {
                     {comment.author.username[0].toUpperCase()}
                   </Avatar>
                   <Box sx={{ flexGrow: 1 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <Typography variant="subtitle2">
                         {comment.author.username}
                       </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {formatDate(comment.created_at)}
-                      </Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Typography variant="caption" color="text.secondary">
+                          {formatDate(comment.created_at)}
+                        </Typography>
+                        {isAdmin && (
+                          <IconButton 
+                            size="small" 
+                            color="error"
+                            onClick={() => handleDeleteComment(comment.id)}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        )}
+                      </Box>
                     </Box>
                     <Typography variant="body2">
                       {comment.content}
@@ -371,6 +426,31 @@ const PostDetail: React.FC = () => {
           </Box>
         )}
       </Paper>
+
+      {/* Диалог подтверждения удаления поста */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+      >
+        <DialogTitle>Подтверждение удаления</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Вы уверены, что хотите удалить этот пост? Это действие нельзя отменить.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialogOpen(false)}>
+            Отмена
+          </Button>
+          <Button 
+            onClick={handleDeletePost} 
+            color="error" 
+            variant="contained"
+          >
+            Удалить
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };
