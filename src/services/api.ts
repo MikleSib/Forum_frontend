@@ -47,6 +47,13 @@ api.interceptors.response.use(
         // Пробуем обновить токен
         const tokens = await refreshToken();
         
+        // Сохраняем новые токены
+        userStore.setAuth({
+          access_token: tokens.access_token,
+          refresh_token: tokens.refresh_token,
+          user: userStore.user!
+        });
+        
         // Обновляем токен в заголовке оригинального запроса
         if (originalRequest.headers) {
           originalRequest.headers.Authorization = `Bearer ${tokens.access_token}`;
@@ -57,6 +64,8 @@ api.interceptors.response.use(
       } catch (refreshError) {
         // Если не удалось обновить токен, очищаем данные авторизации
         userStore.clear();
+        // Перенаправляем на страницу входа
+        window.location.href = '/login';
         throw refreshError;
       }
     }

@@ -143,6 +143,11 @@ const PostDetail: React.FC = () => {
       if (newComment) {
         setComments(prevComments => [...prevComments, newComment]);
         setCommentText('');
+        // Обновляем данные поста после успешного создания комментария
+        const updatedPost = await getPostById(id);
+        if (updatedPost) {
+          setPost(updatedPost);
+        }
       }
     } catch (err) {
       console.error('Ошибка при отправке комментария:', err);
