@@ -24,6 +24,7 @@ import { Post } from '../../shared/types/post.types';
 import { NewsCategory } from '../../shared/types/news.types';
 import { useTheme, useMediaQuery } from '@mui/material';
 import { newsApi } from '../../services/newsApi';
+import logo from '../../assets/logo.svg';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -186,7 +187,7 @@ const Dashboard = () => {
         {/* Верхняя часть шапки */}
         <div className={styles.headerContent}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, width: { xs: '100%', sm: 'auto' } }}>
-            <div className={styles.logoIcon}></div>
+            <img src={logo} alt="Логотип" style={{ width: '50px', height: '50px' }} />
             <Box sx={{ flex: 1 }}>
               <Typography variant="h3" className={styles.headerTitle}>
                 Рыболовный форум
