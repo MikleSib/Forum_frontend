@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { Box, Container, Typography, Button, Tabs, Tab, Paper, Divider, Chip, InputBase, Grid, List, ListItem, ListItemText, ListItemButton, ListItemIcon, IconButton, TextField, Dialog, DialogActions, DialogContent, DialogTitle, Link, Tooltip, Alert } from '@mui/material';
+import { Box, Container, Typography, Button, Tabs, Tab, Paper, Divider, Chip, InputBase, Grid, List, ListItem, ListItemText, ListItemButton, ListItemIcon, IconButton, TextField, Dialog, DialogActions, DialogContent, DialogTitle, Link, Tooltip, Alert, Drawer, AppBar, Toolbar } from '@mui/material';
 import { useNavigate } from 'react-router-dom'; 
 import PostCard from '../../components/PostCard';
 import AddIcon from '@mui/icons-material/Add';
@@ -24,6 +24,8 @@ import RoomIcon from '@mui/icons-material/Room';
 import SaveIcon from '@mui/icons-material/Save';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import MyLocationIcon from '@mui/icons-material/MyLocation';
+import MenuIcon from '@mui/icons-material/Menu';
+import CloseIcon from '@mui/icons-material/Close';
 import styles from './Dashboard.module.css';
 import { getPosts } from '../../services/api';
 import { Post } from '../../shared/types/post.types';
@@ -175,6 +177,7 @@ const Dashboard = () => {
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [isTrackingLocation, setIsTrackingLocation] = useState(false);
   const watchPositionRef = useRef<number | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const topics: TopicItem[] = [
     { id: 1, name: "Новости", category: NewsCategory.NEWS },
@@ -480,12 +483,125 @@ const Dashboard = () => {
     }
   }, [showMap, locationRequested, locationLoading]);
 
+  // Обработчик открытия и закрытия мобильного меню
+  const toggleMobileMenu = () => {
+    setMobileMenuOpen(!mobileMenuOpen);
+  };
+  
+  // Обработчик клика по пункту мобильного меню с закрытием меню
+  const handleMobileNavClick = (callback: () => void) => {
+    return () => {
+      callback();
+      setMobileMenuOpen(false);
+    };
+  };
+
   return (
     <Container maxWidth={false} sx={{ maxWidth: '1600px', p: 0 }}>
-      <Box sx={{ mt: 3 }}>
+      {/* Мобильная шапка с бургер-меню */}
+      <Box sx={{ display: { xs: 'block', md: 'none' }, position: 'sticky', top: 0, zIndex: 1100 }}>
+        <AppBar position="static" color="primary" elevation={0} className={styles.mobileAppBar} sx={{ borderRadius: 0 }}>
+          <Toolbar>
+            <IconButton
+              edge="start"
+              color="inherit"
+              aria-label="menu"
+              onClick={toggleMobileMenu}
+              sx={{ mr: 2 }}
+            >
+              <MenuIcon />
+            </IconButton>
+            <Typography variant="h6" component="div" className={styles.mobileAppBarTitle} sx={{ flexGrow: 1 }}>
+              Рыболовный форум
+            </Typography>
+          </Toolbar>
+        </AppBar>
+      </Box>
+      
+      {/* Мобильное боковое меню */}
+      <Drawer
+        anchor="left"
+        open={mobileMenuOpen}
+        onClose={toggleMobileMenu}
+        sx={{
+          display: { xs: 'block', md: 'none' },
+          '& .MuiDrawer-paper': { width: 280, boxSizing: 'border-box', borderRadius: 0 },
+        }}
+      >
+        <Box sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }} className={styles.mobileMenuHeader}>
+          <Typography variant="h6" sx={{ color: 'white' }}>Навигация</Typography>
+          <IconButton onClick={toggleMobileMenu} sx={{ color: 'white' }}>
+            <CloseIcon />
+          </IconButton>
+        </Box>
+        <Divider />
+        <List className={styles.mobileMenuList}>
+          <ListItemButton 
+            onClick={handleMobileNavClick(handleHomeClick)} 
+            className={!showMap ? styles.mobileMenuItem + ' ' + styles.active : styles.mobileMenuItem}
+          >
+            <ListItemIcon>
+              <FeedIcon color={!showMap ? "primary" : "inherit"} />
+            </ListItemIcon>
+            <ListItemText primary="Главная" />
+          </ListItemButton>
+          <ListItemButton 
+            onClick={handleMobileNavClick(handleFishingMapClick)}
+            className={showMap ? styles.mobileMenuItem + ' ' + styles.active : styles.mobileMenuItem}
+          >
+            <ListItemIcon>
+              <MapIcon color={showMap ? "primary" : "inherit"} />
+            </ListItemIcon>
+            <ListItemText primary="Карта рыбных мест" />
+          </ListItemButton>
+          <ListItemButton onClick={toggleMobileMenu} className={styles.mobileMenuItem}>
+            <ListItemIcon>
+              <EmojiEventsIcon />
+            </ListItemIcon>
+            <ListItemText primary="Соревнования" />
+          </ListItemButton>
+          <ListItemButton onClick={toggleMobileMenu} className={styles.mobileMenuItem}>
+            <ListItemIcon>
+              <InfoOutlinedIcon />
+            </ListItemIcon>
+            <ListItemText primary="О проекте" />
+          </ListItemButton>
+          <ListItemButton onClick={toggleMobileMenu} className={styles.mobileMenuItem}>
+            <ListItemIcon>
+              <HelpOutlineIcon />
+            </ListItemIcon>
+            <ListItemText primary="Помощь" />
+          </ListItemButton>
+        </List>
+        <Divider />
+        <Box sx={{ p: 2 }}>
+          <Typography variant="h6" sx={{ mb: 2 }}>Темы</Typography>
+          <List>
+            {topics.map((topic) => (
+              <ListItemButton 
+                key={topic.id}
+                onClick={() => {
+                  handleTopicClick(topic.category);
+                  setMobileMenuOpen(false);
+                }}
+              >
+                <ListItemIcon>
+                  {TOPIC_ICONS[topic.category]}
+                </ListItemIcon>
+                <ListItemText 
+                  primary={topic.name}
+                  secondary={`${getCategoryCount(topic.category)} ${getPublicationWord(getCategoryCount(topic.category))}`}
+                />
+              </ListItemButton>
+            ))}
+          </List>
+        </Box>
+      </Drawer>
+    
+      <Box sx={{ mt: { xs: 1, md: 3 } }}>
         {/* Основной контент */}
         <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', md: 'row' } }}>
-          {/* Левая колонка */}
+          {/* Левая колонка - скрыта на мобильных */}
           <Box sx={{ flex: '0 0 250px', display: { xs: 'none', md: 'block' } }}>
             <Paper sx={{ p: 2, mb: 2 }}>
               <Typography variant="h6" sx={{ mb: 2 }}>Навигация</Typography>
@@ -528,31 +644,65 @@ const Dashboard = () => {
           <Box sx={{ flex: 1 }}>
             {showMap ? (
               <Paper sx={{ p: 2, mb: 2 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Box sx={{ 
+                  display: 'flex', 
+                  flexDirection: { xs: 'column', sm: 'row' },
+                  justifyContent: 'space-between', 
+                  alignItems: { xs: 'flex-start', sm: 'center' }, 
+                  mb: 2,
+                  gap: 1
+                }}>
                   <Typography variant="h6">Карта рыбных мест</Typography>
-                  <Box sx={{ display: 'flex', gap: 1 }}>
-                    <Button
-                      variant="outlined"
-                      startIcon={<MyLocationIcon />}
-                      onClick={getUserLocation}
-                      disabled={locationLoading}
-                    >
-                      {locationLoading ? 'Определяем...' : 'Мое местоположение'}
-                    </Button>
-                    <Button
-                      variant="outlined"
-                      color={isTrackingLocation ? "secondary" : "primary"}
-                      onClick={toggleLocationTracking}
-                      disabled={locationLoading}
-                      sx={{ minWidth: '180px' }}
-                    >
-                      {isTrackingLocation ? 'Остановить слежение' : 'Следить за положением'}
-                    </Button>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    flexDirection: { xs: 'column', sm: 'row' },
+                    width: { xs: '100%', sm: 'auto' },
+                    gap: 1 
+                  }}>
+                    <Box sx={{ 
+                      display: 'flex', 
+                      flexDirection: 'row',
+                      width: { xs: '100%', sm: 'auto' },
+                      gap: 1 
+                    }}>
+                      <Button
+                        variant="outlined"
+                        startIcon={<MyLocationIcon />}
+                        onClick={getUserLocation}
+                        disabled={locationLoading}
+                        size={isMobile ? "small" : "medium"}
+                        sx={{ 
+                          flex: { xs: 1, sm: 'none' },
+                          minWidth: { xs: 0, sm: '140px' }
+                        }}
+                      >
+                        {locationLoading ? 'Определяем...' : isMobile ? 'Моя позиция' : 'Мое местоположение'}
+                      </Button>
+                      <Button
+                        variant="outlined"
+                        color={isTrackingLocation ? "secondary" : "primary"}
+                        onClick={toggleLocationTracking}
+                        disabled={locationLoading}
+                        size={isMobile ? "small" : "medium"}
+                        sx={{ 
+                          flex: { xs: 1, sm: 'none' },
+                          minWidth: { xs: 0, sm: '180px' }
+                        }}
+                      >
+                        {isTrackingLocation 
+                          ? (isMobile ? 'Выкл слежение' : 'Остановить слежение')
+                          : (isMobile ? 'Вкл слежение' : 'Следить за положением')}
+                      </Button>
+                    </Box>
                     <Button
                       variant="contained"
                       startIcon={isAddingMarker ? <RoomIcon /> : <AddIcon />}
                       color={isAddingMarker ? "secondary" : "primary"}
                       onClick={() => setIsAddingMarker(!isAddingMarker)}
+                      size={isMobile ? "small" : "medium"}
+                      sx={{ 
+                        width: { xs: '100%', sm: 'auto' }
+                      }}
                     >
                       {isAddingMarker ? 'Отменить' : 'Добавить метку'}
                     </Button>
@@ -571,7 +721,7 @@ const Dashboard = () => {
                   </Alert>
                 )}
                 
-                <Box sx={{ position: 'relative', height: '600px', borderRadius: '8px', overflow: 'hidden' }}>
+                <Box sx={{ position: 'relative', height: { xs: '400px', sm: '500px', md: '600px' }, borderRadius: '8px', overflow: 'hidden' }}>
                   <YMaps query={{ lang: 'ru_RU', apikey: '' }}>
                     <YMap
                       defaultState={{
@@ -654,8 +804,19 @@ const Dashboard = () => {
                 {/* Список добавленных рыбных мест */}
                 {fishingSpots.length > 0 && (
                   <Box sx={{ mt: 2 }}>
-                    <Typography variant="h6" sx={{ mb: 1 }}>Список рыбных мест</Typography>
-                    <List sx={{ bgcolor: 'background.paper' }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                      <Typography variant="h6">Список рыбных мест</Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {fishingSpots.length} {getPublicationWord(fishingSpots.length)}
+                      </Typography>
+                    </Box>
+                    <List sx={{ 
+                      bgcolor: 'background.paper',
+                      maxHeight: { xs: '250px', md: 'auto' },
+                      overflowY: { xs: 'auto', md: 'visible' },
+                      borderRadius: '4px',
+                      border: '1px solid rgba(0,0,0,0.1)'
+                    }}>
                       {fishingSpots.map((spot) => (
                         <ListItem 
                           key={spot.id}
@@ -664,8 +825,10 @@ const Dashboard = () => {
                             <IconButton onClick={(e) => {
                               e.stopPropagation();
                               handleDeleteSpot(spot.id);
-                            }}>
-                              <DeleteIcon />
+                            }}
+                            size={isMobile ? "small" : "medium"}
+                            >
+                              <DeleteIcon fontSize={isMobile ? "small" : "medium"} />
                             </IconButton>
                           }
                           sx={{ mb: 1 }}
@@ -678,7 +841,8 @@ const Dashboard = () => {
                               '&:hover': {
                                 backgroundColor: 'rgba(59, 89, 152, 0.08)'
                               },
-                              bgcolor: selectedSpot?.id === spot.id ? 'rgba(59, 89, 152, 0.05)' : 'transparent'
+                              bgcolor: selectedSpot?.id === spot.id ? 'rgba(59, 89, 152, 0.05)' : 'transparent',
+                              py: isMobile ? 1 : 1.5
                             }}
                           >
                             <ListItemText 
@@ -686,11 +850,23 @@ const Dashboard = () => {
                                 <Typography
                                   component="span" 
                                   fontWeight={selectedSpot?.id === spot.id ? 'bold' : 'normal'}
+                                  variant={isMobile ? "body2" : "body1"}
                                 >
                                   {spot.title}
                                 </Typography>
                               }
-                              secondary={`${spot.description.slice(0, 50)}${spot.description.length > 50 ? '...' : ''}`} 
+                              secondary={
+                                <Typography variant="body2" sx={{ 
+                                  fontSize: isMobile ? '0.75rem' : '0.875rem',
+                                  display: '-webkit-box',
+                                  overflow: 'hidden',
+                                  WebkitBoxOrient: 'vertical',
+                                  WebkitLineClamp: 2
+                                }}>
+                                  {spot.description.slice(0, isMobile ? 30 : 50)}
+                                  {spot.description.length > (isMobile ? 30 : 50) ? '...' : ''}
+                                </Typography>
+                              }
                             />
                           </ListItemButton>
                         </ListItem>

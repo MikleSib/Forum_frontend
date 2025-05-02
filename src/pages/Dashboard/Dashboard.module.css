@@ -619,4 +619,145 @@ body {
 .selectedSpot {
   background-color: rgba(59, 89, 152, 0.1);
   border-left: 3px solid #3b5998;
+}
+
+/* Стили для мобильного меню */
+.mobileMenuHeader {
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: var(--primary-color);
+  color: white;
+  border-radius: 0;
+}
+
+.mobileMenuList {
+  padding: 0;
+}
+
+.mobileMenuItem {
+  padding: 12px 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: background-color 0.2s ease;
+  border-radius: 0;
+}
+
+.mobileMenuItem:hover,
+.mobileMenuItem.active {
+  background-color: rgba(0, 129, 145, 0.1);
+}
+
+.mobileMenuItem svg {
+  color: var(--primary-color);
+}
+
+.mobileMenuButton {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobileMenuButton {
+    display: block;
+  }
+  
+  .desktopMenu {
+    display: none;
+  }
+  
+  /* Стили для адаптивных кнопок */
+  .mapControlsContainer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .mapControlsButtonGroup {
+    width: 100%;
+    display: flex;
+    gap: 8px;
+  }
+  
+  .mapControlsButtonGroup button {
+    flex: 1;
+  }
+  
+  .mapControlsButton {
+    width: 100%;
+  }
+  
+  /* Уменьшаем отступы и размеры для мобильных устройств */
+  .cardMobile {
+    padding: 12px !important;
+  }
+  
+  .listItemMobile {
+    padding: 8px !important;
+  }
+  
+  .spotsList {
+    max-height: 250px;
+    overflow-y: auto;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+  }
+  
+  /* Стили для мобильной шапки */
+  .mobileAppBar {
+    border-radius: 0 !important;
+  }
+  
+  .mobileAppBarTitle {
+    color: white !important;
+    font-weight: 500;
+  }
+}
+
+/* Адаптивная высота для карты */
+.mapContainer {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+@media (max-width: 600px) {
+  .mapContainer {
+    height: 400px;
+  }
+}
+
+@media (min-width: 601px) and (max-width: 960px) {
+  .mapContainer {
+    height: 500px;
+  }
+}
+
+@media (min-width: 961px) {
+  .mapContainer {
+    height: 600px;
+  }
+}
+
+/* Улучшенные стили для списка меток */
+.spotItem {
+  margin-bottom: 4px;
+  transition: all 0.2s ease;
+}
+
+.spotItemButton {
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.spotItemButton:hover {
+  background-color: rgba(59, 89, 152, 0.08);
+}
+
+.spotItemSelected {
+  border: 1px solid #3b5998;
+  border-radius: 4px;
+  background-color: rgba(59, 89, 152, 0.05);
 } 
