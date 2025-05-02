@@ -13,6 +13,10 @@ import PostDetail from './pages/PostDetail/index';
 import NewsPage from './pages/News';
 import NewsDetail from './pages/News/NewsDetail';
 import CreateNews from './pages/CreateNews';
+import ForumPage from './pages/Forum';
+import CategoryDetail from './pages/Forum/CategoryDetail';
+import TopicDetail from './pages/Forum/TopicDetail';
+import CreateTopic from './pages/Forum/CreateTopic';
 import { userStore } from './shared/store/userStore';
 
 const theme = createTheme({
@@ -101,6 +105,11 @@ function App() {
             <Route path="post/:id" element={<PostDetail />} />
             <Route path="news" element={<NewsPage />} />
             <Route path="news/:id" element={<NewsDetail />} />
+            <Route path="forum" element={<ForumPage />} />
+            <Route path="forum/category/:categoryId" element={<CategoryDetail />} />
+            <Route path="forum/topic/:topicId" element={<TopicDetail />} />
+            <Route path="forum/create-topic" element={<CreateTopic />} />
+            <Route path="forum/category/:categoryId/create-topic" element={<CreateTopic />} />
             {userStore.isAdmin && (
               <Route path="news/create" element={<CreateNews />} />
             )}
