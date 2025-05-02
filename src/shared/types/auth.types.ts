@@ -18,10 +18,19 @@ export interface User {
   is_admin: boolean;
 }
 
+export interface EmailVerification {
+  required: boolean;
+  message: string;
+  email: string;
+  expires_in: number;
+}
+
 export interface AuthResponse {
   access_token: string;
   refresh_token: string;
   user: User;
+  email_verification?: EmailVerification;
+  requiresEmailVerification?: boolean;
 }
 
 export interface UserProfile {

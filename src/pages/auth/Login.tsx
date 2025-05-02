@@ -25,7 +25,16 @@ const Login: React.FC = () => {
     setLoading(true);
 
     try {
-      await authApi.login({ username, password });
+      const response = await authApi.login({ username, password });
+      
+      // Проверяем, требуется ли верификация email
+      if (response.requiresEmailVerification && response.email_verification) {
+        // Перенаправляем на страницу верификации с email в URL
+        navigate(`/verify-email?email=${encodeURIComponent(response.email_verification.email)}`);
+        return;
+      }
+      
+      // Если верификация не требуется, перенаправляем на главную страницу
       navigate('/');
     } catch (err: any) {
       console.error('Ошибка входа:', err);

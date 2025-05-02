@@ -162,6 +162,19 @@ export const authApi = {
       });
 
       if (response.data) {
+        // Проверяем наличие информации о верификации email
+        if (response.data.email_verification && response.data.email_verification.required) {
+          // Сохраняем токены на случай, если пользователь захочет повторно войти после подтверждения
+          localStorage.setItem('access_token', response.data.access_token);
+          localStorage.setItem('refresh_token', response.data.refresh_token);
+          
+          // Добавляем информацию о верификации в ответ для обработки в компоненте Login
+          return {
+            ...response.data,
+            requiresEmailVerification: true
+          };
+        }
+
         // Проверяем наличие всех необходимых данных
         if (!response.data.access_token || !response.data.refresh_token || !response.data.user) {
           throw new Error('Неверный формат ответа от сервера');

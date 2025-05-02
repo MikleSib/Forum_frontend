@@ -6,6 +6,7 @@ import MainLayout from './layouts/MainLayout';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
+import VerifyEmail from './pages/auth/VerifyEmail';
 import Profile from './pages/Profile';
 import CreatePost from './pages/CreatePost';
 import PostDetail from './pages/PostDetail/index';
@@ -106,6 +107,7 @@ function App() {
           </Route>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
         </Routes>
       </Router>
     </ThemeProvider>
