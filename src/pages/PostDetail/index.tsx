@@ -29,6 +29,7 @@ import { getPostById, likePost, unlikePost, createComment, deletePost, deleteCom
 import { Post, Comment } from '../../shared/types/post.types';
 import { userStore } from '../../shared/store/userStore';
 import styles from './PostDetail.module.css';
+import ImageGallery from '../../components/ImageGallery';
 
 const PostDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -298,15 +299,9 @@ const PostDetail: React.FC = () => {
           <Divider />
         </Box>
         
-        {/* Изображение поста */}
+        {/* Изображения поста - заменяем на ImageGallery */}
         {post.images && post.images.length > 0 && (
-          <Box className={styles.imageContainer}>
-            <img 
-              src={`https://рыбный-форум.рф${post.images[0].image_url}`} 
-              alt={post.title} 
-              className={styles.postImage} 
-            />
-          </Box>
+          <ImageGallery images={post.images} />
         )}
         
         {/* Содержимое поста */}

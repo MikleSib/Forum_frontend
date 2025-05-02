@@ -37,6 +37,31 @@
   object-fit: contain;
 }
 
+.galleryContainer {
+  margin: 24px 0;
+  display: grid;
+  grid-gap: 8px;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  grid-auto-rows: 150px;
+}
+
+.galleryItem {
+  overflow: hidden;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.galleryItem:hover {
+  transform: scale(1.03);
+}
+
+.galleryImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .postContent {
   font-size: 1.1rem;
   line-height: 1.8;
