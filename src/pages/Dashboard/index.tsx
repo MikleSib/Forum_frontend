@@ -25,6 +25,7 @@ import { NewsCategory } from '../../shared/types/news.types';
 import { useTheme, useMediaQuery } from '@mui/material';
 import { newsApi } from '../../services/newsApi';
 import logo from '../../assets/logo.svg';
+import { AUTH_STATUS_CHANGED } from '../../components/Header';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -124,11 +125,24 @@ const Dashboard = () => {
       }
     };
 
+    // Проверяем статус авторизации
+    const checkAuthStatus = () => {
+      const token = localStorage.getItem('access_token');
+      setIsAuth(!!token);
+    };
+
     // Проверяем наличие токена в localStorage
-    const token = localStorage.getItem('access_token');
-    setIsAuth(!!token);
+    checkAuthStatus();
+
+    // Добавляем слушатель на изменение статуса авторизации
+    window.addEventListener(AUTH_STATUS_CHANGED, checkAuthStatus);
 
     fetchData();
+
+    // Очищаем слушатель при размонтировании
+    return () => {
+      window.removeEventListener(AUTH_STATUS_CHANGED, checkAuthStatus);
+    };
   }, []);
 
   // Переход на страницу создания поста
