@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Container, Typography, TextField, Button, Grid, IconButton, Snackbar, Alert } from '@mui/material';
+import { Container, Typography, TextField, Button, Grid, IconButton, Snackbar, Alert, CircularProgress } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import CloseIcon from '@mui/icons-material/Close';
@@ -8,6 +8,7 @@ import styles from './CreatePost.module.css';
 import { CreatePostRequest } from '../../shared/types/post.types';
 import { createPost } from '../../services/api';
 import TipTapEditor from './TipTapEditor';
+import { compressMultipleImages } from '../../utils/imageCompressor';
 
 const CreatePost: React.FC = () => {
   const navigate = useNavigate();
@@ -19,9 +20,10 @@ const CreatePost: React.FC = () => {
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [showSuccess, setShowSuccess] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [isCompressing, setIsCompressing] = useState(false);
 
   // Обработка загрузки изображений
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
       const selectedFiles = Array.from(event.target.files);
       
@@ -31,15 +33,27 @@ const CreatePost: React.FC = () => {
         return;
       }
       
-      // Добавляем новые файлы
-      setImages(prevImages => [...prevImages, ...selectedFiles]);
+      setIsCompressing(true);
       
-      // Создаем превью URL для отображения
-      const newPreviewUrls = selectedFiles.map(file => URL.createObjectURL(file));
-      setPreviewUrls(prevUrls => [...prevUrls, ...newPreviewUrls]);
-      
-      // Сбрасываем ошибку, если она была
-      setError('');
+      try {
+        // Сжимаем изображения перед добавлением (на 33%)
+        const compressedFiles = await compressMultipleImages(selectedFiles, 0.67);
+        
+        // Добавляем новые файлы
+        setImages(prevImages => [...prevImages, ...compressedFiles]);
+        
+        // Создаем превью URL для отображения
+        const newPreviewUrls = compressedFiles.map(file => URL.createObjectURL(file));
+        setPreviewUrls(prevUrls => [...prevUrls, ...newPreviewUrls]);
+        
+        // Сбрасываем ошибку, если она была
+        setError('');
+      } catch (err) {
+        console.error('Ошибка при сжатии изображений:', err);
+        setError('Не удалось обработать изображения');
+      } finally {
+        setIsCompressing(false);
+      }
     }
   };
 
@@ -61,7 +75,7 @@ const CreatePost: React.FC = () => {
   };
 
   // Обработка перетаскивания файлов (drag and drop)
-  const handleDrop = useCallback((event: React.DragEvent<HTMLDivElement>) => {
+  const handleDrop = useCallback(async (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     
     if (event.dataTransfer.files) {
@@ -75,15 +89,27 @@ const CreatePost: React.FC = () => {
         return;
       }
       
-      // Добавляем новые файлы
-      setImages(prevImages => [...prevImages, ...droppedFiles]);
+      setIsCompressing(true);
       
-      // Создаем превью URL для отображения
-      const newPreviewUrls = droppedFiles.map(file => URL.createObjectURL(file));
-      setPreviewUrls(prevUrls => [...prevUrls, ...newPreviewUrls]);
-      
-      // Сбрасываем ошибку, если она была
-      setError('');
+      try {
+        // Сжимаем изображения перед добавлением (на 33%)
+        const compressedFiles = await compressMultipleImages(droppedFiles, 0.67);
+        
+        // Добавляем новые файлы
+        setImages(prevImages => [...prevImages, ...compressedFiles]);
+        
+        // Создаем превью URL для отображения
+        const newPreviewUrls = compressedFiles.map(file => URL.createObjectURL(file));
+        setPreviewUrls(prevUrls => [...prevUrls, ...newPreviewUrls]);
+        
+        // Сбрасываем ошибку, если она была
+        setError('');
+      } catch (err) {
+        console.error('Ошибка при сжатии изображений:', err);
+        setError('Не удалось обработать изображения');
+      } finally {
+        setIsCompressing(false);
+      }
     }
   }, [images]);
 
@@ -200,27 +226,38 @@ const CreatePost: React.FC = () => {
                   onDrop={handleDrop}
                   onDragOver={handleDragOver}
                 >
-                  <InsertPhotoIcon className={styles.dropzoneIcon} />
-                  <Typography variant="body1" className={styles.dropzoneText}>
-                    Перетащите изображения сюда или нажмите для выбора
-                  </Typography>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    onChange={handleImageUpload}
-                    style={{ display: 'none' }}
-                    id="image-upload"
-                  />
-                  <Button 
-                    variant="outlined" 
-                    color="primary"
-                    onClick={() => document.getElementById('image-upload')?.click()}
-                    startIcon={<CloudUploadIcon />}
-                    disabled={images.length >= 20}
-                  >
-                    Выбрать изображения
-                  </Button>
+                  {isCompressing ? (
+                    <div className={styles.compressingContainer}>
+                      <CircularProgress size={40} color="primary" />
+                      <Typography variant="body2" sx={{ mt: 1.5 }}>
+                        Сжатие изображений...
+                      </Typography>
+                    </div>
+                  ) : (
+                    <>
+                      <InsertPhotoIcon className={styles.dropzoneIcon} />
+                      <Typography variant="body1" className={styles.dropzoneText}>
+                        Перетащите изображения сюда или нажмите для выбора
+                      </Typography>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={handleImageUpload}
+                        style={{ display: 'none' }}
+                        id="image-upload"
+                      />
+                      <Button 
+                        variant="outlined" 
+                        color="primary"
+                        onClick={() => document.getElementById('image-upload')?.click()}
+                        startIcon={<CloudUploadIcon />}
+                        disabled={images.length >= 20 || isCompressing}
+                      >
+                        Выбрать изображения
+                      </Button>
+                    </>
+                  )}
                 </div>
                 
                 {error && (
@@ -230,7 +267,7 @@ const CreatePost: React.FC = () => {
                 )}
                 
                 <Typography variant="body2" className={styles.warningText}>
-                  Максимальное количество изображений: 20
+                  Максимальное количество изображений: 20. Все изображения будут автоматически сжаты на 33%.
                 </Typography>
 
                 {/* Предпросмотр изображений */}
@@ -271,7 +308,7 @@ const CreatePost: React.FC = () => {
                   type="submit"
                   variant="contained" 
                   color="primary"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || isCompressing}
                   className={styles.submitButton}
                 >
                   {isSubmitting ? 'Создание...' : 'Опубликовать'}

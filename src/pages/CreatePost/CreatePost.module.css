@@ -179,4 +179,12 @@
   font-size: 0.8rem !important;
   color: #666 !important;
   margin-top: 8px !important;
+}
+
+.compressingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
 } 

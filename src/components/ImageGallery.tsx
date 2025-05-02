@@ -51,23 +51,23 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, baseUrl = 'https://
     }
   };
 
-  // Устанавливаем разные размеры для изображений в зависимости от их количества
+  // Устанавливаем адаптивные размеры для контейнеров изображений
   const getItemStyle = (index: number) => {
     const count = images.length;
     
     if (count === 1) {
-      return { gridColumn: '1 / -1', gridRow: '1 / -1', height: '500px' };
+      return { gridColumn: '1 / -1', gridRow: '1 / -1', height: 'auto', maxHeight: '500px', minHeight: '200px' };
     } else if (count === 2) {
-      return { height: '400px' };
+      return { height: 'auto', maxHeight: '400px', minHeight: '200px' };
     } else if (count === 3) {
       if (index === 0) {
-        return { gridColumn: '1 / -1', height: '400px' };
+        return { gridColumn: '1 / -1', height: 'auto', maxHeight: '400px', minHeight: '200px' };
       }
-      return { height: '200px' };
+      return { height: 'auto', maxHeight: '200px', minHeight: '150px' };
     } else if (count === 4) {
-      return { height: '200px' };
+      return { height: 'auto', maxHeight: '200px', minHeight: '150px' };
     } else {
-      return { height: '160px' };
+      return { height: 'auto', maxHeight: '160px', minHeight: '120px' };
     }
   };
 
@@ -85,6 +85,7 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, baseUrl = 'https://
           marginY: 3,
           borderRadius: '12px',
           overflow: 'hidden',
+          width: '100%',
         }}
       >
         {visibleImages.map((image, index) => (
@@ -97,6 +98,11 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, baseUrl = 'https://
               position: 'relative',
               cursor: 'pointer',
               transition: 'transform 0.3s',
+              backgroundColor: '#f5f5f5',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '4px',
               '&:hover': {
                 transform: 'scale(1.02)',
               },
@@ -134,9 +140,12 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, baseUrl = 'https://
               src={`${baseUrl}${image.image_url}`}
               alt={`Изображение ${index + 1}`}
               style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
+                maxWidth: '100%',
+                maxHeight: '100%',
+                width: 'auto',
+                height: 'auto',
+                objectFit: 'contain',
+                borderRadius: '4px',
               }}
             />
           </Box>
