@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, Container, Avatar, Button, TextField, Tabs, Tab, IconButton, Paper } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import LogoutIcon from '@mui/icons-material/Logout';
 import { userStore } from '../../shared/store/userStore';
+import { useNavigate } from 'react-router-dom';
+import { authApi } from '../../services/auth';
+import { AUTH_STATUS_CHANGED } from '../../components/Header';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -30,6 +34,7 @@ function TabPanel(props: TabPanelProps) {
 }
 
 const Profile: React.FC = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(0);
   const [userData, setUserData] = useState({
     firstName: '',
@@ -61,11 +66,41 @@ const Profile: React.FC = () => {
     // Здесь будет логика сохранения данных
   };
 
+  const handleLogout = () => {
+    authApi.logout();
+    // Запускаем событие для обновления статуса авторизации в Header
+    window.dispatchEvent(new Event(AUTH_STATUS_CHANGED));
+    navigate('/');
+  };
+
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Typography variant="h4" component="h1" sx={{ mb: 4, fontWeight: 500, color: '#1A1A1A' }}>
-        Профиль
-      </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+        <Typography variant="h4" component="h1" sx={{ fontWeight: 500, color: '#1A1A1A' }}>
+          Профиль
+        </Typography>
+        <Button
+          variant="outlined"
+          color="error"
+          startIcon={<LogoutIcon />}
+          onClick={handleLogout}
+          sx={{
+            borderRadius: '58px',
+            textTransform: 'none',
+            fontWeight: 500,
+            px: 3,
+            py: 1,
+            borderColor: '#d32f2f',
+            color: '#d32f2f',
+            '&:hover': {
+              bgcolor: 'rgba(211, 47, 47, 0.04)',
+              borderColor: '#b71c1c'
+            }
+          }}
+        >
+          Выйти
+        </Button>
+      </Box>
 
       <Box sx={{ display: 'flex', gap: 4, flexDirection: { xs: 'column', md: 'row' } }}>
         {/* Левая колонка с фото */}

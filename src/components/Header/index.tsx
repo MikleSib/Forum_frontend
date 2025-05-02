@@ -5,18 +5,37 @@ import bgImage from '../../assets/bg.png';
 import logo from '../../assets/logo.svg';
 import { userStore } from '../../shared/store/userStore';
 
+// Создаем пользовательское событие для обновления статуса авторизации
+export const AUTH_STATUS_CHANGED = 'auth_status_changed';
+
 const Header: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isAuth, setIsAuth] = useState(false);
   const [user, setUser] = useState<any>(null);
 
-  useEffect(() => {
+  // Функция для проверки статуса авторизации
+  const checkAuthStatus = () => {
     const token = localStorage.getItem('access_token');
     setIsAuth(!!token);
     if (token) {
       setUser(userStore.user);
+    } else {
+      setUser(null);
     }
+  };
+
+  useEffect(() => {
+    // Проверяем статус авторизации при монтировании
+    checkAuthStatus();
+    
+    // Добавляем слушатель для события изменения статуса авторизации
+    window.addEventListener(AUTH_STATUS_CHANGED, checkAuthStatus);
+    
+    // Очистка слушателя при размонтировании
+    return () => {
+      window.removeEventListener(AUTH_STATUS_CHANGED, checkAuthStatus);
+    };
   }, []);
 
   const handleLogin = () => {

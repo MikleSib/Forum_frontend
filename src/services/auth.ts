@@ -2,6 +2,7 @@ import { RegisterRequest, LoginRequest, AuthResponse, UserProfile } from '../sha
 import API_URL from '../config/api';
 import axios from 'axios';
 import { userStore } from '../shared/store/userStore';
+import { AUTH_STATUS_CHANGED } from '../components/Header';
 
 // Функция для обработки HTTP ошибок с обновлением токена
 export const handleErrors = async (error: any) => {
@@ -206,9 +207,14 @@ export const authApi = {
     }
   },
   logout: () => {
-    // Очищаем токены при выходе
+    // Очищаем все связанные с авторизацией токены и данные
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
+    localStorage.removeItem('auth');
+    // Очищаем состояние пользователя
     userStore.clear();
+    
+    // Оповещаем компоненты, что статус авторизации изменился
+    window.dispatchEvent(new Event(AUTH_STATUS_CHANGED));
   }
 }; 
