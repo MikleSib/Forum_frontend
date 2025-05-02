@@ -5,6 +5,7 @@ import CommentIcon from '@mui/icons-material/Comment';
 import ShareIcon from '@mui/icons-material/Share';
 import styles from './PostCard.module.css';
 import type { Post } from '../../shared/types/post.types';
+import CachedImage from '../CachedImage';
 
 interface Props {
   post: Post;
@@ -19,22 +20,25 @@ const PostCard = ({ post, onClick }: Props): React.ReactElement => {
     return txt.value;
   };
 
-  // Функция для форматирования URL изображения
-  const formatImageUrl = (imageUrl: string | undefined) => {
-    if (!imageUrl) return '';
-    return `https://рыбный-форум.рф${imageUrl}`;
-  };
+  // Базовый URL для изображений
+  const baseUrl = 'https://рыбный-форум.рф';
 
   return (
     <Card className={styles.postCard} onClick={onClick} sx={{ cursor: onClick ? 'pointer' : 'default' }}>
       {post.images?.[0] && (
-        <CardMedia
-          component="img"
-          height="200"
-          image={formatImageUrl(post.images[0].image_url)}
-          alt={post.title}
-          className={styles.postImage}
-        />
+        <Box className={styles.imageContainer} sx={{ height: '200px', position: 'relative', overflow: 'hidden' }}>
+          <CachedImage
+            src={post.images[0].image_url}
+            baseUrl={baseUrl}
+            alt={post.title}
+            style={{ 
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+            }}
+            placeholderSrc="/placeholder-image.jpg"
+          />
+        </Box>
       )}
       <CardContent className={styles.postContent}>
         <Box className={styles.authorSection}>

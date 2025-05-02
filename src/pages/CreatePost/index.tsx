@@ -28,8 +28,8 @@ const CreatePost: React.FC = () => {
       const selectedFiles = Array.from(event.target.files);
       
       // Проверка на максимальное количество
-      if (images.length + selectedFiles.length > 20) {
-        setError('Максимальное количество изображений - 20');
+      if (images.length + selectedFiles.length > 5) {
+        setError('Максимальное количество изображений - 5');
         return;
       }
       
@@ -84,8 +84,8 @@ const CreatePost: React.FC = () => {
       );
       
       // Проверка на максимальное количество
-      if (images.length + droppedFiles.length > 20) {
-        setError('Максимальное количество изображений - 20');
+      if (images.length + droppedFiles.length > 5) {
+        setError('Максимальное количество изображений - 5');
         return;
       }
       
@@ -218,7 +218,7 @@ const CreatePost: React.FC = () => {
               {/* Загрузка изображений */}
               <div className={styles.imageUploadSection}>
                 <Typography variant="subtitle1" className={styles.imageUploadTitle}>
-                  Изображения ({images.length}/20)
+                  Изображения ({images.length}/5)
                 </Typography>
                 
                 <div 
@@ -252,7 +252,7 @@ const CreatePost: React.FC = () => {
                         color="primary"
                         onClick={() => document.getElementById('image-upload')?.click()}
                         startIcon={<CloudUploadIcon />}
-                        disabled={images.length >= 20 || isCompressing}
+                        disabled={images.length >= 5 || isCompressing}
                       >
                         Выбрать изображения
                       </Button>
@@ -267,7 +267,7 @@ const CreatePost: React.FC = () => {
                 )}
                 
                 <Typography variant="body2" className={styles.warningText}>
-                  Максимальное количество изображений: 20. Все изображения будут автоматически сжаты на 33%.
+                  Максимальное количество изображений: 5. Все изображения будут автоматически сжаты на 33%.
                 </Typography>
 
                 {/* Предпросмотр изображений */}

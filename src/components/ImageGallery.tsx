@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
-import { Box, Dialog, DialogContent, IconButton, MobileStepper, useMediaQuery, useTheme } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { Box, Dialog, DialogContent, IconButton, MobileStepper, useMediaQuery, useTheme, CircularProgress } from '@mui/material';
 import { Close, KeyboardArrowLeft, KeyboardArrowRight } from '@mui/icons-material';
 import { PostImage } from '../shared/types/post.types';
+import CachedImage from './CachedImage';
+import imageCache from '../utils/imageCache';
 
 interface ImageGalleryProps {
   images: PostImage[];
@@ -11,9 +13,27 @@ interface ImageGalleryProps {
 const ImageGallery: React.FC<ImageGalleryProps> = ({ images, baseUrl = 'https://рыбный-форум.рф' }) => {
   const [open, setOpen] = useState(false);
   const [activeStep, setActiveStep] = useState(0);
+  const [isImagesLoaded, setIsImagesLoaded] = useState(false);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const maxSteps = images.length;
+
+  // Предварительная загрузка изображений при монтировании компонента
+  useEffect(() => {
+    if (images && images.length > 0) {
+      const imageUrls = images.map(img => img.image_url);
+      // Предзагружаем изображения в кеш
+      imageCache.preloadImages(imageUrls, baseUrl);
+      
+      // Устанавливаем флаг загрузки через небольшую задержку
+      // чтобы дать возможность начать загрузку изображений
+      const timer = setTimeout(() => {
+        setIsImagesLoaded(true);
+      }, 100);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [images, baseUrl]);
 
   const handleOpen = (index: number) => {
     setActiveStep(index);
@@ -74,6 +94,23 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, baseUrl = 'https://
   // Отображаем не более 20 изображений и добавляем кнопку "еще" если их больше
   const visibleImages = images.slice(0, 20);
   const remainingCount = images.length - 20;
+
+  // Если изображения еще не загружены, показываем анимацию загрузки
+  if (!isImagesLoaded && images.length > 0) {
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          marginY: 3,
+          height: '200px',
+        }}
+      >
+        <CircularProgress size={40} />
+      </Box>
+    );
+  }
 
   return (
     <>
@@ -136,8 +173,9 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, baseUrl = 'https://
                 : {}),
             }}
           >
-            <img
-              src={`${baseUrl}${image.image_url}`}
+            <CachedImage
+              src={image.image_url}
+              baseUrl={baseUrl}
               alt={`Изображение ${index + 1}`}
               style={{
                 maxWidth: '100%',
@@ -147,6 +185,7 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, baseUrl = 'https://
                 objectFit: 'contain',
                 borderRadius: '4px',
               }}
+              placeholderSrc="/placeholder-image.jpg"
             />
           </Box>
         ))}
@@ -186,8 +225,9 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, baseUrl = 'https://
             height: '100%',
           }}
         >
-          <img
-            src={`${baseUrl}${images[activeStep].image_url}`}
+          <CachedImage
+            src={images[activeStep].image_url}
+            baseUrl={baseUrl}
             alt={`Изображение ${activeStep + 1}`}
             style={{
               maxWidth: '100%',
