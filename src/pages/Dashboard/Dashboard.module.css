@@ -329,7 +329,7 @@ body {
 }
 
 .tabPanel {
-  padding: 20px;
+  padding: 0;
 }
 
 /* Анимация для новых элементов */
@@ -559,4 +559,64 @@ body {
   .postCardAuthor {
     width: 100%;
   }
+}
+
+/* Скрываем элементы атрибуции Leaflet */
+:global(.leaflet-control-attribution) {
+  display: none !important;
+}
+
+:global(.leaflet-control-zoom) {
+  border: none !important;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Анимация пульсации для маркера местоположения */
+@keyframes pulseDot {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.5);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+.locationPulse {
+  position: relative;
+}
+
+.locationPulse::before {
+  content: '';
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: rgba(255, 0, 0, 0.4);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: pulseDot 1.5s ease-in-out infinite;
+  z-index: -1;
+}
+
+/* Добавляем эффект наведения на элементы списка */
+.spotListItem {
+  transition: background-color 0.2s ease;
+  border-radius: 4px;
+  margin-bottom: 4px;
+}
+
+.spotListItem:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.selectedSpot {
+  background-color: rgba(59, 89, 152, 0.1);
+  border-left: 3px solid #3b5998;
 } 

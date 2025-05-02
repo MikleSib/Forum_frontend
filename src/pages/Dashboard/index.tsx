@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Box, Container, Typography, Button, Tabs, Tab, Paper, Divider, Chip, InputBase, Grid, List, ListItem, ListItemText, ListItemButton, ListItemIcon } from '@mui/material';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { Box, Container, Typography, Button, Tabs, Tab, Paper, Divider, Chip, InputBase, Grid, List, ListItem, ListItemText, ListItemButton, ListItemIcon, IconButton, TextField, Dialog, DialogActions, DialogContent, DialogTitle, Link, Tooltip, Alert } from '@mui/material';
 import { useNavigate } from 'react-router-dom'; 
 import PostCard from '../../components/PostCard';
 import AddIcon from '@mui/icons-material/Add';
@@ -18,6 +18,12 @@ import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import PetsIcon from '@mui/icons-material/Pets';
 import EventIcon from '@mui/icons-material/Event';
+import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
+import RoomIcon from '@mui/icons-material/Room';
+import SaveIcon from '@mui/icons-material/Save';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import MyLocationIcon from '@mui/icons-material/MyLocation';
 import styles from './Dashboard.module.css';
 import { getPosts } from '../../services/api';
 import { Post } from '../../shared/types/post.types';
@@ -26,6 +32,15 @@ import { useTheme, useMediaQuery } from '@mui/material';
 import { newsApi } from '../../services/newsApi';
 import logo from '../../assets/logo.svg';
 import { AUTH_STATUS_CHANGED } from '../../components/Header';
+import { userStore } from '../../shared/store/userStore';
+import { YMaps, Map as YMap, Placemark, ZoomControl } from '@pbe/react-yandex-maps';
+
+// Другие варианты карт:
+// Esri World Terrain (только природный рельеф): "https://server.arcgisonline.com/ArcGIS/rest/services/World_Terrain_Base/MapServer/tile/{z}/{y}/{x}"
+// Esri World Physical (физическая карта без границ): "https://server.arcgisonline.com/ArcGIS/rest/services/World_Physical_Map/MapServer/tile/{z}/{y}/{x}"
+// Stamen Terrain (красивая карта рельефа): "https://stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}.png"
+// Thunderforest Landscape: "https://{s}.tile.thunderforest.com/landscape/{z}/{x}/{y}.png"
+// Thunderforest Outdoors: "https://{s}.tile.thunderforest.com/outdoors/{z}/{x}/{y}.png"
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -73,6 +88,55 @@ const TOPIC_ICONS: Record<NewsCategory, React.ReactElement> = {
   [NewsCategory.EVENTS]: <EventIcon sx={{ color: 'var(--primary-color)' }} />
 };
 
+// Интерфейс для меток рыбных мест
+interface FishingSpot {
+  id: string;
+  position: { lat: number; lng: number };
+  title: string;
+  description: string;
+  createdBy?: string;
+  createdAt?: Date;
+}
+
+// Тип для событий Яндекс карт
+interface YandexMapEvent {
+  get: (name: string) => any;
+  originalEvent: {
+    target: any;
+  };
+}
+
+// CSS для пульсации метки
+const pulsingDotStyles = {
+  position: 'relative',
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    width: '16px',
+    height: '16px',
+    borderRadius: '50%',
+    backgroundColor: 'rgba(44, 110, 178, 0.5)',
+    animation: 'pulse 1.5s infinite',
+    top: '0',
+    left: '0',
+    zIndex: -1
+  },
+  '@keyframes pulse': {
+    '0%': {
+      transform: 'scale(1)',
+      opacity: 0.8
+    },
+    '70%': {
+      transform: 'scale(2.5)',
+      opacity: 0
+    },
+    '100%': {
+      transform: 'scale(3)',
+      opacity: 0
+    }
+  }
+};
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const theme = useTheme();
@@ -92,6 +156,25 @@ const Dashboard = () => {
     guides: 0,
     fish_species: 0
   });
+  
+  // Состояние для отображения карты или публикаций
+  const [showMap, setShowMap] = useState(false);
+  
+  // Состояния для работы с картой
+  const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number }>({ lat: 55.7558, lng: 37.6173 }); // Москва по умолчанию
+  const [fishingSpots, setFishingSpots] = useState<FishingSpot[]>([]);
+  const [selectedSpot, setSelectedSpot] = useState<FishingSpot | null>(null);
+  const [isAddingMarker, setIsAddingMarker] = useState(false);
+  const [newMarkerPosition, setNewMarkerPosition] = useState<{ lat: number; lng: number } | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [newSpotTitle, setNewSpotTitle] = useState('');
+  const [newSpotDescription, setNewSpotDescription] = useState('');
+  const [locationRequested, setLocationRequested] = useState(false);
+  const [locationLoading, setLocationLoading] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [isTrackingLocation, setIsTrackingLocation] = useState(false);
+  const watchPositionRef = useRef<number | null>(null);
 
   const topics: TopicItem[] = [
     { id: 1, name: "Новости", category: NewsCategory.NEWS },
@@ -194,6 +277,209 @@ const Dashboard = () => {
     return 'публикаций';
   };
 
+  // Сохранение новой метки
+  const handleSaveSpot = () => {
+    if (newSpotTitle) {
+      const position = newMarkerPosition || {
+        lat: parseFloat((document.getElementById('latitudeInput') as HTMLInputElement)?.value || mapCenter.lat.toString()),
+        lng: parseFloat((document.getElementById('longitudeInput') as HTMLInputElement)?.value || mapCenter.lng.toString())
+      };
+      
+      const newSpot: FishingSpot = {
+        id: Date.now().toString(),
+        position: position,
+        title: newSpotTitle,
+        description: newSpotDescription,
+        createdBy: isAuth ? userStore.user?.username : 'Гость',
+        createdAt: new Date()
+      };
+      setFishingSpots([...fishingSpots, newSpot]);
+      
+      // Сохраняем метки в localStorage
+      localStorage.setItem('fishingSpots', JSON.stringify([...fishingSpots, newSpot]));
+      
+      // Сбрасываем состояния
+      setNewMarkerPosition(null);
+      setNewSpotTitle('');
+      setNewSpotDescription('');
+      setIsAddingMarker(false);
+      setIsDialogOpen(false);
+    }
+  };
+
+  // Удаление метки
+  const handleDeleteSpot = (spotId: string) => {
+    const updatedSpots = fishingSpots.filter(spot => spot.id !== spotId);
+    setFishingSpots(updatedSpots);
+    setSelectedSpot(null);
+    
+    // Обновляем localStorage
+    localStorage.setItem('fishingSpots', JSON.stringify(updatedSpots));
+  };
+
+  // Закрытие диалога
+  const handleCloseDialog = () => {
+    setIsDialogOpen(false);
+    if (isAddingMarker) {
+      setIsAddingMarker(false);
+    }
+  };
+
+  // Загрузка меток из localStorage при инициализации
+  useEffect(() => {
+    const savedSpots = localStorage.getItem('fishingSpots');
+    if (savedSpots) {
+      try {
+        setFishingSpots(JSON.parse(savedSpots));
+      } catch (e) {
+        console.error('Ошибка при загрузке меток:', e);
+      }
+    }
+  }, []);
+
+  // Обработчик клика по пункту меню "Карта рыбных мест"
+  const handleFishingMapClick = () => {
+    setShowMap(true);
+  };
+
+  // Обработчик клика по пункту меню "Главная"
+  const handleHomeClick = () => {
+    setShowMap(false);
+  };
+
+  // Функция для создания новой метки
+  const handleYandexMapClick = (e: YandexMapEvent) => {
+    if (isAddingMarker) {
+      const coords = e.get('coords');
+      if (coords) {
+        const position = {
+          lat: coords[0],
+          lng: coords[1]
+        };
+        setNewMarkerPosition(position);
+        setIsDialogOpen(true);
+      }
+    }
+  };
+
+  // Функция для перехода к метке на карте
+  const handleSpotClick = (spot: FishingSpot) => {
+    setSelectedSpot(spot);
+    setMapCenter(spot.position);
+  };
+
+  // Функция для определения местоположения пользователя
+  const getUserLocation = () => {
+    if (!navigator.geolocation) {
+      setLocationError('Геолокация не поддерживается вашим браузером');
+      return;
+    }
+    
+    setLocationLoading(true);
+    setLocationError(null);
+    
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        const userPos = { lat: latitude, lng: longitude };
+        setMapCenter(userPos);
+        setUserLocation(userPos);
+        setLocationLoading(false);
+        setLocationRequested(true);
+      },
+      (error) => {
+        setLocationLoading(false);
+        setLocationError(
+          error.code === 1 
+            ? 'Доступ к геолокации запрещен. Пожалуйста, предоставьте разрешение в настройках браузера.' 
+            : 'Не удалось определить ваше местоположение. Пожалуйста, попробуйте позже.'
+        );
+      },
+      { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+    );
+  };
+  
+  // Функция для отслеживания изменения местоположения пользователя
+  const toggleLocationTracking = () => {
+    if (isTrackingLocation) {
+      // Останавливаем отслеживание
+      if (watchPositionRef.current !== null) {
+        navigator.geolocation.clearWatch(watchPositionRef.current);
+        watchPositionRef.current = null;
+      }
+      setIsTrackingLocation(false);
+    } else {
+      // Начинаем отслеживание
+      if (!navigator.geolocation) {
+        setLocationError('Геолокация не поддерживается вашим браузером');
+        return;
+      }
+      
+      setLocationLoading(true);
+      
+      try {
+        const watchId = navigator.geolocation.watchPosition(
+          (position) => {
+            const { latitude, longitude } = position.coords;
+            const userPos = { lat: latitude, lng: longitude };
+            setUserLocation(userPos);
+            // При активном отслеживании центрируем карту на местоположении пользователя
+            if (isTrackingLocation) {
+              setMapCenter(userPos);
+            }
+            setLocationLoading(false);
+            setLocationRequested(true);
+          },
+          (error) => {
+            setLocationLoading(false);
+            setLocationError(
+              error.code === 1 
+                ? 'Доступ к геолокации запрещен. Пожалуйста, предоставьте разрешение в настройках браузера.' 
+                : 'Не удалось определить ваше местоположение. Пожалуйста, попробуйте позже.'
+            );
+            setIsTrackingLocation(false);
+            if (watchPositionRef.current !== null) {
+              navigator.geolocation.clearWatch(watchPositionRef.current);
+              watchPositionRef.current = null;
+            }
+          },
+          { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
+        );
+        
+        watchPositionRef.current = watchId;
+        setIsTrackingLocation(true);
+      } catch (err) {
+        setLocationLoading(false);
+        setLocationError('Не удалось начать отслеживание местоположения');
+        setIsTrackingLocation(false);
+      }
+    }
+  };
+  
+  // Эффект для центрирования карты при отслеживании
+  useEffect(() => {
+    if (isTrackingLocation && userLocation) {
+      setMapCenter(userLocation);
+    }
+  }, [isTrackingLocation, userLocation]);
+  
+  // Очистка отслеживания при размонтировании компонента
+  useEffect(() => {
+    return () => {
+      if (watchPositionRef.current !== null) {
+        navigator.geolocation.clearWatch(watchPositionRef.current);
+      }
+    };
+  }, []);
+  
+  // Запрос геолокации при первом отображении карты
+  useEffect(() => {
+    if (showMap && !locationRequested && !locationLoading) {
+      // Запрашиваем геолокацию напрямую - браузер сам покажет необходимый интерфейс
+      getUserLocation();
+    }
+  }, [showMap, locationRequested, locationLoading]);
+
   return (
     <Container maxWidth={false} sx={{ maxWidth: '1600px', p: 0 }}>
       <Box sx={{ mt: 3 }}>
@@ -204,16 +490,34 @@ const Dashboard = () => {
             <Paper sx={{ p: 2, mb: 2 }}>
               <Typography variant="h6" sx={{ mb: 2 }}>Навигация</Typography>
               <List>
-                <ListItemButton>
+                <ListItemButton onClick={handleHomeClick}>
+                  <ListItemIcon>
+                    <FeedIcon color={!showMap ? "primary" : "inherit"} />
+                  </ListItemIcon>
+                  <ListItemText primary="Главная" />
+                </ListItemButton>
+                <ListItemButton onClick={handleFishingMapClick}>
+                  <ListItemIcon>
+                    <MapIcon color={showMap ? "primary" : "inherit"} />
+                  </ListItemIcon>
                   <ListItemText primary="Карта рыбных мест" />
                 </ListItemButton>
                 <ListItemButton>
+                  <ListItemIcon>
+                    <EmojiEventsIcon />
+                  </ListItemIcon>
                   <ListItemText primary="Соревнования" />
                 </ListItemButton>
                 <ListItemButton>
+                  <ListItemIcon>
+                    <InfoOutlinedIcon />
+                  </ListItemIcon>
                   <ListItemText primary="О проекте" />
                 </ListItemButton>
                 <ListItemButton>
+                  <ListItemIcon>
+                    <HelpOutlineIcon />
+                  </ListItemIcon>
                   <ListItemText primary="Помощь" />
                 </ListItemButton>
               </List>
@@ -222,47 +526,216 @@ const Dashboard = () => {
 
           {/* Центральная колонка */}
           <Box sx={{ flex: 1 }}>
-            <Paper sx={{ p: 2, mb: 2 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                <Typography variant="h6">Последние публикации</Typography>
-                {isAuth && (
-                  <Button
-                    variant="contained"
-                    startIcon={<AddIcon />}
-                    onClick={handleCreatePost}
-                  >
-                    Создать пост
-                  </Button>
-                )}
-              </Box>
-              <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-                <Chip icon={<TrendingUpIcon />} label="Популярные" onClick={() => {}} />
-                <Chip icon={<FiberNewIcon />} label="Новые" onClick={() => {}} />
-                <Chip icon={<AccessTimeIcon />} label="По дате" onClick={() => {}} />
-              </Box>
-              {loading ? (
-                <Typography>Загрузка...</Typography>
-              ) : error ? (
-                <Typography color="error">{error}</Typography>
-              ) : (
-                <Box sx={{ width: '100%' }}>
-                  {posts.map((post) => (
-                    <Box key={post.id} sx={{ mb: 2 }}>
-                      <PostCard
-                        title={post.title}
-                        content={post.content}
-                        imageUrl={post.images[0]}
-                        author={post.author.username}
-                        date={post.created_at}
-                        comments={post.comments}
-                        likes={post.likes}
-                        onClick={() => handlePostClick(post.id)}
-                      />
-                    </Box>
-                  ))}
+            {showMap ? (
+              <Paper sx={{ p: 2, mb: 2 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                  <Typography variant="h6">Карта рыбных мест</Typography>
+                  <Box sx={{ display: 'flex', gap: 1 }}>
+                    <Button
+                      variant="outlined"
+                      startIcon={<MyLocationIcon />}
+                      onClick={getUserLocation}
+                      disabled={locationLoading}
+                    >
+                      {locationLoading ? 'Определяем...' : 'Мое местоположение'}
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      color={isTrackingLocation ? "secondary" : "primary"}
+                      onClick={toggleLocationTracking}
+                      disabled={locationLoading}
+                      sx={{ minWidth: '180px' }}
+                    >
+                      {isTrackingLocation ? 'Остановить слежение' : 'Следить за положением'}
+                    </Button>
+                    <Button
+                      variant="contained"
+                      startIcon={isAddingMarker ? <RoomIcon /> : <AddIcon />}
+                      color={isAddingMarker ? "secondary" : "primary"}
+                      onClick={() => setIsAddingMarker(!isAddingMarker)}
+                    >
+                      {isAddingMarker ? 'Отменить' : 'Добавить метку'}
+                    </Button>
+                  </Box>
                 </Box>
-              )}
-            </Paper>
+                
+                {locationError && (
+                  <Alert severity="error" sx={{ mb: 2 }}>
+                    {locationError}
+                  </Alert>
+                )}
+                
+                {isAddingMarker && (
+                  <Alert severity="info" sx={{ mb: 2 }}>
+                    Кликните на карту, чтобы выбрать место для метки
+                  </Alert>
+                )}
+                
+                <Box sx={{ position: 'relative', height: '600px', borderRadius: '8px', overflow: 'hidden' }}>
+                  <YMaps query={{ lang: 'ru_RU', apikey: '' }}>
+                    <YMap
+                      defaultState={{
+                        center: [mapCenter.lat, mapCenter.lng],
+                        zoom: 8
+                      }}
+                      state={{
+                        center: [mapCenter.lat, mapCenter.lng],
+                        zoom: selectedSpot ? 12 : (userLocation && isTrackingLocation ? 15 : 8)
+                      }}
+                      width="100%"
+                      height="100%"
+                      onClick={handleYandexMapClick}
+                      modules={['geoObject.addon.balloon', 'geoObject.addon.hint']}
+                    >
+                      <ZoomControl />
+                      
+                      {/* Метка текущего местоположения пользователя */}
+                      {userLocation && (
+                        <Placemark 
+                          geometry={[userLocation.lat, userLocation.lng]}
+                          options={{
+                            preset: isTrackingLocation ? 'islands#redDotIcon' : 'islands#geolocationIcon',
+                            iconColor: isTrackingLocation ? '#ff0000' : '#2c6eb2',
+                            zIndex: 999
+                          }}
+                          properties={{
+                            hintContent: 'Ваше местоположение',
+                            balloonContentHeader: 'Вы здесь',
+                            balloonContentBody: `Ваши координаты: ${userLocation.lat.toFixed(6)}, ${userLocation.lng.toFixed(6)}`,
+                            balloonContentFooter: isTrackingLocation ? 'Отслеживание активно' : '',
+                            iconContent: isTrackingLocation ? '<div class="locationPulse"></div>' : ''
+                          }}
+                          modules={['geoObject.addon.balloon', 'geoObject.addon.hint']}
+                        />
+                      )}
+                      
+                      <Placemark
+                        geometry={[mapCenter.lat, mapCenter.lng]}
+                        options={{
+                          preset: 'islands#blueDotIcon',
+                          draggable: isAddingMarker
+                        }}
+                        onDragEnd={(e: YandexMapEvent) => {
+                          const coords = e.get('coords');
+                          if (coords) {
+                            setNewMarkerPosition({ lat: coords[0], lng: coords[1] });
+                            setIsDialogOpen(true);
+                          }
+                        }}
+                      />
+                      
+                      {fishingSpots.map(spot => (
+                        <Placemark
+                          key={spot.id}
+                          geometry={[spot.position.lat, spot.position.lng]}
+                          options={{
+                            preset: spot.id === selectedSpot?.id 
+                              ? 'islands#redDotIconWithCaption' 
+                              : 'islands#blueDotIconWithCaption',
+                            openBalloonOnClick: true,
+                            hasHint: true,
+                            iconColor: spot.id === selectedSpot?.id ? '#FF0000' : '#3b5998'
+                          }}
+                          properties={{
+                            hintContent: spot.title,
+                            balloonContentHeader: spot.title,
+                            balloonContentBody: spot.description,
+                            balloonContentFooter: spot.createdBy ? `Добавил: ${spot.createdBy}` : '',
+                            iconCaption: spot.title
+                          }}
+                          modules={['geoObject.addon.balloon', 'geoObject.addon.hint']}
+                          onClick={() => setSelectedSpot(spot)}
+                        />
+                      ))}
+                    </YMap>
+                  </YMaps>
+                </Box>
+                
+                {/* Список добавленных рыбных мест */}
+                {fishingSpots.length > 0 && (
+                  <Box sx={{ mt: 2 }}>
+                    <Typography variant="h6" sx={{ mb: 1 }}>Список рыбных мест</Typography>
+                    <List sx={{ bgcolor: 'background.paper' }}>
+                      {fishingSpots.map((spot) => (
+                        <ListItem 
+                          key={spot.id}
+                          disablePadding
+                          secondaryAction={
+                            <IconButton onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteSpot(spot.id);
+                            }}>
+                              <DeleteIcon />
+                            </IconButton>
+                          }
+                          sx={{ mb: 1 }}
+                        >
+                          <ListItemButton
+                            onClick={() => handleSpotClick(spot)}
+                            sx={{
+                              border: selectedSpot?.id === spot.id ? '1px solid #3b5998' : 'none',
+                              borderRadius: '4px',
+                              '&:hover': {
+                                backgroundColor: 'rgba(59, 89, 152, 0.08)'
+                              },
+                              bgcolor: selectedSpot?.id === spot.id ? 'rgba(59, 89, 152, 0.05)' : 'transparent'
+                            }}
+                          >
+                            <ListItemText 
+                              primary={
+                                <Typography
+                                  component="span" 
+                                  fontWeight={selectedSpot?.id === spot.id ? 'bold' : 'normal'}
+                                >
+                                  {spot.title}
+                                </Typography>
+                              }
+                              secondary={`${spot.description.slice(0, 50)}${spot.description.length > 50 ? '...' : ''}`} 
+                            />
+                          </ListItemButton>
+                        </ListItem>
+                      ))}
+                    </List>
+                  </Box>
+                )}
+              </Paper>
+            ) : (
+              <Paper sx={{ p: 2, mb: 2 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                  <Typography variant="h6">Последние публикации</Typography>
+                  {isAuth && (
+                    <Button
+                      variant="contained"
+                      startIcon={<AddIcon />}
+                      onClick={handleCreatePost}
+                    >
+                      Создать пост
+                    </Button>
+                  )}
+                </Box>
+                <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+                  <Chip icon={<TrendingUpIcon />} label="Популярные" onClick={() => {}} />
+                  <Chip icon={<FiberNewIcon />} label="Новые" onClick={() => {}} />
+                  <Chip icon={<AccessTimeIcon />} label="По дате" onClick={() => {}} />
+                </Box>
+                {loading ? (
+                  <Typography>Загрузка...</Typography>
+                ) : error ? (
+                  <Typography color="error">{error}</Typography>
+                ) : (
+                  <Box sx={{ width: '100%' }}>
+                    {posts.map((post) => (
+                      <Box key={post.id} sx={{ mb: 2 }}>
+                        <PostCard
+                          post={post}
+                          onClick={() => handlePostClick(post.id)}
+                        />
+                      </Box>
+                    ))}
+                  </Box>
+                )}
+              </Paper>
+            )}
           </Box>
 
           {/* Правая колонка */}
@@ -289,6 +762,64 @@ const Dashboard = () => {
           </Box>
         </Box>
       </Box>
+
+      {/* Диалог для добавления новой метки */}
+      <Dialog open={isDialogOpen} onClose={handleCloseDialog}>
+        <DialogTitle>Добавить рыбное место</DialogTitle>
+        <DialogContent sx={{ minWidth: '300px' }}>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Название места"
+            fullWidth
+            value={newSpotTitle}
+            onChange={(e) => setNewSpotTitle(e.target.value)}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            margin="dense"
+            label="Описание"
+            fullWidth
+            multiline
+            rows={4}
+            value={newSpotDescription}
+            onChange={(e) => setNewSpotDescription(e.target.value)}
+            sx={{ mb: 2 }}
+          />
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <TextField
+              margin="dense"
+              label="Широта"
+              type="number"
+              value={newMarkerPosition?.lat || mapCenter.lat}
+              disabled
+              fullWidth
+            />
+            <TextField
+              margin="dense"
+              label="Долгота"
+              type="number"
+              value={newMarkerPosition?.lng || mapCenter.lng}
+              disabled
+              fullWidth
+            />
+          </Box>
+          <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+            Координаты выбраны на карте. Закройте диалог и нажмите на карту, чтобы изменить местоположение.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog}>Отмена</Button>
+          <Button 
+            onClick={handleSaveSpot} 
+            variant="contained" 
+            startIcon={<SaveIcon />}
+            disabled={!newSpotTitle}
+          >
+            Сохранить
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };

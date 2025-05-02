@@ -4,10 +4,10 @@ import { styled } from '@mui/material/styles';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import CommentIcon from '@mui/icons-material/Comment';
-import { PostImage } from '../shared/types/post.types';
+import { PostImage, Post } from '../shared/types/post.types';
 import styles from '../pages/Dashboard/Dashboard.module.css';
 
-interface PostCardProps {
+interface PostCardPropsDetailed {
   title: string;
   content: string;
   imageUrl?: PostImage;
@@ -16,7 +16,22 @@ interface PostCardProps {
   comments?: any[];
   likes?: any[];
   onClick?: () => void;
+  post?: never;
 }
+
+interface PostCardPropsUnified {
+  post: Post;
+  onClick?: () => void;
+  title?: never;
+  content?: never;
+  imageUrl?: never;
+  author?: never;
+  date?: never;
+  comments?: never;
+  likes?: never;
+}
+
+type PostCardProps = PostCardPropsDetailed | PostCardPropsUnified;
 
 const StyledCard = styled(Card)(() => ({
   overflow: 'hidden',
@@ -31,16 +46,31 @@ const StyledCard = styled(Card)(() => ({
   },
 }));
 
-const PostCard: React.FC<PostCardProps> = ({ 
-  title, 
-  content, 
-  imageUrl, 
-  author, 
-  date, 
-  comments = [], 
-  likes = [],
-  onClick
-}) => {
+const PostCard: React.FC<PostCardProps> = (props) => {
+  // Определяем, какие пропсы мы получили (объект post или отдельные поля)
+  const isUnifiedProps = 'post' in props && props.post !== undefined;
+  
+  // Извлекаем нужные данные в зависимости от типа пропсов
+  const {
+    title, 
+    content, 
+    imageUrl, 
+    author, 
+    date, 
+    comments = [], 
+    likes = [],
+    onClick
+  } = isUnifiedProps ? {
+    title: props.post.title,
+    content: props.post.content,
+    imageUrl: props.post.images?.[0],
+    author: props.post.author?.username || '',
+    date: props.post.created_at,
+    comments: props.post.comments || [],
+    likes: props.post.likes || [],
+    onClick: props.onClick
+  } : props as PostCardPropsDetailed;
+  
   // Форматируем URL изображения
   const formatImageUrl = (image: PostImage | undefined) => {
     if (!image || !image.image_url) return '';
@@ -57,7 +87,8 @@ const PostCard: React.FC<PostCardProps> = ({
   };
 
   // Получаем инициалы автора
-  const getInitials = (name: string) => {
+  const getInitials = (name?: string) => {
+    if (!name || name.length === 0) return '?';
     return name.charAt(0).toUpperCase();
   };
 
@@ -67,7 +98,7 @@ const PostCard: React.FC<PostCardProps> = ({
     return doc.body.textContent || '';
   };
 
-  const cleanContent = stripHtml(content);
+  const cleanContent = stripHtml(content || '');
 
   // Обработчик клика на кнопку "Читать"
   const handleReadButtonClick = (e: React.MouseEvent) => {

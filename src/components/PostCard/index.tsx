@@ -20,6 +20,11 @@ const PostCard = ({ post, onClick }: Props): React.ReactElement => {
     return txt.value;
   };
 
+  // Функция для получения инициалов пользователя
+  const getInitials = (name?: string): string => {
+    return name && name.length > 0 ? name.charAt(0).toUpperCase() : '?';
+  };
+
   // Базовый URL для изображений
   const baseUrl = 'https://рыбный-форум.рф';
 
@@ -42,10 +47,12 @@ const PostCard = ({ post, onClick }: Props): React.ReactElement => {
       )}
       <CardContent className={styles.postContent}>
         <Box className={styles.authorSection}>
-          <Avatar className={styles.avatar} />
+          <Avatar className={styles.avatar}>
+            {getInitials(post.author?.username)}
+          </Avatar>
           <Box className={styles.authorInfo}>
             <Typography className={styles.authorName}>
-              {post.author.username}
+              {post.author?.username || 'Неизвестный автор'}
             </Typography>
             <Typography className={styles.postDate}>
               {new Date(post.created_at).toLocaleDateString('ru-RU', {
