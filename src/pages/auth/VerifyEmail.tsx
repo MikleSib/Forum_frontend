@@ -42,14 +42,31 @@ const VerifyEmail: React.FC = () => {
       
       const response = await axios.post(`${API_URL}/auth/verify-email?to_email=${encodeURIComponent(email)}&code=${code}`);
       
-      // Если получен успешный HTTP-статус (2xx), значит верификация успешна
-      if (response.status >= 200 && response.status < 300) {
+      // Проверяем ответ API на наличие данных о статусе проверки
+      if (response.data) {
+        // Если в ответе есть verified и он равен false, показываем ошибку
+        if (response.data.status === 'error' || response.data.verified === false) {
+          setError(response.data.message || 'Неверный код подтверждения');
+          return;
+        }
+        
+        // Если всё хорошо, показываем успех
         setSuccess(true);
       } else {
-        setError(response.data?.message || response.data?.detail || 'Произошла ошибка при подтверждении email');
+        setError('Получен некорректный ответ от сервера');
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || err.response?.data?.detail || 'Произошла ошибка при подтверждении email');
+      // Если ошибка имеет свойство response, проверяем содержимое ответа
+      if (err.response && err.response.data) {
+        // Если в ответе явно указано, что код неверный
+        if (err.response.data.status === 'error' || err.response.data.verified === false) {
+          setError(err.response.data.message || 'Неверный код подтверждения');
+        } else {
+          setError(err.response.data.message || err.response.data.detail || 'Произошла ошибка при подтверждении email');
+        }
+      } else {
+        setError('Произошла ошибка при подтверждении email');
+      }
     } finally {
       setLoading(false);
     }
