@@ -388,6 +388,17 @@ export const forumApi = {
     }
   },
   
+  // Отправка жалобы на сообщение
+  reportPost: async (postId: number, reason: string): Promise<any> => {
+    try {
+      const response = await api.post(`/forum/posts/${postId}/report`, { reason });
+      return response.data;
+    } catch (error) {
+      console.error(`Ошибка при отправке жалобы на сообщение форума ${postId}:`, error);
+      throw error;
+    }
+  },
+  
   // Получение активных тем
   getActiveTopics: async (limit: number = 5): Promise<ForumTopic[]> => {
     try {
