@@ -106,7 +106,7 @@ const NewsCard: React.FC<NewsCardProps> = ({ news, onClick }) => {
           </Avatar>
           <Box>
             <Typography variant="caption" fontWeight={500}>
-              {news.author?.name || 'Неизвестный автор'}
+              {news.author?.name || 'Рыбный форум'}
             </Typography>
             <Typography variant="caption" display="block" color="text.secondary">
               {format(new Date(news.created_at), 'dd MMMM yyyy', { locale: ru })}

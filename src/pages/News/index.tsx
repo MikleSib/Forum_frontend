@@ -181,11 +181,11 @@ const NewsPage: React.FC = () => {
                   >
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
                       <Avatar src={item.author?.avatar}>
-                        {item.author?.name?.[0]?.toUpperCase() || '?'}
+                        {item.author?.name?.[0]?.toUpperCase() || 'РФ'}
                       </Avatar>
                       <Box>
                         <Typography variant="subtitle2">
-                          {item.author?.name || 'Неизвестный автор'}
+                          {item.author?.name || 'Рыбный форум'}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
                           {format(new Date(item.created_at), 'dd MMMM yyyy', { locale: ru })}
