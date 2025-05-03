@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Container, Box, Typography, Paper, Divider, Button, 
   Avatar, Grid, TextField, InputAdornment, Chip,
-  Card, CardContent, CardHeader, CardActions
+  Card, CardContent, CardHeader, CardActions,
+  CircularProgress, Alert
 } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
 import ForumIcon from '@mui/icons-material/Forum';
@@ -13,131 +14,70 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
+import { forumApi } from '../../services/forumApi';
+import { ForumCategory, ForumTopic } from '../../shared/types/forum.types';
+import { userStore } from '../../shared/store/userStore';
 
-// Моковые данные для категорий форума
-export const forumCategories = [
-  { 
-    id: 1, 
-    title: 'Рыболовные снасти', 
-    description: 'Обсуждение удочек, спиннингов, катушек и другого оборудования',
-    topics: 124,
-    posts: 1543,
-    icon: '🎣'
-  },
-  { 
-    id: 2, 
-    title: 'Места для рыбалки', 
-    description: 'Делимся информацией о лучших местах для рыбалки',
-    topics: 89,
-    posts: 967,
-    icon: '🗺️'
-  },
-  { 
-    id: 3, 
-    title: 'Техника ловли', 
-    description: 'Обсуждение различных техник и методов ловли рыбы',
-    topics: 75,
-    posts: 823,
-    icon: '📊'
-  },
-  { 
-    id: 4, 
-    title: 'Наживки и приманки', 
-    description: 'Всё о наживках, приманках и прикормках',
-    topics: 103,
-    posts: 1288,
-    icon: '🪱'
-  },
-  { 
-    id: 5, 
-    title: 'Отчеты о рыбалке', 
-    description: 'Поделитесь своими успехами и впечатлениями',
-    topics: 201,
-    posts: 2654,
-    icon: '📝'
-  }
-];
-
-// Моковые данные для популярных тем
-export const popularTopics = [
-  {
-    id: 1,
-    title: 'Лучшие спиннинги для начинающих',
-    author: {
-      id: 1,
-      name: 'Александр',
-      avatar: 'https://i.pravatar.cc/150?img=1'
-    },
-    replies: 34,
-    views: 678,
-    lastActivity: '15 минут назад',
-    category: 'Рыболовные снасти',
-    isBookmarked: true,
-  },
-  {
-    id: 2,
-    title: 'Рыбалка на Волге: лучшие места и время года',
-    author: {
-      id: 2,
-      name: 'Михаил',
-      avatar: 'https://i.pravatar.cc/150?img=2'
-    },
-    replies: 28,
-    views: 542,
-    lastActivity: '2 часа назад',
-    category: 'Места для рыбалки',
-    isBookmarked: false,
-  },
-  {
-    id: 3,
-    title: 'Как правильно выбрать катушку для спиннинга?',
-    author: {
-      id: 3,
-      name: 'Елена',
-      avatar: 'https://i.pravatar.cc/150?img=3'
-    },
-    replies: 42,
-    views: 891,
-    lastActivity: '4 часа назад',
-    category: 'Рыболовные снасти',
-    isBookmarked: false,
-  },
-  {
-    id: 4,
-    title: 'Уловистые приманки для щуки: личный опыт',
-    author: {
-      id: 4,
-      name: 'Дмитрий',
-      avatar: 'https://i.pravatar.cc/150?img=4'
-    },
-    replies: 39,
-    views: 723,
-    lastActivity: '1 день назад',
-    category: 'Наживки и приманки',
-    isBookmarked: true,
-  },
-  {
-    id: 5,
-    title: 'Техника ловли карпа на бойлы',
-    author: {
-      id: 5,
-      name: 'Сергей',
-      avatar: 'https://i.pravatar.cc/150?img=5'
-    },
-    replies: 31,
-    views: 644,
-    lastActivity: '2 дня назад',
-    category: 'Техника ловли',
-    isBookmarked: false,
-  }
-];
-
+// Удаляем моковые данные и заменяем их на состояние для реальных данных
 const ForumPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
-  const [bookmarkedTopics, setBookmarkedTopics] = useState<number[]>(
-    popularTopics.filter(topic => topic.isBookmarked).map(topic => topic.id)
-  );
+  const [bookmarkedTopics, setBookmarkedTopics] = useState<number[]>([]);
+  
+  // Состояние для хранения категорий форума
+  const [categories, setCategories] = useState<ForumCategory[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Состояние для активных тем
+  const [activeTopics, setActiveTopics] = useState<ForumTopic[]>([]);
+  const [topicsLoading, setTopicsLoading] = useState(true);
+  const [topicsError, setTopicsError] = useState<string | null>(null);
+
+  // Загружаем категории и активные темы при монтировании компонента
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        // Загружаем категории
+        const categoriesData = await forumApi.getCategories();
+        setCategories(categoriesData);
+        setError(null);
+      } catch (err) {
+        console.error('Ошибка при загрузке категорий форума:', err);
+        setError('Не удалось загрузить категории форума. Пожалуйста, попробуйте позже.');
+      } finally {
+        setLoading(false);
+      }
+      
+      try {
+        setTopicsLoading(true);
+        // Загружаем активные темы
+        const topicsData = await forumApi.getActiveTopics(5);
+        setActiveTopics(topicsData);
+        
+        // Инициализируем закладки
+        const initialBookmarks = localStorage.getItem('bookmarkedTopics');
+        if (initialBookmarks) {
+          setBookmarkedTopics(JSON.parse(initialBookmarks));
+        }
+        
+        setTopicsError(null);
+      } catch (err) {
+        console.error('Ошибка при загрузке активных тем форума:', err);
+        setTopicsError('Не удалось загрузить активные темы. Пожалуйста, попробуйте позже.');
+      } finally {
+        setTopicsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // Сохраняем закладки в localStorage при их изменении
+  useEffect(() => {
+    localStorage.setItem('bookmarkedTopics', JSON.stringify(bookmarkedTopics));
+  }, [bookmarkedTopics]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -159,73 +99,123 @@ const ForumPage: React.FC = () => {
     console.log('Создание новой темы');
     navigate('/forum/create-topic');
   };
+  
+  const handleCreateCategory = () => {
+    console.log('Создание новой категории');
+    navigate('/forum/create-category');
+  };
 
   const toggleBookmark = (topicId: number) => {
-    if (bookmarkedTopics.includes(topicId)) {
-      setBookmarkedTopics(bookmarkedTopics.filter(id => id !== topicId));
+    setBookmarkedTopics(prev => 
+      prev.includes(topicId) 
+        ? prev.filter(id => id !== topicId) 
+        : [...prev, topicId]
+    );
+  };
+  
+  // Функция для форматирования даты
+  const formatDate = (dateString: string) => {
+    const now = new Date();
+    const date = new Date(dateString);
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+    
+    if (diffMins < 1) {
+      return 'только что';
+    } else if (diffMins < 60) {
+      return `${diffMins} ${getMinutesWord(diffMins)} назад`;
+    } else if (diffHours < 24) {
+      return `${diffHours} ${getHoursWord(diffHours)} назад`;
+    } else if (diffDays < 7) {
+      return `${diffDays} ${getDaysWord(diffDays)} назад`;
     } else {
-      setBookmarkedTopics([...bookmarkedTopics, topicId]);
+      return date.toLocaleDateString('ru-RU', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      });
     }
+  };
+  
+  // Вспомогательные функции для склонения слов
+  const getMinutesWord = (num: number) => {
+    if (num % 10 === 1 && num % 100 !== 11) return 'минуту';
+    if ([2, 3, 4].includes(num % 10) && ![12, 13, 14].includes(num % 100)) return 'минуты';
+    return 'минут';
+  };
+  
+  const getHoursWord = (num: number) => {
+    if (num % 10 === 1 && num % 100 !== 11) return 'час';
+    if ([2, 3, 4].includes(num % 10) && ![12, 13, 14].includes(num % 100)) return 'часа';
+    return 'часов';
+  };
+  
+  const getDaysWord = (num: number) => {
+    if (num % 10 === 1 && num % 100 !== 11) return 'день';
+    if ([2, 3, 4].includes(num % 10) && ![12, 13, 14].includes(num % 100)) return 'дня';
+    return 'дней';
   };
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       {/* Заголовок и поиск */}
       <Box sx={{ mb: 4 }}>
-        <Grid container spacing={2} alignItems="center">
-          <Grid size={{ xs: 12, md: 6 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <ForumIcon sx={{ fontSize: 36, color: 'primary.main' }} />
-              <Typography variant="h4" component="h1" sx={{ fontWeight: 700 }}>
-                Форум рыболовов
-              </Typography>
-            </Box>
-            <Typography variant="subtitle1" color="text.secondary" sx={{ mt: 1 }}>
-              Общайтесь, делитесь опытом и находите единомышленников
-            </Typography>
-          </Grid>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <Box component="form" onSubmit={handleSearch} sx={{ display: 'flex', alignItems: 'center' }}>
-              <TextField
-                fullWidth
-                variant="outlined"
-                placeholder="Поиск по форуму..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SearchIcon color="action" />
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{ 
-                  bgcolor: 'background.paper',
+        <Typography variant="h4" component="h1" sx={{ fontWeight: 700, mb: 1 }}>
+          Форум рыболовов
+        </Typography>
+        <Typography variant="subtitle1" color="text.secondary">
+          Общайтесь, делитесь опытом и задавайте вопросы другим рыбакам
+        </Typography>
+        
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mt: 2 }}>
+          <Box component="form" onSubmit={handleSearch} sx={{ flex: 1, minWidth: '200px' }}>
+            <TextField
+              fullWidth
+              size="small"
+              placeholder="Поиск по форуму..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon color="action" />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{ 
+                bgcolor: 'background.paper',
+                borderRadius: 2,
+                '& .MuiOutlinedInput-root': {
                   borderRadius: 2,
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: 2,
-                  }
-                }}
-              />
+                }
+              }}
+            />
+          </Box>
+          
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Button 
+              variant="contained" 
+              color="primary"
+              startIcon={<AddIcon />}
+              onClick={handleCreateTopic}
+            >
+              Новая тема
+            </Button>
+            
+            {userStore.isAdmin && (
               <Button 
-                variant="contained" 
+                variant="outlined" 
                 color="primary"
-                onClick={handleCreateTopic}
-                sx={{ 
-                  ml: 2, 
-                  height: 56, 
-                  minWidth: { xs: 56, md: 180 },
-                  borderRadius: 2
-                }}
+                startIcon={<AddIcon />}
+                onClick={handleCreateCategory}
               >
-                <AddIcon sx={{ display: { xs: 'block', md: 'inline' }, mr: { xs: 0, md: 1 } }} />
-                <Typography sx={{ display: { xs: 'none', md: 'block' } }}>
-                  Создать тему
-                </Typography>
+                Создать категорию
               </Button>
-            </Box>
-          </Grid>
-        </Grid>
+            )}
+          </Box>
+        </Box>
       </Box>
 
       {/* Категории форума */}
@@ -250,76 +240,79 @@ const ForumPage: React.FC = () => {
           Категории форума
         </Typography>
         
-        {forumCategories.map((category, index) => (
-          <React.Fragment key={category.id}>
-            {index > 0 && <Divider />}
-            <Box 
-              sx={{ 
-                p: 2, 
-                '&:hover': { 
-                  bgcolor: 'action.hover',
-                  cursor: 'pointer'
-                },
-                transition: 'background-color 0.2s'
-              }}
-              onClick={() => handleCategoryClick(category.id)}
-            >
-              <Grid container spacing={2} alignItems="center">
-                <Grid size={{ xs: 12, md: 8 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Box 
-                      sx={{ 
-                        width: 50, 
-                        height: 50, 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        justifyContent: 'center',
-                        bgcolor: 'primary.light',
-                        color: 'white',
-                        borderRadius: 2,
-                        fontSize: '1.5rem'
-                      }}
-                    >
-                      {category.icon}
-                    </Box>
-                    <Box>
-                      <Typography variant="h6" color="primary.dark">{category.title}</Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {category.description}
-                      </Typography>
-                    </Box>
+        {loading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+            <CircularProgress />
+          </Box>
+        ) : error ? (
+          <Alert severity="error" sx={{ m: 2 }}>{error}</Alert>
+        ) : (
+          <Box>
+            {categories.map((category: ForumCategory, index: number) => (
+              <React.Fragment key={category.id}>
+                <Box
+                  sx={{
+                    p: 2,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    '&:hover': {
+                      bgcolor: 'action.hover',
+                    },
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 2
+                  }}
+                  onClick={() => handleCategoryClick(category.id)}
+                >
+                  <Box
+                    sx={{
+                      width: 50,
+                      height: 50,
+                      borderRadius: 2,
+                      bgcolor: 'primary.light',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: 24
+                    }}
+                  >
+                    {category.icon || '📋'}
                   </Box>
-                </Grid>
-                <Grid size={{ xs: 12, md: 4 }}>
-                  <Box sx={{ display: 'flex', justifyContent: { xs: 'flex-start', md: 'flex-end' }, gap: 3 }}>
-                    <Box sx={{ textAlign: 'center' }}>
-                      <Typography variant="h6" color="primary.main">
-                        {category.topics}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        тем
-                      </Typography>
-                    </Box>
-                    <Box sx={{ textAlign: 'center' }}>
-                      <Typography variant="h6" color="secondary.main">
-                        {category.posts}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        сообщений
-                      </Typography>
-                    </Box>
+                  <Box sx={{ flex: 1 }}>
+                    <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                      {category.title}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {category.description}
+                    </Typography>
                   </Box>
-                </Grid>
-              </Grid>
-            </Box>
-          </React.Fragment>
-        ))}
+                  <Box sx={{ textAlign: 'right' }}>
+                    <Typography variant="body2" color="text.secondary">
+                      Тем: {category.topics_count}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Сообщений: {category.messages_count}
+                    </Typography>
+                  </Box>
+                </Box>
+                {index < categories.length - 1 && <Divider />}
+              </React.Fragment>
+            ))}
+            
+            {categories.length === 0 && (
+              <Box sx={{ p: 4, textAlign: 'center' }}>
+                <Typography variant="body1" color="text.secondary">
+                  Категории форума не найдены
+                </Typography>
+              </Box>
+            )}
+          </Box>
+        )}
       </Paper>
 
-      {/* Популярные темы */}
+      {/* Активные темы */}
       <Paper elevation={0} 
         sx={{ 
-          mb: 4, 
           overflow: 'hidden',
           border: '1px solid',
           borderColor: 'divider',
@@ -330,213 +323,109 @@ const ForumPage: React.FC = () => {
           variant="h6" 
           sx={{ 
             p: 2, 
-            bgcolor: 'secondary.main', 
+            bgcolor: 'primary.main', 
             color: 'white',
             fontWeight: 600
           }}
         >
-          Популярные обсуждения
+          Активные темы
         </Typography>
         
-        {popularTopics.map((topic, index) => (
-          <React.Fragment key={topic.id}>
-            {index > 0 && <Divider />}
-            <Box 
-              sx={{ 
-                p: 2, 
-                '&:hover': { 
-                  bgcolor: 'action.hover',
-                  cursor: 'pointer'
-                },
-                transition: 'background-color 0.2s'
-              }}
-            >
-              <Grid container spacing={2}>
-                <Grid size={{ xs: 10, md: 9 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
-                    <Avatar src={topic.author.avatar} alt={topic.author.name} />
-                    <Box>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-                        <Typography 
-                          variant="subtitle1" 
-                          sx={{ fontWeight: 600, color: 'secondary.dark' }}
-                          onClick={() => handleTopicClick(topic.id)}
-                        >
-                          {topic.title}
+        {topicsLoading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+            <CircularProgress />
+          </Box>
+        ) : topicsError ? (
+          <Alert severity="error" sx={{ m: 2 }}>{topicsError}</Alert>
+        ) : (
+          <Box>
+            {activeTopics.length > 0 ? (
+              activeTopics.map((topic, index) => (
+                <React.Fragment key={topic.id}>
+                  <Box
+                    sx={{
+                      p: 2,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      '&:hover': {
+                        bgcolor: 'action.hover',
+                      },
+                      display: 'flex',
+                      flexDirection: { xs: 'column', sm: 'row' },
+                      alignItems: { xs: 'flex-start', sm: 'center' },
+                      gap: 2
+                    }}
+                    onClick={() => handleTopicClick(topic.id)}
+                  >
+                    <Avatar 
+                      src={topic.last_post_author_avatar || topic.author_avatar} 
+                      sx={{ width: 40, height: 40 }}
+                    >
+                      {!topic.last_post_author_avatar && !topic.author_avatar && ((topic.last_post_author_username || topic.author_username)?.[0] || '?')}
+                    </Avatar>
+                    <Box sx={{ flex: 1 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                        <Typography variant="body2" color="primary">
+                          {topic.category_title || `Категория ${topic.category_id}`}
                         </Typography>
-                        <Chip 
-                          size="small" 
-                          label={topic.category} 
-                          sx={{ 
-                            bgcolor: 'primary.light', 
-                            color: 'white',
-                            height: 24,
-                            fontSize: '0.75rem'
-                          }} 
-                        />
-                      </Box>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 1 }}>
                         <Typography variant="body2" color="text.secondary">
-                          Автор: {topic.author.name}
+                          • {topic.last_post_author_username || topic.author_username || `Пользователь ${topic.last_post_author_id || topic.author_id}`}
                         </Typography>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                          <CommentIcon fontSize="small" color="action" />
+                      </Box>
+                      <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
+                        {topic.title}
+                      </Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 0.5, flexWrap: 'wrap' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          <CommentIcon sx={{ fontSize: 16, mr: 0.5, color: 'text.secondary' }} />
                           <Typography variant="body2" color="text.secondary">
-                            {topic.replies}
+                            {topic.posts_count - 1 >= 0 ? topic.posts_count - 1 : 0}
                           </Typography>
                         </Box>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                          <VisibilityIcon fontSize="small" color="action" />
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          <VisibilityIcon sx={{ fontSize: 16, mr: 0.5, color: 'text.secondary' }} />
                           <Typography variant="body2" color="text.secondary">
-                            {topic.views}
+                            {topic.views_count}
+                          </Typography>
+                        </Box>
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          <AccessTimeIcon sx={{ fontSize: 16, mr: 0.5, color: 'text.secondary' }} />
+                          <Typography variant="body2" color="text.secondary">
+                            {topic.last_post_date ? formatDate(topic.last_post_date) : formatDate(topic.created_at)}
                           </Typography>
                         </Box>
                       </Box>
                     </Box>
-                  </Box>
-                </Grid>
-                <Grid size={{ xs: 2, md: 3 }}>
-                  <Box sx={{ 
-                    display: 'flex', 
-                    flexDirection: { xs: 'column', md: 'row' },
-                    justifyContent: 'flex-end', 
-                    alignItems: { xs: 'flex-end', md: 'center' },
-                    height: '100%',
-                    gap: 2
-                  }}>
-                    <Box sx={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      gap: 0.5 
-                    }}>
-                      <AccessTimeIcon fontSize="small" color="action" />
-                      <Typography variant="body2" color="text.secondary">
-                        {topic.lastActivity}
-                      </Typography>
-                    </Box>
-                    <Box 
+                    <Box
+                      sx={{ 
+                        cursor: 'pointer',
+                        display: { xs: 'none', md: 'block' }
+                      }}
                       onClick={(e) => {
                         e.stopPropagation();
                         toggleBookmark(topic.id);
-                      }}
-                      sx={{ 
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        cursor: 'pointer'
                       }}
                     >
                       {bookmarkedTopics.includes(topic.id) ? (
                         <BookmarkIcon color="primary" />
                       ) : (
-                        <BookmarkBorderIcon />
+                        <BookmarkBorderIcon color="action" />
                       )}
                     </Box>
                   </Box>
-                </Grid>
-              </Grid>
-            </Box>
-          </React.Fragment>
-        ))}
+                  {index < activeTopics.length - 1 && <Divider />}
+                </React.Fragment>
+              ))
+            ) : (
+              <Box sx={{ p: 4, textAlign: 'center' }}>
+                <Typography variant="body1" color="text.secondary">
+                  Активных тем пока нет
+                </Typography>
+              </Box>
+            )}
+          </Box>
+        )}
       </Paper>
-
-      {/* Информация о форуме */}
-      <Grid container spacing={3}>
-        <Grid size={{ xs: 12, md: 4 }}>
-          <Card sx={{ 
-            height: '100%', 
-            display: 'flex', 
-            flexDirection: 'column',
-            borderRadius: 3,
-            boxShadow: 2
-          }}>
-            <CardContent>
-              <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
-                Статистика форума
-              </Typography>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                <Typography variant="body2" color="text.secondary">Всего тем:</Typography>
-                <Typography variant="body2" fontWeight={600}>592</Typography>
-              </Box>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                <Typography variant="body2" color="text.secondary">Всего сообщений:</Typography>
-                <Typography variant="body2" fontWeight={600}>7,275</Typography>
-              </Box>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                <Typography variant="body2" color="text.secondary">Участников:</Typography>
-                <Typography variant="body2" fontWeight={600}>1,423</Typography>
-              </Box>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                <Typography variant="body2" color="text.secondary">Новых за месяц:</Typography>
-                <Typography variant="body2" fontWeight={600}>82</Typography>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid size={{ xs: 12, md: 4 }}>
-          <Card sx={{ 
-            height: '100%', 
-            display: 'flex', 
-            flexDirection: 'column',
-            borderRadius: 3,
-            boxShadow: 2
-          }}>
-            <CardContent>
-              <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
-                Правила форума
-              </Typography>
-              <Typography variant="body2" paragraph>
-                • Уважайте других участников форума
-              </Typography>
-              <Typography variant="body2" paragraph>
-                • Не размещайте спам и рекламу
-              </Typography>
-              <Typography variant="body2" paragraph>
-                • Придерживайтесь тематики раздела
-              </Typography>
-              <Typography variant="body2">
-                • Соблюдайте законодательство РФ
-              </Typography>
-            </CardContent>
-            <CardActions sx={{ mt: 'auto', p: 2, pt: 0 }}>
-              <Button size="small" color="primary">
-                Полные правила
-              </Button>
-            </CardActions>
-          </Card>
-        </Grid>
-        <Grid size={{ xs: 12, md: 4 }}>
-          <Card sx={{ 
-            height: '100%', 
-            display: 'flex', 
-            flexDirection: 'column',
-            borderRadius: 3,
-            boxShadow: 2
-          }}>
-            <CardContent>
-              <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
-                Активные пользователи
-              </Typography>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                {[1, 2, 3, 4, 5, 6, 7, 8].map((id) => (
-                  <Avatar 
-                    key={id}
-                    src={`https://i.pravatar.cc/150?img=${id}`} 
-                    alt={`Пользователь ${id}`}
-                    sx={{ width: 40, height: 40 }}
-                  />
-                ))}
-                <Avatar sx={{ width: 40, height: 40, bgcolor: 'primary.main' }}>+42</Avatar>
-              </Box>
-            </CardContent>
-            <CardActions sx={{ mt: 'auto', p: 2, pt: 0 }}>
-              <Button size="small" color="primary">
-                Список участников
-              </Button>
-            </CardActions>
-          </Card>
-        </Grid>
-      </Grid>
     </Container>
   );
 };

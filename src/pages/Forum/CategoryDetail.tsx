@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Container, Box, Typography, Paper, Divider, Button, 
   Breadcrumbs, Avatar, Chip, IconButton, TextField,
   InputAdornment, Table, TableBody, TableCell, 
-  TableContainer, TableHead, TableRow
+  TableContainer, TableHead, TableRow,
+  CircularProgress, Alert
 } from '@mui/material';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -17,200 +18,64 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import SortIcon from '@mui/icons-material/Sort';
 
-// Данные для моделирования категорий форума из родительского компонента
-import { forumCategories } from './index';
-
-// Моковые данные для тем в категории
-export const topicsData = [
-  {
-    id: 1,
-    title: 'Лучшие спиннинги для начинающих',
-    author: {
-      id: 1,
-      name: 'Александр',
-      avatar: 'https://i.pravatar.cc/150?img=1'
-    },
-    replies: 34,
-    views: 678,
-    lastActivity: '15 минут назад',
-    lastReplyAuthor: {
-      id: 5,
-      name: 'Сергей',
-      avatar: 'https://i.pravatar.cc/150?img=5'
-    },
-    createdAt: '2 дня назад',
-    isPinned: true,
-    isClosed: false,
-    tags: ['Начинающим', 'Снаряжение']
-  },
-  {
-    id: 2,
-    title: 'Карбоновые удилища: за и против',
-    author: {
-      id: 2,
-      name: 'Михаил',
-      avatar: 'https://i.pravatar.cc/150?img=2'
-    },
-    replies: 28,
-    views: 542,
-    lastActivity: '2 часа назад',
-    lastReplyAuthor: {
-      id: 3,
-      name: 'Елена',
-      avatar: 'https://i.pravatar.cc/150?img=3'
-    },
-    createdAt: '3 дня назад',
-    isPinned: false,
-    isClosed: false,
-    tags: ['Снаряжение', 'Обзор']
-  },
-  {
-    id: 3,
-    title: 'Как выбрать катушку для спиннинга?',
-    author: {
-      id: 3,
-      name: 'Елена',
-      avatar: 'https://i.pravatar.cc/150?img=3'
-    },
-    replies: 42,
-    views: 891,
-    lastActivity: '4 часа назад',
-    lastReplyAuthor: {
-      id: 4,
-      name: 'Дмитрий',
-      avatar: 'https://i.pravatar.cc/150?img=4'
-    },
-    createdAt: '5 дней назад',
-    isPinned: false,
-    isClosed: false,
-    tags: ['Снаряжение', 'Вопрос']
-  },
-  {
-    id: 4,
-    title: 'Обзор новинок спиннингов 2023 года',
-    author: {
-      id: 4,
-      name: 'Дмитрий',
-      avatar: 'https://i.pravatar.cc/150?img=4'
-    },
-    replies: 39,
-    views: 723,
-    lastActivity: '1 день назад',
-    lastReplyAuthor: {
-      id: 1,
-      name: 'Александр',
-      avatar: 'https://i.pravatar.cc/150?img=1'
-    },
-    createdAt: '7 дней назад',
-    isPinned: false,
-    isClosed: false,
-    tags: ['Снаряжение', 'Обзор', 'Новинки']
-  },
-  {
-    id: 5,
-    title: 'Ремонт спиннинга своими руками',
-    author: {
-      id: 5,
-      name: 'Сергей',
-      avatar: 'https://i.pravatar.cc/150?img=5'
-    },
-    replies: 31,
-    views: 644,
-    lastActivity: '2 дня назад',
-    lastReplyAuthor: {
-      id: 2,
-      name: 'Михаил',
-      avatar: 'https://i.pravatar.cc/150?img=2'
-    },
-    createdAt: '10 дней назад',
-    isPinned: false,
-    isClosed: true,
-    tags: ['Снаряжение', 'Своими руками', 'Ремонт']
-  },
-  {
-    id: 6,
-    title: 'Как правильно хранить снасти в межсезонье',
-    author: {
-      id: 6,
-      name: 'Анна',
-      avatar: 'https://i.pravatar.cc/150?img=6'
-    },
-    replies: 25,
-    views: 512,
-    lastActivity: '3 дня назад',
-    lastReplyAuthor: {
-      id: 3,
-      name: 'Елена',
-      avatar: 'https://i.pravatar.cc/150?img=3'
-    },
-    createdAt: '2 недели назад',
-    isPinned: false,
-    isClosed: false,
-    tags: ['Снаряжение', 'Хранение', 'Совет']
-  },
-  {
-    id: 7,
-    title: 'Дешевые спиннинги, которые стоят своих денег',
-    author: {
-      id: 7,
-      name: 'Игорь',
-      avatar: 'https://i.pravatar.cc/150?img=7'
-    },
-    replies: 47,
-    views: 902,
-    lastActivity: '1 день назад',
-    lastReplyAuthor: {
-      id: 5,
-      name: 'Сергей',
-      avatar: 'https://i.pravatar.cc/150?img=5'
-    },
-    createdAt: '3 недели назад',
-    isPinned: false,
-    isClosed: false,
-    tags: ['Снаряжение', 'Бюджетное', 'Обзор']
-  },
-  {
-    id: 8,
-    title: 'Помогите выбрать первый спиннинг',
-    author: {
-      id: 8,
-      name: 'Артем',
-      avatar: 'https://i.pravatar.cc/150?img=8'
-    },
-    replies: 38,
-    views: 671,
-    lastActivity: '5 часов назад',
-    lastReplyAuthor: {
-      id: 1,
-      name: 'Александр',
-      avatar: 'https://i.pravatar.cc/150?img=1'
-    },
-    createdAt: '4 дня назад',
-    isPinned: false,
-    isClosed: false,
-    tags: ['Снаряжение', 'Вопрос', 'Начинающим']
-  }
-];
+import { forumApi } from '../../services/forumApi';
+import { ForumCategory, ForumTopic } from '../../shared/types/forum.types';
+import { userStore } from '../../shared/store/userStore';
 
 const CategoryDetail: React.FC = () => {
   const { categoryId } = useParams<{ categoryId: string }>();
   const navigate = useNavigate();
+  
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('lastActivity');
-  const [category, setCategory] = useState<any>(null);
-  const [topics, setTopics] = useState<any[]>([]);
+  const [category, setCategory] = useState<ForumCategory | null>(null);
+  const [topics, setTopics] = useState<ForumTopic[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (categoryId) {
-      const foundCategory = forumCategories.find(c => c.id === parseInt(categoryId));
-      if (foundCategory) {
-        setCategory(foundCategory);
-        // В реальном приложении здесь был бы API-запрос для получения тем в категории
-        // Имитируем загрузку данных
-        setTopics(topicsData);
+  // Функция загрузки данных категории и тем
+  const fetchCategoryData = useCallback(async () => {
+    if (!categoryId) return;
+    
+    try {
+      setLoading(true);
+      // Получаем информацию о категории
+      const categoryData = await forumApi.getCategoryById(parseInt(categoryId));
+      
+      // Если есть родительская категория, загружаем информацию о ней
+      if (categoryData.parent_id) {
+        try {
+          const parentCategory = await forumApi.getCategoryById(categoryData.parent_id);
+          categoryData.parent_title = parentCategory.title;
+        } catch (err) {
+          console.error('Ошибка при загрузке родительской категории:', err);
+          // Даже если не удалось загрузить родительскую категорию, продолжаем работу
+        }
       }
+      
+      setCategory(categoryData);
+      
+      // Получаем темы для этой категории
+      const topicsResponse = await forumApi.getTopics({
+        category_id: parseInt(categoryId),
+        page: 1,
+        page_size: 20
+      });
+      
+      setTopics(topicsResponse.items);
+      setError(null);
+    } catch (err) {
+      console.error('Ошибка при загрузке данных категории:', err);
+      setError('Не удалось загрузить данные категории. Пожалуйста, попробуйте позже.');
+    } finally {
+      setLoading(false);
     }
   }, [categoryId]);
+
+  // Загружаем данные при монтировании компонента
+  useEffect(() => {
+    fetchCategoryData();
+  }, [fetchCategoryData]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -231,25 +96,62 @@ const CategoryDetail: React.FC = () => {
     navigate(`/forum/topic/${topicId}`);
   };
 
+  if (loading) {
+    return (
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
+          <CircularProgress />
+        </Box>
+      </Container>
+    );
+  }
+
+  if (error && !category) {
+    return (
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>
+        <Button 
+          startIcon={<ArrowBackIcon />} 
+          component={Link} 
+          to="/forum"
+          sx={{ mt: 2 }}
+        >
+          Вернуться к списку категорий
+        </Button>
+      </Container>
+    );
+  }
+
   if (!category) {
     return (
       <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Typography variant="h5">Загрузка...</Typography>
+        <Typography variant="h5">Категория не найдена</Typography>
       </Container>
     );
   }
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      {/* Хлебные крошки и заголовок */}
+      {/* Навигационная цепочка и заголовок */}
       <Box sx={{ mb: 3 }}>
-        <Breadcrumbs separator={<NavigateNextIcon fontSize="small" />}>
-          <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>
-            <Typography color="text.primary">Главная</Typography>
-          </Link>
-          <Link to="/forum" style={{ textDecoration: 'none', color: 'inherit' }}>
+        <Breadcrumbs 
+          separator={<NavigateNextIcon fontSize="small" />}
+          sx={{ mb: 1 }}
+        >
+          <Link 
+            to="/forum" 
+            style={{ textDecoration: 'none', color: 'inherit' }}
+          >
             <Typography color="text.primary">Форум</Typography>
           </Link>
+          {category?.parent_id && category.parent_title && (
+            <Link 
+              to={`/forum/category/${category.parent_id}`} 
+              style={{ textDecoration: 'none', color: 'inherit' }}
+            >
+              <Typography color="text.primary">{category.parent_title}</Typography>
+            </Link>
+          )}
           <Typography color="text.primary" fontWeight={500}>{category.title}</Typography>
         </Breadcrumbs>
 
@@ -272,7 +174,7 @@ const CategoryDetail: React.FC = () => {
                   fontSize: '1.5rem'
                 }}
               >
-                {category.icon}
+                {category.icon || '📋'}
               </Box>
               <Typography variant="h4" component="h1" sx={{ fontWeight: 700 }}>
                 {category.title}
@@ -329,9 +231,78 @@ const CategoryDetail: React.FC = () => {
             >
               Новая тема
             </Button>
+            {userStore.isAdmin && (
+              <Button 
+                variant="outlined"
+                color="primary"
+                startIcon={<AddIcon />}
+                onClick={() => navigate(`/forum/category/${categoryId}/create-subcategory`)}
+              >
+                Создать подкатегорию
+              </Button>
+            )}
           </Box>
         </Box>
       </Paper>
+
+      {/* Подкатегории, если они есть */}
+      {category?.subcategories && category.subcategories.length > 0 && (
+        <Paper elevation={0} sx={{ mb: 4, overflow: 'hidden', border: '1px solid', borderColor: 'divider', borderRadius: 3 }}>
+          <Typography variant="h6" sx={{ p: 2, bgcolor: 'primary.main', color: 'white', fontWeight: 600 }}>
+            Подкатегории
+          </Typography>
+          <TableContainer>
+            <Table sx={{ minWidth: 650 }}>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Категория</TableCell>
+                  <TableCell align="center">Темы</TableCell>
+                  <TableCell align="center">Сообщения</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {category.subcategories.map((subcat) => (
+                  <TableRow 
+                    key={subcat.id}
+                    hover
+                    onClick={() => navigate(`/forum/category/${subcat.id}`)}
+                    sx={{ cursor: 'pointer' }}
+                  >
+                    <TableCell>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <Box
+                          sx={{
+                            width: 40,
+                            height: 40,
+                            borderRadius: 1,
+                            bgcolor: 'primary.light',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: 20
+                          }}
+                        >
+                          {subcat.icon || '📋'}
+                        </Box>
+                        <Box>
+                          <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                            {subcat.title}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {subcat.description}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </TableCell>
+                    <TableCell align="center">{subcat.topics_count}</TableCell>
+                    <TableCell align="center">{subcat.messages_count}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Paper>
+      )}
 
       {/* Темы категории */}
       <TableContainer component={Paper} sx={{ 
@@ -343,17 +314,17 @@ const CategoryDetail: React.FC = () => {
       }}>
         <Table sx={{ minWidth: 650 }}>
           <TableHead>
-            <TableRow sx={{ bgcolor: 'primary.main' }}>
+            <TableRow sx={{ bgcolor: '#2e7d32' }}>
               <TableCell sx={{ color: 'white', fontWeight: 600 }}>Тема</TableCell>
               <TableCell align="center" sx={{ color: 'white', fontWeight: 600 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <CommentIcon fontSize="small" sx={{ mr: 0.5 }} />
+                <CommentIcon fontSize="small" sx={{ mr: 0.5 }} />
                   Ответы
                 </Box>
               </TableCell>
               <TableCell align="center" sx={{ color: 'white', fontWeight: 600 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <VisibilityIcon fontSize="small" sx={{ mr: 0.5 }} />
+                <VisibilityIcon fontSize="small" sx={{ mr: 0.5 }} />
                   Просмотры
                 </Box>
               </TableCell>
@@ -377,7 +348,7 @@ const CategoryDetail: React.FC = () => {
                   onClick={() => handleTopicClick(topic.id)}
                   sx={{ 
                     cursor: 'pointer',
-                    bgcolor: topic.isPinned ? 'rgba(46, 125, 50, 0.05)' : 'inherit'
+                    bgcolor: topic.is_pinned ? 'rgba(21, 101, 195, 0.05)' : 'inherit'
                   }}
                 >
                   <TableCell 
@@ -385,18 +356,18 @@ const CategoryDetail: React.FC = () => {
                     scope="row" 
                     sx={{ 
                       pl: 2, 
-                      borderLeft: topic.isPinned ? '4px solid' : 'none',
-                      borderLeftColor: 'primary.main'
+                      borderLeft: topic.is_pinned ? '4px solid' : 'none',
+                      borderLeftColor: '#1565c3'
                     }}
                   >
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-                        {topic.isPinned && (
+                        {topic.is_pinned && (
                           <Chip 
                             size="small" 
                             label="Закреплено" 
                             sx={{ 
-                              bgcolor: 'primary.main', 
+                              bgcolor: '#1565c3', 
                               color: 'white',
                               height: 20,
                               fontSize: '0.7rem',
@@ -404,7 +375,7 @@ const CategoryDetail: React.FC = () => {
                             }} 
                           />
                         )}
-                        {topic.isClosed && (
+                        {topic.is_closed && (
                           <Chip 
                             size="small" 
                             label="Закрыто" 
@@ -421,9 +392,9 @@ const CategoryDetail: React.FC = () => {
                           variant="subtitle1" 
                           sx={{ 
                             fontWeight: 600, 
-                            color: topic.isClosed ? 'text.secondary' : 'secondary.dark',
-                            textDecoration: topic.isClosed ? 'line-through' : 'none',
-                            opacity: topic.isClosed ? 0.7 : 1
+                            color: topic.is_closed ? 'text.secondary' : '#1565c3',
+                            textDecoration: topic.is_closed ? 'line-through' : 'none',
+                            opacity: topic.is_closed ? 0.7 : 1
                           }}
                         >
                           {topic.title}
@@ -433,57 +404,80 @@ const CategoryDetail: React.FC = () => {
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                           <PersonIcon fontSize="small" color="action" sx={{ fontSize: '0.9rem' }} />
                           <Typography variant="body2" color="text.secondary">
-                            {topic.author.name}
+                            {topic.author_username || `Пользователь ${topic.author_id}`}
                           </Typography>
                         </Box>
                         <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
                           •
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                          {topic.createdAt}
+                          {topic.created_at ? 
+                            new Date(topic.created_at).toLocaleDateString('ru-RU', {
+                              day: 'numeric',
+                              month: 'long',
+                              year: 'numeric'
+                            }) : ''}
                         </Typography>
                       </Box>
-                      <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mt: 0.5 }}>
-                        {topic.tags.map((tag: string, index: number) => (
-                          <Chip 
-                            key={index}
-                            size="small" 
-                            label={tag} 
-                            sx={{ 
-                              bgcolor: 'action.hover', 
-                              height: 20,
-                              fontSize: '0.7rem'
-                            }} 
-                          />
-                        ))}
-                      </Box>
+                      {topic.tags && topic.tags.length > 0 && (
+                        <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mt: 0.5 }}>
+                          {topic.tags.map((tag, index) => (
+                            <Chip 
+                              key={index}
+                              size="small" 
+                              label={tag} 
+                              sx={{ 
+                                bgcolor: 'rgba(21, 101, 195, 0.1)', 
+                                color: '#1565c3',
+                                height: 20,
+                                fontSize: '0.7rem'
+                              }} 
+                            />
+                          ))}
+                        </Box>
+                      )}
                     </Box>
                   </TableCell>
                   <TableCell align="center">
                     <Typography variant="body2" fontWeight={500}>
-                      {topic.replies}
+                      {topic.posts_count - 1 >= 0 ? topic.posts_count - 1 : 0}
                     </Typography>
                   </TableCell>
                   <TableCell align="center">
                     <Typography variant="body2" fontWeight={500}>
-                      {topic.views}
+                      {topic.views_count}
                     </Typography>
                   </TableCell>
                   <TableCell align="right">
                     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 1 }}>
-                      <Box>
+                      {topic.last_post_date ? (
+                        <>
+                          <Box>
+                            <Typography variant="body2" color="text.secondary">
+                              {topic.last_post_author_username || (topic.last_post_author_id ? `Пользователь ${topic.last_post_author_id}` : '')}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              {new Date(topic.last_post_date).toLocaleString('ru-RU', {
+                                day: 'numeric',
+                                month: 'short',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </Typography>
+                          </Box>
+                          <Avatar 
+                            src={topic.last_post_author_avatar || undefined} 
+                            alt="Аватар пользователя"
+                            sx={{ width: 32, height: 32 }}
+                          >
+                            {!topic.last_post_author_avatar && (topic.last_post_author_username?.[0] || '?')}
+                          </Avatar>
+                        </>
+                      ) : (
                         <Typography variant="body2" color="text.secondary">
-                          {topic.lastReplyAuthor.name}
+                          —
                         </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          {topic.lastActivity}
-                        </Typography>
-                      </Box>
-                      <Avatar 
-                        src={topic.lastReplyAuthor.avatar} 
-                        alt={topic.lastReplyAuthor.name}
-                        sx={{ width: 32, height: 32 }}
-                      />
+                      )}
                     </Box>
                   </TableCell>
                 </TableRow>
@@ -497,17 +491,17 @@ const CategoryDetail: React.FC = () => {
       <Paper elevation={0} sx={{ p: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
           <Box>
-            <Typography variant="h6" color="primary.main" sx={{ fontWeight: 600, mb: 1 }}>
+            <Typography variant="h6" color="#1565c3" sx={{ fontWeight: 600, mb: 1 }}>
               Статистика категории
             </Typography>
             <Box sx={{ display: 'flex', gap: 3 }}>
               <Box>
                 <Typography variant="body2" color="text.secondary">Тем:</Typography>
-                <Typography variant="body1" fontWeight={500}>{category.topics}</Typography>
+                <Typography variant="body1" fontWeight={500}>{category.topics_count}</Typography>
               </Box>
               <Box>
                 <Typography variant="body2" color="text.secondary">Сообщений:</Typography>
-                <Typography variant="body1" fontWeight={500}>{category.posts}</Typography>
+                <Typography variant="body1" fontWeight={500}>{category.messages_count}</Typography>
               </Box>
               <Box>
                 <Typography variant="body2" color="text.secondary">Участников:</Typography>
@@ -516,7 +510,7 @@ const CategoryDetail: React.FC = () => {
             </Box>
           </Box>
           <Box>
-            <Typography variant="h6" color="secondary.main" sx={{ fontWeight: 600, mb: 1 }}>
+            <Typography variant="h6" color="#1565c3" sx={{ fontWeight: 600, mb: 1 }}>
               Активные участники
             </Typography>
             <Box sx={{ display: 'flex', gap: 1 }}>
@@ -536,4 +530,4 @@ const CategoryDetail: React.FC = () => {
   );
 };
 
-export default CategoryDetail; 
+export default CategoryDetail;

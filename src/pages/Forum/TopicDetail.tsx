@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { 
   Container, Box, Typography, Paper, Divider, Button, 
   Breadcrumbs, Avatar, Chip, IconButton, TextField,
   Card, CardContent, CardActions, Grid, Menu, MenuItem,
-  ListItemIcon, ListItemText, CircularProgress, Tooltip
+  ListItemIcon, ListItemText, CircularProgress, Tooltip,
+  Alert, Pagination
 } from '@mui/material';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -22,620 +23,469 @@ import ThumbDownAltIcon from '@mui/icons-material/ThumbDownAlt';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import InsertPhotoIcon from '@mui/icons-material/InsertPhoto';
 import FormatQuoteRoundedIcon from '@mui/icons-material/FormatQuoteRounded';
+import RefreshIcon from '@mui/icons-material/Refresh';
 import { userStore } from '../../shared/store/userStore';
-import { forumCategories } from './index';
-import { topicsData } from './CategoryDetail';
 import ImageGallery from '../../components/ImageGallery';
+import { forumApi } from '../../services/forumApi';
+import { ForumTopic, ForumPost, ForumPostImage, PaginatedResponse, ForumUserData } from '../../shared/types/forum.types';
+import { PostImage } from '../../shared/types/post.types';
 
-// Типы данных для постов
-interface PostImage {
+// Интерфейс для превью изображений
+interface ImagePreview {
   id: number;
-  image_url: string;
-  post_id?: number; // Опциональное поле
-  created_at?: string; // Опциональное поле
+  url: string;
 }
 
-interface PostAuthor {
-  id: number;
-  name: string;
-  avatar: string;
-  joinDate: string;
-  postsCount: number;
-  role: string;
-}
-
-interface QuotedPost {
-  id: number;
-  author: {
-    id: number;
-    name: string;
-  };
-  content: string;
-}
-
-interface Post {
-  id: number;
-  content: string;
-  author: PostAuthor;
-  createdAt: string;
-  isTopicStarter: boolean;
-  likes: number;
-  dislikes: number;
-  images?: PostImage[];
-  quotedPost?: QuotedPost;
-}
-
-// Моковые данные для темы
-export const topicData = {
-  id: 1,
-  title: 'Лучшие спиннинги для начинающих',
-  category: {
-    id: 1,
-    title: 'Рыболовные снасти',
-    icon: '🎣'
-  },
-  author: {
-    id: 1,
-    name: 'Александр',
-    avatar: 'https://i.pravatar.cc/150?img=1',
-    joinDate: 'Май 2022',
-    postsCount: 128,
-    role: 'Продвинутый рыболов'
-  },
-  createdAt: '2 дня назад',
-  views: 678,
-  isPinned: true,
-  isClosed: false,
-  tags: ['Начинающим', 'Снаряжение']
-};
-
-// Моковые данные для сообщений в теме
-const postsData: Post[] = [
-  {
-    id: 1,
-    content: `
-Всем привет! Я недавно заинтересовался рыбалкой и хочу приобрести свой первый спиннинг. 
-Бюджет ограничен, но хочется что-то качественное, на чем можно будет нормально учиться и ловить.
-
-Какие модели спиннингов посоветуете для новичка, который только начинает осваивать спиннинговую ловлю? 
-Интересует что-то универсальное, чтобы можно было ловить как на небольших речках, так и на водохранилищах.
-
-Заранее спасибо за советы!
-    `,
-    author: {
-      id: 1,
-      name: 'Александр',
-      avatar: 'https://i.pravatar.cc/150?img=1',
-      joinDate: 'Май 2022',
-      postsCount: 128,
-      role: 'Продвинутый рыболов'
-    },
-    createdAt: '2 дня назад',
-    isTopicStarter: true,
-    likes: 5,
-    dislikes: 0
-  },
-  {
-    id: 2,
-    content: `
-Привет! Для начинающего могу посоветовать несколько вариантов в бюджетном сегменте:
-
-1. **Salmo Sniper SPIN** - хороший бюджетный вариант, довольно универсальный. Можно брать с тестом 10-30г.
-
-2. **Shimano Catana EX** - чуть дороже, но очень надежный и приятный в работе спиннинг. Тест 10-30г или 15-40г в зависимости от того, какую рыбу планируешь ловить.
-
-3. **FAVORITE Laguna** - неплохой вариант по соотношению цена/качество.
-
-Главное при выборе первого спиннинга - не гнаться за ультралайтом или специализированными моделями. Лучше взять что-то среднее по тесту и жесткости, чтобы можно было освоить разные техники ловли и понять, что тебе больше нравится.
-
-Удачи в выборе!
-    `,
-    author: {
-      id: 2,
-      name: 'Михаил',
-      avatar: 'https://i.pravatar.cc/150?img=2',
-      joinDate: 'Февраль 2020',
-      postsCount: 543,
-      role: 'Эксперт по снастям'
-    },
-    createdAt: '2 дня назад',
-    isTopicStarter: false,
-    likes: 8,
-    dislikes: 0
-  },
-  {
-    id: 3,
-    content: `
-Полностью согласна с Михаилом насчет универсальности для первого спиннинга!
-
-Я бы еще добавила в список:
-
-**Major Craft Finetail** - отличный вариант для начинающих, хорошая чувствительность и при этом достаточная прочность.
-
-**Daiwa Ninja** - тоже хороший вариант в бюджетном сегменте.
-
-И очень важно - не забудь про правильный выбор катушки! Даже к недорогому спиннингу лучше взять катушку приличного качества. Shimano Nexave или Daiwa Ninja подойдут очень хорошо.
-
-Также советую обратить внимание на плетеный шнур вместо монолески для спиннинга - с ним ты будешь лучше чувствовать поклевки.
-    `,
-    author: {
-      id: 3,
-      name: 'Елена',
-      avatar: 'https://i.pravatar.cc/150?img=3',
-      joinDate: 'Июнь 2021',
-      postsCount: 231,
-      role: 'Активный участник'
-    },
-    createdAt: '1 день назад',
-    isTopicStarter: false,
-    likes: 6,
-    dislikes: 0
-  },
-  {
-    id: 4,
-    content: `
-Спасибо всем за советы! 
-
-@Михаил, @Елена - очень ценные рекомендации, изучу все предложенные варианты. 
-
-Вопрос про длину - какую оптимальную длину спиннинга посоветуете для новичка? Видел модели от 1.8м до 2.7м, и не могу определиться.
-    `,
-    author: {
-      id: 1,
-      name: 'Александр',
-      avatar: 'https://i.pravatar.cc/150?img=1',
-      joinDate: 'Май 2022',
-      postsCount: 128,
-      role: 'Продвинутый рыболов'
-    },
-    createdAt: '1 день назад',
-    isTopicStarter: true,
-    likes: 1,
-    dislikes: 0,
-    quotedPost: {
-      id: 3,
-      author: {
-        id: 3,
-        name: 'Елена'
-      },
-      content: 'И очень важно - не забудь про правильный выбор катушки! Даже к недорогому спиннингу лучше взять катушку приличного качества.'
-    }
-  },
-  {
-    id: 5,
-    content: `
-Насчет длины спиннинга для начинающего:
-
-Если в основном планируешь ловить с берега на открытых водоемах - бери 2.4-2.7м. Это даст тебе хороший заброс и возможность манипулировать приманкой на расстоянии.
-
-Если часто будешь рыбачить в стесненных условиях (небольшие речки с заросшими берегами) - можно взять покороче, 2.1-2.4м.
-
-Спиннинги короче 2.1м обычно используются для специализированной ловли или с лодки.
-
-По моему опыту, для новичка оптимально 2.4м - такая длина довольно универсальна.
-    `,
-    author: {
-      id: 5,
-      name: 'Сергей',
-      avatar: 'https://i.pravatar.cc/150?img=5',
-      joinDate: 'Март 2019',
-      postsCount: 872,
-      role: 'Местная легенда'
-    },
-    createdAt: '20 часов назад',
-    isTopicStarter: false,
-    likes: 4,
-    dislikes: 0
-  },
-  {
-    id: 6,
-    content: `
-А что насчет каких-то китайских спиннингов на Aliexpress? Видел там много вариантов по низким ценам. Стоит ли рассматривать такие варианты или лучше не рисковать?
-    `,
-    author: {
-      id: 4,
-      name: 'Дмитрий',
-      avatar: 'https://i.pravatar.cc/150?img=4',
-      joinDate: 'Январь 2022',
-      postsCount: 47,
-      role: 'Новичок'
-    },
-    createdAt: '12 часов назад',
-    isTopicStarter: false,
-    likes: 0,
-    dislikes: 1
-  },
-  {
-    id: 7,
-    content: `
-@Дмитрий, из личного опыта скажу - с китайскими спиннингами нужно быть очень осторожным. Есть неплохие модели, но найти их среди моря откровенного шлака сложно.
-
-Если уж очень ограничен бюджет, то лучше посмотреть на б/у спиннинги от известных брендов на местных досках объявлений или форумах.
-
-А если всё же рассматривать китайские варианты, то могу посоветовать обратить внимание на Tsurinoya и Kastking - эти бренды зарекомендовали себя неплохо даже среди опытных рыболовов. Но всё равно есть риск нарваться на подделку.
-
-@Александр, как успехи в выборе? На чем остановился в итоге?
-    `,
-    author: {
-      id: 2,
-      name: 'Михаил',
-      avatar: 'https://i.pravatar.cc/150?img=2',
-      joinDate: 'Февраль 2020',
-      postsCount: 543,
-      role: 'Эксперт по снастям'
-    },
-    createdAt: '5 часов назад',
-    isTopicStarter: false,
-    likes: 3,
-    dislikes: 0
-  }
-];
-
+// Подготавливаем компонент для отображения деталей темы
 const TopicDetail: React.FC = () => {
   const { topicId } = useParams<{ topicId: string }>();
   const navigate = useNavigate();
+  
+  // Состояние для API данных
+  const [topic, setTopic] = useState<ForumTopic | null>(null);
+  const [posts, setPosts] = useState<ForumPost[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [shouldRefresh, setShouldRefresh] = useState(false);
+  
+  // Состояния для UI
+  const [reply, setReply] = useState('');
+  const [uploadedImages, setUploadedImages] = useState<File[]>([]);
+  const [previewImages, setPreviewImages] = useState<ImagePreview[]>([]);
+  const [nextImageId, setNextImageId] = useState(1);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [currentPostId, setCurrentPostId] = useState<number | null>(null);
-  const [selectionAnchorEl, setSelectionAnchorEl] = useState<null | HTMLElement>(null);
-  const [selectedText, setSelectedText] = useState<{text: string, postId: number, author: string} | null>(null);
-  const selectionTimeout = useRef<NodeJS.Timeout | null>(null);
-  const [topic, setTopic] = useState(topicData);
-  const [posts, setPosts] = useState<Post[]>(postsData);
-  const [userLikes, setUserLikes] = useState<number[]>([]);
-  const [userDislikes, setUserDislikes] = useState<number[]>([]);
-  const [replyContent, setReplyContent] = useState('');
+  const [activePostId, setActivePostId] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [images, setImages] = useState<PostImage[]>([]);
-  const [isCompressing, setIsCompressing] = useState(false);
-  const [quoteData, setQuoteData] = useState<{id: number, author: string, content: string} | null>(null);
+  const [selectedText, setSelectedText] = useState<string>('');
+  const [selectedPostId, setSelectedPostId] = useState<number | null>(null);
+  const [selectionAuthor, setSelectionAuthor] = useState<string>('');
+  const [selectionMenuPosition, setSelectionMenuPosition] = useState<{
+    top: number;
+    left: number;
+  } | null>(null);
   
-  const open = Boolean(anchorEl);
-  const isAuth = !!userStore.user; // Проверка авторизации пользователя
+  // Состояние для цитаты
+  const [currentQuote, setCurrentQuote] = useState<{
+    author: string;
+    text: string;
+    postId: number;
+  } | null>(null);
   
-  useEffect(() => {
-    if (topicId) {
-      // В реальном приложении здесь был бы API-запрос для получения данных темы
-      // Имитируем получение данных из моковых данных
-      const foundTopic = topicsData.find(t => t.id === parseInt(topicId));
-      if (foundTopic) {
-        const matchingCategory = forumCategories.find(c => c.title === topic.category.title);
-        setTopic({
-          ...topic,
-          title: foundTopic.title,
-          category: {
-            ...topic.category,
-            id: matchingCategory?.id || topic.category.id
-          },
-          author: foundTopic.author as unknown as typeof topic.author, // Приведение типов
-          createdAt: foundTopic.createdAt,
-          views: foundTopic.views,
-          isPinned: foundTopic.isPinned || false,
-          isClosed: foundTopic.isClosed || false,
-          tags: foundTopic.tags || []
-        });
-      }
-    }
-  }, [topicId]);
+  const replyBoxRef = useRef<HTMLDivElement>(null);
+  const textFieldRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Функция для генерации градиентного цвета на основе имени пользователя
+  const generateGradientColor = (userId: number, username: string) => {
+    // Используем комбинацию ID и имени для создания уникального хеша
+    const hash = userId.toString() + (username || 'user');
+    let hashValue = 0;
+    
+    // Простая хеш-функция для преобразования строки в число
+    for (let i = 0; i < hash.length; i++) {
+      hashValue = ((hashValue << 5) - hashValue) + hash.charCodeAt(i);
+      hashValue = hashValue & hashValue; // Convert to 32bit integer
+    }
+    
+    // Массив с парами цветов для градиентов
+    const gradients = [
+      ['#1976d2', '#64b5f6'], // Синий
+      ['#388e3c', '#81c784'], // Зеленый
+      ['#d32f2f', '#e57373'], // Красный
+      ['#7b1fa2', '#ba68c8'], // Фиолетовый
+      ['#f57c00', '#ffb74d'], // Оранжевый
+      ['#0097a7', '#4dd0e1'], // Циан
+      ['#5d4037', '#a1887f'], // Коричневый
+      ['#616161', '#bdbdbd'], // Серый
+      ['#827717', '#c0ca33'], // Лаймовый
+      ['#c2185b', '#f06292']  // Розовый
+    ];
+    
+    // Выбираем градиент на основе хеша
+    const index = Math.abs(hashValue) % gradients.length;
+    const [color1, color2] = gradients[index];
+    
+    return `linear-gradient(135deg, ${color1} 0%, ${color2} 100%)`;
+  };
+
+  // Функция для загрузки данных темы и сообщений
+  const fetchTopicData = useCallback(async () => {
+    if (!topicId) return;
+    
+    try {
+      setLoading(true);
+      
+      // Получаем информацию о теме
+      const topicData = await forumApi.getTopicById(parseInt(topicId));
+      
+      // Если есть идентификатор категории, загружаем информацию о ней для breadcrumbs
+      if (topicData.category_id) {
+        try {
+          const categoryData = await forumApi.getCategoryById(topicData.category_id);
+          topicData.category_title = categoryData.title;
+          
+          // Проверяем, есть ли у категории родительская категория
+          if (categoryData.parent_id) {
+            try {
+              const parentCategoryData = await forumApi.getCategoryById(categoryData.parent_id);
+              // Добавляем информацию о родительской категории в данные темы
+              topicData.parent_category_id = categoryData.parent_id;
+              topicData.parent_category_title = parentCategoryData.title;
+            } catch (err) {
+              console.error('Ошибка при загрузке родительской категории:', err);
+            }
+          }
+        } catch (err) {
+          console.error('Ошибка при загрузке категории:', err);
+        }
+      }
+      
+      setTopic(topicData);
+      
+      // Получаем сообщения для этой темы
+      const postsResponse = await forumApi.getPosts({
+        topic_id: parseInt(topicId),
+        page: page,
+        page_size: 20
+      });
+      
+      // Обрабатываем полученные данные, чтобы подготовить их для отображения
+      const postsWithUserData = postsResponse.items.map(post => {
+        // Используем поля user из ответа API, если они есть
+        const userData: ForumUserData = post.user || {
+          id: post.author_id,
+          username: '',
+          fullname: '',
+          avatar: '',
+          posts_count: 0,
+          registration_date: '',
+          role: 'user'
+        };
+        
+        return {
+          ...post,
+          author_id: post.author_id,
+          author_username: userData.username || `Пользователь ${post.author_id}`,
+          author_avatar: userData.avatar || undefined,
+          author_post_count: userData.posts_count || 0,
+          author_signature: userData.fullname || ''
+        };
+      });
+      
+      setPosts(postsWithUserData);
+      setTotalPages(postsResponse.pages);
+      setError(null);
+    } catch (err) {
+      console.error('Ошибка при загрузке данных темы:', err);
+      setError('Не удалось загрузить данные темы. Пожалуйста, попробуйте позже.');
+    } finally {
+      setLoading(false);
+      setShouldRefresh(false);
+    }
+  }, [topicId, page]);
+
+  // Загружаем данные при монтировании и при изменении параметров
+  useEffect(() => {
+    fetchTopicData();
+  }, [fetchTopicData, shouldRefresh]);
+
+  // Обработчики для UI
   const handleMenuClick = (event: React.MouseEvent<HTMLElement>, postId: number) => {
     setAnchorEl(event.currentTarget);
-    setCurrentPostId(postId);
+    setActivePostId(postId);
   };
   
   const handleMenuClose = () => {
     setAnchorEl(null);
-    setCurrentPostId(null);
+    setActivePostId(null);
   };
 
-  const handleQuote = (postId: number) => {
-    const postToQuote = posts.find(post => post.id === postId);
-    if (!postToQuote) return;
-    
-    // Устанавливаем только данные цитаты без добавления в textarea
-    setQuoteData({
-      id: postId,
-      author: postToQuote.author.name,
-      content: postToQuote.content.trim().substring(0, 150) + (postToQuote.content.length > 150 ? '...' : '')
-    });
-    
-    // Прокручиваем к форме ответа
-    const replyForm = document.getElementById('reply-form');
-    if (replyForm) {
-      replyForm.scrollIntoView({ behavior: 'smooth' });
-      
-      // Анимация для привлечения внимания
-      replyForm.style.transition = 'box-shadow 0.3s ease-in-out';
-      replyForm.style.boxShadow = '0 0 15px rgba(25, 118, 210, 0.5)';
-      
-      setTimeout(() => {
-        if (replyForm) {
-          replyForm.style.boxShadow = 'none';
-        }
-      }, 1000);
-    }
-    
-    handleMenuClose();
-  };
-
-  const handleLike = (postId: number) => {
-    setPosts(posts.map(post => 
-      post.id === postId 
-        ? { ...post, likes: userLikes.includes(postId) ? post.likes - 1 : post.likes + 1 } 
-        : post
-    ));
-    
-    setUserLikes(prev => 
-      prev.includes(postId) 
-        ? prev.filter(id => id !== postId) 
-        : [...prev, postId]
-    );
-    
-    // Если пост был дизлайкнут, убираем дизлайк
-    if (userDislikes.includes(postId)) {
-      setPosts(posts.map(post => 
-        post.id === postId 
-          ? { ...post, dislikes: post.dislikes - 1 } 
-          : post
-      ));
-      
-      setUserDislikes(prev => prev.filter(id => id !== postId));
-    }
-  };
-  
-  const handleDislike = (postId: number) => {
-    setPosts(posts.map(post => 
-      post.id === postId 
-        ? { ...post, dislikes: userDislikes.includes(postId) ? post.dislikes - 1 : post.dislikes + 1 } 
-        : post
-    ));
-    
-    setUserDislikes(prev => 
-      prev.includes(postId) 
-        ? prev.filter(id => id !== postId) 
-        : [...prev, postId]
-    );
-    
-    // Если пост был лайкнут, убираем лайк
-    if (userLikes.includes(postId)) {
-      setPosts(posts.map(post => 
-        post.id === postId 
-          ? { ...post, likes: post.likes - 1 } 
-          : post
-      ));
-      
-      setUserLikes(prev => prev.filter(id => id !== postId));
-    }
-  };
-
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (!files || files.length === 0) return;
-    
-    // Проверка количества изображений (максимум 5)
-    if (images.length + files.length > 5) {
-      alert('Можно загрузить не более 5 изображений');
-      return;
-    }
-    
-    setIsCompressing(true);
-    
-    // Имитация обработки и загрузки изображений
-    setTimeout(() => {
-      const newImages: PostImage[] = Array.from(files).map((file, index) => ({
-        id: Date.now() + index,
-        image_url: URL.createObjectURL(file)
-      }));
-      
-      setImages(prev => [...prev, ...newImages]);
-      setIsCompressing(false);
-    }, 1000);
-  };
-  
-  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    
-    const files = event.dataTransfer.files;
-    if (!files || files.length === 0) return;
-    
-    // Фильтруем только изображения
-    const imageFiles = Array.from(files).filter(file => 
-      file.type.startsWith('image/')
-    );
-    
-    if (imageFiles.length === 0) return;
-    
-    // Проверка количества изображений (максимум 5)
-    if (images.length + imageFiles.length > 5) {
-      alert('Можно загрузить не более 5 изображений');
-      return;
-    }
-    
-    setIsCompressing(true);
-    
-    // Имитация обработки и загрузки изображений
-    setTimeout(() => {
-      const newImages: PostImage[] = imageFiles.map((file, index) => ({
-        id: Date.now() + index,
-        image_url: URL.createObjectURL(file)
-      }));
-      
-      setImages(prev => [...prev, ...newImages]);
-      setIsCompressing(false);
-    }, 1000);
-  };
-  
-  const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-  };
-  
-  const removeImage = (id: number) => {
-    setImages(images.filter(img => img.id !== id));
-  };
-  
-  const handleReply = () => {
-    if (!replyContent.trim() && images.length === 0) return;
-    
-    setIsSubmitting(true);
-    
-    // Имитация отправки ответа
-    setTimeout(() => {
-      const newPost: Post = {
-        id: Date.now(),
-        content: replyContent,
-        author: {
-          id: userStore.user?.id || 1,
-          name: userStore.user?.username || 'Пользователь',
-          avatar: userStore.user?.avatar || 'https://i.pravatar.cc/150?img=1',
-          joinDate: 'Май 2023',
-          postsCount: 10,
-          role: 'Участник форума'
-        },
-        createdAt: 'только что',
-        isTopicStarter: topic.author.id === (userStore.user?.id || 1),
-        likes: 0,
-        dislikes: 0,
-        images: images.length > 0 ? images : undefined,
-        quotedPost: quoteData ? {
-          id: quoteData.id,
-          author: {
-            id: 0,
-            name: quoteData.author
-          },
-          content: quoteData.content
-        } : undefined
-      };
-      
-      setPosts([...posts, newPost]);
-      setReplyContent('');
-      setImages([]);
-      setQuoteData(null);
-      setIsSubmitting(false);
-    }, 1500);
-  };
-
-  // Функция для обработки выделения текста
-  const handleTextSelection = (event: React.MouseEvent, post: Post) => {
+  // Обработчик выделения текста
+  const handleTextSelection = (e: React.MouseEvent, post: ForumPost) => {
     const selection = window.getSelection();
-    
     if (selection && selection.toString().trim().length > 0) {
-      // Есть выделенный текст
-      const text = selection.toString().trim();
+      const selectedText = selection.toString().trim();
       
-      // Сохраняем выделенный текст и информацию о посте
-      setSelectedText({
-        text,
-        postId: post.id,
-        author: post.author.name
-      });
-      
-      // Получаем координаты выделения для позиционирования меню
+      // Получение координат выделения
       const range = selection.getRangeAt(0);
       const rect = range.getBoundingClientRect();
       
-      // Создаем временный элемент для привязки меню
-      const tempButton = document.createElement('div');
-      tempButton.style.position = 'absolute';
-      tempButton.style.left = `${rect.left + window.scrollX + (rect.width / 2)}px`;
-      tempButton.style.top = `${rect.bottom + window.scrollY}px`;
-      tempButton.style.width = '1px';
-      tempButton.style.height = '1px';
-      document.body.appendChild(tempButton);
-      
-      // Устанавливаем якорь для меню
-      setSelectionAnchorEl(tempButton);
-      
-      // Очищаем предыдущий таймер, если он был
-      if (selectionTimeout.current) {
-        clearTimeout(selectionTimeout.current);
-      }
-      
-      // Устанавливаем таймер для скрытия меню, если пользователь не взаимодействует с ним
-      selectionTimeout.current = setTimeout(() => {
-        setSelectionAnchorEl(null);
-        setSelectedText(null);
-        if (document.body.contains(tempButton)) {
-          document.body.removeChild(tempButton);
-        }
-      }, 3000);
+      // Установка состояний для меню цитирования
+      setSelectedText(selectedText);
+      setSelectedPostId(post.id);
+      setSelectionAuthor(post.user?.username || post.author_username || `Пользователь ${post.author_id}`);
+      setSelectionMenuPosition({
+        top: rect.bottom + window.scrollY,
+        left: rect.left + window.scrollX + (rect.width / 2)
+      });
     }
   };
-  
-  // Функция для цитирования выделенного текста
-  const handleQuoteSelectedText = () => {
-    if (!selectedText) return;
+
+  // Обработчик закрытия меню выделения
+  const handleCloseSelectionMenu = () => {
+    setSelectionMenuPosition(null);
+    setSelectedText('');
+    setSelectedPostId(null);
+  };
+
+  // Обработчик цитирования из меню действий
+  const handleQuote = (postId: number) => {
+    // Находим пост для цитирования из API данных
+    const postToQuote = posts.find(post => post.id === postId);
+    if (postToQuote) {
+      const username = postToQuote.user?.username || 
+                      postToQuote.author_username || 
+                      `Пользователь ${postToQuote.author_id}`;
+      
+      // Устанавливаем данные цитаты
+      setCurrentQuote({
+        author: username,
+        text: postToQuote.content,
+        postId: postToQuote.id
+      });
+      
+      // Прокручиваем к форме ответа
+      if (replyBoxRef.current) {
+        replyBoxRef.current.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+    handleMenuClose();
+  };
+
+  // Обработчик цитирования выделенного текста
+  const handleQuoteSelection = () => {
+    if (selectedText && selectedPostId) {
+      // Устанавливаем данные цитаты
+      setCurrentQuote({
+        author: selectionAuthor,
+        text: selectedText,
+        postId: selectedPostId
+      });
+      
+      // Прокручиваем к форме ответа
+      if (replyBoxRef.current) {
+        replyBoxRef.current.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+    handleCloseSelectionMenu();
+  };
+
+  // Обработчик удаления цитаты
+  const handleRemoveQuote = () => {
+    setCurrentQuote(null);
+  };
+
+  // Обработчик клика по документу для закрытия меню выделения
+  useEffect(() => {
+    const handleDocumentClick = (e: MouseEvent) => {
+      if (selectionMenuPosition) {
+        const target = e.target as Element;
+        if (!target.closest('.selection-menu')) {
+          handleCloseSelectionMenu();
+        }
+      }
+    };
     
-    // Устанавливаем только данные цитаты без добавления в textarea
-    setQuoteData({
-      id: selectedText.postId,
-      author: selectedText.author,
-      content: selectedText.text
+    document.addEventListener('mousedown', handleDocumentClick);
+    return () => {
+      document.removeEventListener('mousedown', handleDocumentClick);
+    };
+  }, [selectionMenuPosition]);
+
+  // Обработчики для API
+  const handleLike = async (postId: number) => {
+    try {
+      await forumApi.likePost(postId);
+      // Обновляем данные после лайка
+      setShouldRefresh(true);
+    } catch (error) {
+      console.error('Ошибка при добавлении лайка:', error);
+      setError('Не удалось добавить лайк. Пожалуйста, попробуйте позже.');
+    }
+  };
+
+  const handleDislike = async (postId: number) => {
+    try {
+      await forumApi.dislikePost(postId);
+      // Обновляем данные после дизлайка
+      setShouldRefresh(true);
+    } catch (error) {
+      console.error('Ошибка при добавлении дизлайка:', error);
+      setError('Не удалось добавить дизлайк. Пожалуйста, попробуйте позже.');
+    }
+  };
+
+  const handleDeleteReaction = async (postId: number) => {
+    try {
+      await forumApi.deleteReaction(postId);
+      // Обновляем данные после удаления реакции
+      setShouldRefresh(true);
+    } catch (error) {
+      console.error('Ошибка при удалении реакции:', error);
+      setError('Не удалось удалить реакцию. Пожалуйста, попробуйте позже.');
+    }
+  };
+
+  // Обработчик отправки ответа
+  const handleReply = async () => {
+    if (!reply.trim() && !currentQuote && uploadedImages.length === 0) return;
+    
+    setIsSubmitting(true);
+    
+    try {
+      if (!topicId) {
+        throw new Error('ID темы не найден');
+      }
+      
+      // Логирование перед отправкой
+      console.log('Отправка сообщения. Изображения:', uploadedImages);
+      uploadedImages.forEach((img, index) => {
+        console.log(`Изображение ${index}:`, img.name, img.type, img.size);
+      });
+      
+      // Создаем объект с данными сообщения
+      const postData = {
+        topic_id: parseInt(topicId),
+        content: reply,
+        quoted_post_id: currentQuote ? currentQuote.postId : undefined,
+        images: uploadedImages.length > 0 ? uploadedImages : undefined
+      };
+      
+      // Проверяем, действительно ли передаем изображения
+      console.log('postData перед отправкой:', JSON.stringify({
+        ...postData, 
+        images: postData.images ? `${postData.images.length} файлов` : 'нет'
+      }));
+      
+      // Отправляем запрос на создание сообщения с изображениями, если они есть
+      await forumApi.createPost(postData);
+      
+      // Сбрасываем форму
+      setReply('');
+      setCurrentQuote(null);
+      setUploadedImages([]);
+      setPreviewImages([]);
+      
+      // Обновляем список сообщений
+      setShouldRefresh(true);
+      
+      // Прокручиваем страницу вниз к новому сообщению
+      setTimeout(() => {
+        window.scrollTo(0, document.body.scrollHeight);
+      }, 300);
+    } catch (error) {
+      console.error('Ошибка при отправке ответа:', error);
+      setError('Не удалось отправить ответ. Пожалуйста, попробуйте позже.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    
+    // Преобразуем FileList в массив
+    const files = Array.from(e.target.files);
+    
+    // Логирование для отладки
+    console.log('Файлы выбраны в handleImageUpload:', files);
+    files.forEach(file => {
+      console.log('Файл:', file.name, file.type, file.size);
     });
     
-    // Прокручиваем страницу к форме ответа
-    const replyForm = document.getElementById('reply-form');
-    if (replyForm) {
-      replyForm.scrollIntoView({ behavior: 'smooth' });
-      
-      // Анимация для привлечения внимания
-      replyForm.style.transition = 'box-shadow 0.3s ease-in-out';
-      replyForm.style.boxShadow = '0 0 15px rgba(25, 118, 210, 0.5)';
-      
-      setTimeout(() => {
-        if (replyForm) {
-          replyForm.style.boxShadow = 'none';
-        }
-      }, 1000);
-    }
+    // Сохраняем файлы в state
+    setUploadedImages(prev => [...prev, ...files]);
     
-    // Очищаем выделение и закрываем меню
-    if (selectionAnchorEl instanceof HTMLElement && document.body.contains(selectionAnchorEl)) {
-      document.body.removeChild(selectionAnchorEl);
-    }
-    setSelectionAnchorEl(null);
-    setSelectedText(null);
-    window.getSelection()?.removeAllRanges();
+    // Создаем превью для каждого файла
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        if (e.target?.result) {
+          const newId = nextImageId;
+          setPreviewImages(prev => [
+            ...prev,
+            {
+              id: newId,
+              url: e.target?.result as string
+            }
+          ]);
+          setNextImageId(prev => prev + 1);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+    
+    // Сбрасываем значение input, чтобы можно было выбрать те же файлы снова
+    e.target.value = '';
   };
-  
-  // Обработчик клика вне выделения для закрытия меню
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      // Проверяем, что клик был вне меню выделения
-      if (
-        selectionAnchorEl && 
-        !(event.target instanceof Node && (event.target as Element).closest?.('.selection-quote-button'))
-      ) {
-        if (selectionAnchorEl instanceof HTMLElement && document.body.contains(selectionAnchorEl)) {
-          document.body.removeChild(selectionAnchorEl);
-        }
-        setSelectionAnchorEl(null);
-        setSelectedText(null);
-      }
-    };
-    
-    document.addEventListener('mousedown', handleClickOutside);
-    
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      if (selectionTimeout.current) {
-        clearTimeout(selectionTimeout.current);
-      }
-      if (selectionAnchorEl instanceof HTMLElement && document.body.contains(selectionAnchorEl)) {
-        document.body.removeChild(selectionAnchorEl);
-      }
-    };
-  }, [selectionAnchorEl]);
 
-  if (!topic) {
+  const removeImage = (id: number) => {
+    // Находим индекс изображения в массиве превью
+    const indexInPreviews = previewImages.findIndex(img => img.id === id);
+    
+    if (indexInPreviews !== -1) {
+      // Удаляем превью
+      setPreviewImages(prev => prev.filter(img => img.id !== id));
+      
+      // Удаляем соответствующий файл из uploadedImages
+      setUploadedImages(prev => {
+        const newArray = [...prev];
+        newArray.splice(indexInPreviews, 1);
+        return newArray;
+      });
+      
+      // Логирование для отладки
+      console.log('Изображение удалено, ID:', id, 'Индекс:', indexInPreviews);
+    }
+  };
+
+  // Обработчик переключения страниц
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setPage(newPage);
+      // Прокручиваем страницу вверх при смене страницы
+      window.scrollTo(0, 0);
+    }
+  };
+
+  // Обработчик ручного обновления данных
+  const handleRefresh = () => {
+    setShouldRefresh(true);
+  };
+
+  // Отображение загрузки
+  if (loading && !topic) {
     return (
       <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Typography variant="h5">Загрузка...</Typography>
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
+          <CircularProgress />
+        </Box>
+      </Container>
+    );
+  }
+
+  // Отображение ошибки
+  if (error && !topic) {
+    return (
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>
+        <Button 
+          startIcon={<ArrowBackIcon />} 
+          component={Link} 
+          to="/forum"
+          sx={{ mt: 2 }}
+        >
+          Вернуться к форуму
+        </Button>
       </Container>
     );
   }
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      {/* Хлебные крошки и заголовок */}
+      {/* Хлебные крошки */}
       <Box sx={{ mb: 3 }}>
         <Breadcrumbs separator={<NavigateNextIcon fontSize="small" />}>
           <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>
@@ -644,104 +494,105 @@ const TopicDetail: React.FC = () => {
           <Link to="/forum" style={{ textDecoration: 'none', color: 'inherit' }}>
             <Typography color="text.primary">Форум</Typography>
           </Link>
-          <Link to={`/forum/category/${topic.category.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-            <Typography color="text.primary">{topic.category.title}</Typography>
-          </Link>
-          <Typography color="text.primary" fontWeight={500}>{topic.title}</Typography>
+          {topic?.parent_category_id && topic.parent_category_title && (
+            <Link to={`/forum/category/${topic.parent_category_id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+              <Typography color="text.primary">{topic.parent_category_title}</Typography>
+            </Link>
+          )}
+          {topic?.category_id && (
+            <Link to={`/forum/category/${topic.category_id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+              <Typography color="text.primary">{topic.category_title || 'Категория'}</Typography>
+            </Link>
+          )}
+          <Typography color="text.primary" fontWeight={500}>
+            {topic?.title}
+          </Typography>
         </Breadcrumbs>
 
-        <Box sx={{ display: 'flex', alignItems: 'center', mt: 2, mb: 3, gap: 2 }}>
-          <IconButton 
-            sx={{ bgcolor: 'action.hover' }} 
-            onClick={() => navigate(`/forum/category/${topic.category.id}`)}
-          >
+        {/* Заголовок темы */}
+        <Box sx={{ display: 'flex', alignItems: 'center', mt: 2, gap: 2 }}>
+          <IconButton sx={{ bgcolor: 'action.hover' }} 
+            onClick={() => navigate(topic?.category_id ? 
+              `/forum/category/${topic.category_id}` : '/forum')}>
             <ArrowBackIcon />
           </IconButton>
-          <Box>
+          <Box sx={{ flex: 1 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-              {topic.isPinned && (
+              {topic?.is_pinned && (
                 <Chip 
                   size="small" 
                   label="Закреплено" 
-                  sx={{ 
-                    bgcolor: 'primary.main', 
-                    color: 'white',
-                    height: 24,
-                    fontSize: '0.7rem',
-                    fontWeight: 600
-                  }} 
+                  color="primary" 
+                  variant="outlined"
+                  sx={{ height: 24 }}
                 />
               )}
-              {topic.isClosed && (
+              {topic?.is_closed && (
                 <Chip 
                   size="small" 
                   label="Закрыто" 
-                  sx={{ 
-                    bgcolor: 'text.secondary', 
-                    color: 'white',
-                    height: 24,
-                    fontSize: '0.7rem',
-                    fontWeight: 600
-                  }} 
+                  color="error" 
+                  variant="outlined"
+                  sx={{ height: 24 }}
                 />
               )}
               <Typography variant="h4" component="h1" sx={{ fontWeight: 700 }}>
-                {topic.title}
+                {topic?.title}
               </Typography>
             </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap', mt: 1 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <PersonIcon fontSize="small" color="action" />
-                <Typography variant="body2" color="text.secondary">
-                  {topic.author.name}
-                </Typography>
-              </Box>
-              <Typography variant="body2" color="text.secondary">
-                •
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {topic.createdAt}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                •
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {topic.views} просмотров
-              </Typography>
-            </Box>
-            <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mt: 1 }}>
-              {topic.tags.map((tag: string, index: number) => (
+            
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
+              {Array.isArray(topic?.tags) && topic?.tags.map((tag, idx) => (
                 <Chip 
-                  key={index}
+                  key={idx}
                   size="small" 
                   label={tag} 
                   sx={{ 
-                    bgcolor: 'action.hover', 
-                    height: 24,
-                    fontSize: '0.75rem'
+                    bgcolor: 'primary.light', 
+                    color: 'white' 
                   }} 
                 />
               ))}
             </Box>
           </Box>
+          
+          <Tooltip title="Обновить">
+            <IconButton 
+              onClick={handleRefresh}
+              disabled={loading}
+              sx={{ ml: 'auto' }}
+            >
+              <RefreshIcon />
+            </IconButton>
+          </Tooltip>
         </Box>
       </Box>
 
-      {/* Сообщения в теме */}
-      <Box sx={{ mb: 4 }}>
-        {posts.map((post) => (
+      {/* Основное содержимое */}
+      {loading && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+          <CircularProgress />
+        </Box>
+      )}
+      
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>
+      )}
+      
+      {!loading && posts.map((post, index) => (
           <Paper 
-            key={post.id} 
             elevation={0} 
+            key={post.id} 
             sx={{ 
-              mb: 2, 
-              borderRadius: 3, 
-              border: '1px solid', 
-              borderColor: 'divider',
-              overflow: 'hidden'
+              mb: 3, 
+              overflow: 'hidden',
+              borderRadius: 3,
+              border: '1px solid',
+              borderColor: 'divider'
             }}
           >
             <Grid container>
+              {/* Информация об авторе */}
               <Grid size={{ xs: 12, md: 3 }} sx={{ 
                 p: 2, 
                 bgcolor: 'action.hover',
@@ -753,179 +604,315 @@ const TopicDetail: React.FC = () => {
                 alignItems: 'center',
                 textAlign: 'center'
               }}>
-                <Avatar 
-                  src={post.author.avatar} 
-                  alt={post.author.name}
-                  sx={{ width: 80, height: 80, mb: 1 }}
-                />
-                <Typography variant="subtitle1" fontWeight={600}>
-                  {post.author.name}
-                </Typography>
-                {post.isTopicStarter && (
-                  <Chip 
-                    size="small" 
-                    label="Автор темы" 
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                  <Avatar 
+                    src={post.user?.avatar || post.author_avatar || undefined} 
+                    alt={post.user?.username || post.author_username || `Пользователь ${post.author_id}`}
                     sx={{ 
-                      bgcolor: 'primary.main', 
-                      color: 'white',
-                      height: 20,
-                      fontSize: '0.7rem',
-                      mt: 0.5
-                    }} 
-                  />
-                )}
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                  {post.author.role}
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                  На форуме с {post.author.joinDate}
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                  Сообщений: {post.author.postsCount}
-                </Typography>
-              </Grid>
-              <Grid size={{ xs: 12, md: 9 }}>
-                <Box sx={{ p: 2, position: 'relative', height: '100%' }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                    <Typography variant="body2" color="text.secondary">
-                      {post.createdAt}
-                    </Typography>
-                    <IconButton 
+                      width: 80, 
+                      height: 80, 
+                      bgcolor: !post.user?.avatar && !post.author_avatar 
+                        ? 'transparent'
+                        : undefined,
+                      fontSize: '2.2rem',
+                      fontWeight: 800,
+                      border: !post.user?.avatar && !post.author_avatar ? '3px solid white' : 'none',
+                      boxShadow: !post.user?.avatar && !post.author_avatar 
+                        ? '0 4px 20px rgba(0, 0, 0, 0.15)'
+                        : '0 2px 10px rgba(0, 0, 0, 0.08)',
+                      position: 'relative',
+                      transition: 'all 0.3s ease-in-out',
+                      '&:hover': {
+                        transform: 'scale(1.05)',
+                        boxShadow: '0 6px 24px rgba(0, 0, 0, 0.18)'
+                      },
+                      animation: !loading ? 'avatarFadeIn 0.6s ease-out' : 'none',
+                      '@keyframes avatarFadeIn': {
+                        '0%': {
+                          opacity: 0,
+                          transform: 'translateY(10px)'
+                        },
+                        '100%': {
+                          opacity: 1,
+                          transform: 'translateY(0)'
+                        }
+                      },
+                      '&::before': !post.user?.avatar && !post.author_avatar ? {
+                        content: '""',
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: generateGradientColor(
+                          post.author_id, 
+                          post.user?.username || post.author_username || ''
+                        ),
+                        borderRadius: '50%',
+                        zIndex: -1
+                      } : {}
+                    }}
+                  >
+                    {(!post.user?.avatar && !post.author_avatar) && 
+                      (post.user?.fullname 
+                        ? (() => {
+                            const nameParts = post.user.fullname.split(' ');
+                            return nameParts.length > 1 
+                              ? `${nameParts[0][0]}${nameParts[1][0]}`.toUpperCase()
+                              : post.user.fullname[0].toUpperCase();
+                          })()
+                        : (post.user?.username || post.author_username || 'П').charAt(0).toUpperCase()
+                      )
+                    }
+                  </Avatar>
+                  <Typography 
+                    variant="h6" 
+                    sx={{ 
+                      fontWeight: 600, 
+                      textAlign: 'center',
+                      color: 'primary.main'
+                    }}
+                  >
+                    {post.user?.username || post.author_username || `Пользователь ${post.author_id}`}
+                  </Typography>
+                  {post.is_topic_starter && (
+                    <Chip 
                       size="small" 
-                      onClick={(e) => handleMenuClick(e, post.id)}
-                    >
-                      <MoreVertIcon fontSize="small" />
-                    </IconButton>
+                      label="Автор темы" 
+                      color="primary" 
+                      sx={{ fontSize: '0.75rem', bgcolor: '#4caf50', color: 'white' }}
+                    />
+                  )}
+                  <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center' }}>
+                    {post.user?.fullname || post.author_signature || 'Участник форума'}
+                  </Typography>
+                  <Box sx={{ width: '100%', mt: 1 }}>
+                    <Divider />
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
+                      <Typography variant="caption" color="text.secondary">Сообщений:</Typography>
+                      <Typography variant="caption" fontWeight={500}>
+                        {post.user?.posts_count || post.author_post_count || '—'}
+                  </Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 0.5 }}>
+                      <Typography variant="caption" color="text.secondary">Рег.:</Typography>
+                      <Typography variant="caption" fontWeight={500}>
+                        {post.user?.registration_date 
+                          ? new Date(post.user.registration_date).toLocaleDateString('ru-RU', {
+                              year: 'numeric',
+                              month: 'long'
+                            }) 
+                          : post.created_at 
+                              ? new Date(post.created_at).toLocaleDateString('ru-RU', {
+                                  year: 'numeric',
+                                  month: 'long'
+                                })
+                              : '—'}
+                  </Typography>
+                    </Box>
                   </Box>
+                </Box>
+              </Grid>
+            
+              {/* Содержимое сообщения */}
+              <Grid size={{ xs: 12, md: 9 }} sx={{ p: 0, bgcolor: 'white', position: 'relative' }}>
+                <Box sx={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  p: 2,
+                  bgcolor: 'white'
+                }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Typography variant="body2" color="text.secondary">
+                      {post.created_at 
+                        ? new Date(post.created_at).toLocaleString('ru-RU', {
+                            day: 'numeric',
+                            month: 'long',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })
+                        : '—'
+                      }
+                    </Typography>
+                    {post.is_edited && (
+                      <Chip 
+                        size="small" 
+                        label="Изменено" 
+                        variant="outlined"
+                        sx={{ height: 20, fontSize: '0.65rem' }}
+                      />
+                    )}
+                  </Box>
+                  <IconButton 
+                    size="small" 
+                    onClick={(e) => handleMenuClick(e, post.id)}
+                  >
+                    <MoreVertIcon fontSize="small" />
+                  </IconButton>
+                </Box>
                   
-                  {post.quotedPost && (
+                <Box sx={{ px: 3, py: 2 }} onMouseUp={(e) => handleTextSelection(e, post)}>
+                  {/* Цитируемое сообщение */}
+                  {post.quoted_post_id && post.quoted_content && (
                     <Paper 
                       elevation={0} 
                       sx={{ 
-                        p: 1.5, 
+                        p: 2,
                         mb: 2, 
-                        bgcolor: 'action.hover', 
+                        bgcolor: 'grey.50',
                         borderLeft: '4px solid',
-                        borderColor: 'primary.light',
+                        borderColor: 'primary.main',
                         borderRadius: 1
                       }}
                     >
-                      <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic', mb: 0.5 }}>
-                        {post.quotedPost.author.name} писал(а):
-                      </Typography>
-                      <Typography variant="body2">
-                        {post.quotedPost.content}
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                        <FormatQuoteRoundedIcon color="primary" fontSize="small" sx={{ mr: 1 }} />
+                        <Typography variant="body2" color="primary" fontWeight={500}>
+                          {post.quoted_author || 'Цитата'}:
+                        </Typography>
+                      </Box>
+                      <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
+                        {post.quoted_content}
                       </Typography>
                     </Paper>
                   )}
                   
-                  <Typography 
-                    variant="body1" 
-                    sx={{ 
-                      whiteSpace: 'pre-line',
-                      mb: post.images && post.images.length > 0 ? 2 : 3
-                    }}
-                    onMouseUp={(e) => handleTextSelection(e, post)}
-                  >
+                  {/* Основное сообщение */}
+                  <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
                     {post.content}
                   </Typography>
                   
+                  {/* Изображения в сообщении */}
                   {post.images && post.images.length > 0 && (
-                    <Box sx={{ mb: 3 }}>
-                      <ImageGallery images={post.images as any[]} />
+                    <Box sx={{ mt: 2 }}>
+                      <ImageGallery 
+                        images={post.images.map(img => ({
+                          id: img.id,
+                          image_url: img.image_url,
+                          post_id: post.id,
+                          created_at: post.created_at
+                        }))} 
+                      />
                     </Box>
                   )}
-                  
-                  <Box sx={{ 
-                    display: 'flex', 
-                    gap: 2, 
-                    mt: 'auto',
-                    position: 'absolute',
-                    bottom: 16,
-                    left: 16
-                  }}>
-                    <Button 
-                      variant="text" 
-                      size="small" 
-                      startIcon={<ThumbUpAltIcon />}
-                      onClick={() => handleLike(post.id)}
-                      sx={{ 
-                        color: userLikes.includes(post.id) ? 'success.main' : 'text.secondary',
-                        minWidth: 0
-                      }}
-                    >
-                      {post.likes}
-                    </Button>
-                    <Button 
-                      variant="text" 
-                      size="small" 
-                      startIcon={<ThumbDownAltIcon />}
-                      onClick={() => handleDislike(post.id)}
-                      sx={{ 
-                        color: userDislikes.includes(post.id) ? 'error.main' : 'text.secondary',
-                        minWidth: 0
-                      }}
-                    >
-                      {post.dislikes}
-                    </Button>
-                  </Box>
+                </Box>
+                
+                <Box sx={{ 
+                  position: 'absolute',
+                  bottom: 12,
+                  right: 16,
+                  display: 'flex',
+                  gap: 1
+                }}>
+                  <Button
+                    size="small"
+                    color="inherit"
+                    onClick={() => handleLike(post.id)}
+                    sx={{ 
+                      minWidth: 0,
+                      px: 1,
+                      color: post.likes_count > 0 ? '#1976d2' : 'inherit',
+                      borderRadius: 1
+                    }}
+                  >
+                    <ThumbUpAltIcon fontSize="small" />
+                    {post.likes_count > 0 && (
+                      <Typography variant="caption" sx={{ ml: 0.5 }}>
+                        {post.likes_count}
+                      </Typography>
+                    )}
+                  </Button>
+                  <Button 
+                    size="small" 
+                    color="inherit"
+                    onClick={() => handleDislike(post.id)}
+                    sx={{ 
+                      minWidth: 0,
+                      px: 1,
+                      color: post.dislikes_count > 0 ? '#d32f2f' : 'inherit',
+                      borderRadius: 1
+                    }}
+                  >
+                    <ThumbDownAltIcon fontSize="small" />
+                    {post.dislikes_count > 0 && (
+                      <Typography variant="caption" sx={{ ml: 0.5 }}>
+                        {post.dislikes_count}
+                      </Typography>
+                    )}
+                  </Button>
                 </Box>
               </Grid>
             </Grid>
           </Paper>
         ))}
+      
+      {/* Пагинация */}
+      {totalPages > 1 && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', my: 3 }}>
+          <Pagination 
+            count={totalPages} 
+            page={page} 
+            onChange={(_, value) => handlePageChange(value)} 
+            color="primary"
+            disabled={loading}
+            size="large"
+          />
       </Box>
+      )}
 
-      {/* Форма для ответа */}
-      {!topic.isClosed && isAuth ? (
+      {/* Форма ответа */}
+      {topic && !topic.is_closed && (
         <Paper 
-          id="reply-form"
           elevation={0} 
+          ref={replyBoxRef}
           sx={{ 
+            mt: 4, 
             p: 3, 
-            borderRadius: 3, 
             border: '1px solid', 
-            borderColor: 'divider'
+            borderColor: 'divider',
+            borderRadius: 2
           }}
         >
-          <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-            Ответить в тему
+          <Typography variant="h6" gutterBottom>
+            Ответить в теме
           </Typography>
           
-          {quoteData && (
+          {/* Блок цитаты */}
+          {currentQuote && (
             <Paper 
               elevation={0} 
               sx={{ 
-                p: 1.5, 
+                p: 2,
                 mb: 2, 
-                bgcolor: 'action.hover', 
+                bgcolor: 'grey.50',
                 borderLeft: '4px solid',
-                borderColor: 'primary.light',
+                borderColor: 'primary.main',
                 borderRadius: 1,
                 position: 'relative'
               }}
             >
               <IconButton 
                 size="small" 
+                onClick={handleRemoveQuote}
                 sx={{ 
-                  position: 'absolute', 
-                  top: 4, 
-                  right: 4,
+                  position: 'absolute',
+                  top: 8,
+                  right: 8,
                   width: 20,
-                  height: 20
-                }}
-                onClick={() => {
-                  console.log('Удаление цитаты');
-                  setQuoteData(null);
+                  height: 20,
+                  p: 0
                 }}
               >
                 <DeleteIcon fontSize="small" />
               </IconButton>
-              <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic', mb: 0.5 }}>
-                {quoteData.author} писал(а):
-              </Typography>
-              <Typography variant="body2">
-                {quoteData.content}
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <Typography variant="body2" sx={{ fontStyle: 'italic', color: 'text.secondary' }}>
+                  {currentQuote.author} писал(а):
+                </Typography>
+              </Box>
+              <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                {currentQuote.text}
               </Typography>
             </Paper>
           )}
@@ -933,106 +920,30 @@ const TopicDetail: React.FC = () => {
           <TextField
             fullWidth
             multiline
-            minRows={4}
-            maxRows={10}
-            placeholder="Введите ваше сообщение..."
-            value={replyContent}
-            onChange={(e) => setReplyContent(e.target.value)}
+            rows={6}
+            value={reply}
+            onChange={(e) => setReply(e.target.value)}
+            placeholder="Введите текст сообщения..."
+            variant="outlined"
+            ref={textFieldRef}
             sx={{ mb: 2 }}
           />
           
-          {/* Загрузка изображений */}
-          <Box sx={{ mb: 2 }}>
-            <Typography variant="subtitle1" sx={{ mb: 1 }}>
-              Изображения ({images.length}/5)
-            </Typography>
-            
-            <Box 
-              sx={{ 
-                border: '2px dashed',
-                borderColor: 'divider',
-                borderRadius: 2,
-                p: 3,
-                textAlign: 'center',
-                mb: 2,
-                cursor: 'pointer',
-                transition: 'background-color 0.2s',
-                '&:hover': {
-                  bgcolor: 'action.hover',
-                }
-              }}
-              onDrop={handleDrop}
-              onDragOver={handleDragOver}
-              onClick={() => document.getElementById('forum-image-upload')?.click()}
-            >
-              {isCompressing ? (
-                <Box sx={{ 
-                  display: 'flex', 
-                  flexDirection: 'column', 
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  py: 2
-                }}>
-                  <CircularProgress size={40} color="primary" />
-                  <Typography variant="body2" sx={{ mt: 1.5 }}>
-                    Обработка изображений...
-                  </Typography>
-                </Box>
-              ) : (
-                <>
-                  <InsertPhotoIcon sx={{ fontSize: 48, color: 'action.active', mb: 1 }} />
-                  <Typography variant="body1" sx={{ mb: 1 }}>
-                    Перетащите изображения сюда или нажмите для выбора
-                  </Typography>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    onChange={handleImageUpload}
-                    style={{ display: 'none' }}
-                    id="forum-image-upload"
-                    disabled={images.length >= 5}
-                  />
-                  <Button 
-                    variant="outlined" 
-                    color="primary"
-                    startIcon={<CloudUploadIcon />}
-                    disabled={images.length >= 5}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      document.getElementById('forum-image-upload')?.click();
-                    }}
-                  >
-                    Выбрать изображения
-                  </Button>
-                </>
-              )}
-            </Box>
-            
-            {/* Предпросмотр загруженных изображений */}
-            {images.length > 0 && (
-              <Box sx={{ 
-                display: 'flex', 
-                flexWrap: 'wrap', 
-                gap: 1,
-                mb: 2
-              }}>
-                {images.map(img => (
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+            {previewImages.map(img => (
                   <Box 
                     key={img.id} 
                     sx={{ 
                       position: 'relative',
-                      width: 100,
-                      height: 100,
+                  width: 120,
+                  height: 90,
                       borderRadius: 1,
-                      overflow: 'hidden',
-                      border: '1px solid',
-                      borderColor: 'divider'
+                  overflow: 'hidden'
                     }}
                   >
                     <img 
-                      src={img.image_url} 
-                      alt="Загруженное изображение" 
+                  src={img.url}
+                  alt="Preview"
                       style={{ 
                         width: '100%', 
                         height: '100%', 
@@ -1045,190 +956,146 @@ const TopicDetail: React.FC = () => {
                         position: 'absolute', 
                         top: 4, 
                         right: 4,
-                        bgcolor: 'rgba(0, 0, 0, 0.5)',
+                    bgcolor: 'rgba(0, 0, 0, 0.6)',
                         color: 'white',
-                        width: 20,
-                        height: 20,
                         '&:hover': {
-                          bgcolor: 'rgba(0, 0, 0, 0.7)',
-                        }
+                      bgcolor: 'rgba(0, 0, 0, 0.8)',
+                    },
+                    p: 0.5
                       }}
                       onClick={() => removeImage(img.id)}
                     >
-                      <DeleteIcon fontSize="small" sx={{ fontSize: 14 }} />
+                  <DeleteIcon fontSize="small" />
                     </IconButton>
                   </Box>
                 ))}
-              </Box>
-            )}
           </Box>
           
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+            <Box sx={{ display: 'flex', gap: 1 }}>
             <Button 
-              variant="contained" 
-              color="primary"
-              startIcon={<ReplyIcon />}
-              onClick={handleReply}
-              disabled={(!replyContent.trim() && images.length === 0) || isSubmitting}
-            >
-              {isSubmitting ? 'Отправка...' : 'Отправить ответ'}
+                variant="outlined"
+                startIcon={<InsertPhotoIcon />}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                Добавить изображение
             </Button>
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleImageUpload}
+                ref={fileInputRef}
+                style={{ display: 'none' }}
+              />
           </Box>
-        </Paper>
-      ) : topic.isClosed ? (
-        <Paper 
-          elevation={0} 
-          sx={{ 
-            p: 3, 
-            borderRadius: 3, 
-            border: '1px solid', 
-            borderColor: 'divider',
-            bgcolor: 'action.hover',
-            textAlign: 'center'
-          }}
-        >
-          <Typography variant="h6" sx={{ color: 'text.secondary', fontWeight: 500 }}>
-            Эта тема закрыта для новых сообщений
-          </Typography>
-        </Paper>
-      ) : (
-        <Paper 
-          elevation={0} 
-          sx={{ 
-            p: 3, 
-            borderRadius: 3, 
-            border: '1px solid', 
-            borderColor: 'divider',
-            bgcolor: 'action.hover',
-            textAlign: 'center'
-          }}
-        >
-          <Typography variant="h6" sx={{ color: 'text.secondary', fontWeight: 500, mb: 2 }}>
-            Для ответа в тему необходимо авторизоваться
-          </Typography>
           <Button 
             variant="contained" 
             color="primary"
-            onClick={() => navigate('/login')}
+              endIcon={<ReplyIcon />}
+              onClick={handleReply}
+              disabled={!reply.trim() && !currentQuote || isSubmitting}
           >
-            Войти
+              {isSubmitting ? 'Отправка...' : 'Отправить'}
           </Button>
+          </Box>
         </Paper>
       )}
 
-      {/* Кнопка "Цитировать" для выделенного текста */}
-      <Menu
-        anchorEl={selectionAnchorEl}
-        open={Boolean(selectionAnchorEl)}
-        onClose={() => {
-          if (selectionAnchorEl instanceof HTMLElement && document.body.contains(selectionAnchorEl)) {
-            document.body.removeChild(selectionAnchorEl);
-          }
-          setSelectionAnchorEl(null);
-          setSelectedText(null);
-        }}
-        className="selection-quote-button"
-        anchorOrigin={{
-          vertical: 'top',
-          horizontal: 'center',
-        }}
-        transformOrigin={{
-          vertical: 'bottom',
-          horizontal: 'center',
-        }}
-        PaperProps={{
-          elevation: 3,
-          sx: {
-            borderRadius: 2,
-            minWidth: 'auto'
-          }
-        }}
-      >
-        <MenuItem onClick={handleQuoteSelectedText} sx={{ py: 0.5, px: 1 }}>
-          <ListItemIcon sx={{ minWidth: 30 }}>
-            <FormatQuoteIcon fontSize="small" />
-          </ListItemIcon>
-          <ListItemText 
-            primary="Цитировать" 
-            primaryTypographyProps={{ variant: 'body2', fontWeight: 500 }}
-          />
-        </MenuItem>
-      </Menu>
-
-      {/* Контекстное меню для сообщений */}
+      {/* Меню для цитирования выделенного текста */}
+      {selectionMenuPosition && (
+        <Box
+          className="selection-menu"
+          sx={{
+            position: 'absolute',
+            top: selectionMenuPosition.top,
+            left: selectionMenuPosition.left,
+            transform: 'translateX(-50%)',
+            zIndex: 1000,
+            bgcolor: 'white',
+            borderRadius: 1,
+            boxShadow: 3,
+            overflow: 'hidden'
+          }}
+        >
+          <Button
+            size="small"
+            startIcon={<FormatQuoteIcon />}
+            onClick={handleQuoteSelection}
+            sx={{ 
+              py: 1, 
+              px: 2,
+              borderRadius: 0,
+              '&:hover': {
+                bgcolor: 'action.hover'
+              }
+            }}
+          >
+            Цитировать
+          </Button>
+        </Box>
+      )}
+      
+      {/* Меню действий с сообщением */}
       <Menu
         anchorEl={anchorEl}
-        id="post-menu"
-        open={open}
+        open={Boolean(anchorEl)}
         onClose={handleMenuClose}
-        onClick={handleMenuClose}
-        PaperProps={{
-          elevation: 0,
-          sx: {
-            overflow: 'visible',
-            filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.15))',
-            mt: 1.5,
-            borderRadius: 2,
-            minWidth: 180,
-            '& .MuiMenuItem-root': {
-              px: 2,
-              py: 1,
-            },
-          },
-        }}
-        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
       >
-        <MenuItem onClick={() => currentPostId && handleQuote(currentPostId)}>
+        <MenuItem onClick={() => {
+          handleQuote(activePostId!);
+          handleMenuClose();
+        }}>
           <ListItemIcon>
             <FormatQuoteIcon fontSize="small" />
           </ListItemIcon>
           <ListItemText>Цитировать</ListItemText>
         </MenuItem>
-        
-        {/* Пункты меню для администратора */}
+        {/* Другие пункты меню (только для админов или автора) */}
         {userStore.isAdmin && (
+          <>
           <MenuItem>
             <ListItemIcon>
-              <FlagIcon fontSize="small" />
+                <EditIcon fontSize="small" />
             </ListItemIcon>
-            <ListItemText>Пометить как нарушение</ListItemText>
+              <ListItemText>Редактировать</ListItemText>
           </MenuItem>
-        )}
-        
-        {/* Пункты меню для первого сообщения (если пользователь администратор) */}
-        {userStore.isAdmin && currentPostId === posts[0]?.id && (
           <MenuItem>
             <ListItemIcon>
-              <LockIcon fontSize="small" />
+                <DeleteIcon fontSize="small" />
             </ListItemIcon>
-            <ListItemText>
-              {topic.isClosed ? 'Открыть тему' : 'Закрыть тему'}
-            </ListItemText>
+              <ListItemText>Удалить</ListItemText>
           </MenuItem>
-        )}
-        
-        {userStore.isAdmin && currentPostId === posts[0]?.id && (
+            {activePostId === 1 && topic && (
+              <>
+                <Divider />
           <MenuItem>
             <ListItemIcon>
               <PushPinIcon fontSize="small" />
             </ListItemIcon>
             <ListItemText>
-              {topic.isPinned ? 'Открепить тему' : 'Закрепить тему'}
+                    {topic.is_pinned ? 'Открепить тему' : 'Закрепить тему'}
             </ListItemText>
           </MenuItem>
-        )}
-        
-        {userStore.isAdmin && (
           <MenuItem>
             <ListItemIcon>
-              <DeleteIcon fontSize="small" color="error" />
+                    <LockIcon fontSize="small" />
             </ListItemIcon>
-            <ListItemText sx={{ color: 'error.main' }}>
-              {currentPostId === posts[0]?.id ? 'Удалить тему' : 'Удалить сообщение'}
+                  <ListItemText>
+                    {topic.is_closed ? 'Открыть тему' : 'Закрыть тему'}
             </ListItemText>
           </MenuItem>
+              </>
+            )}
+          </>
         )}
+        <Divider />
+        <MenuItem>
+          <ListItemIcon>
+            <FlagIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Пожаловаться</ListItemText>
+        </MenuItem>
       </Menu>
     </Container>
   );
