@@ -4,13 +4,14 @@ import { Close, KeyboardArrowLeft, KeyboardArrowRight } from '@mui/icons-materia
 import { PostImage } from '../shared/types/post.types';
 import CachedImage from './CachedImage';
 import imageCache from '../utils/imageCache';
+import { IMAGE_BASE_URL } from '../config/api';
 
 interface ImageGalleryProps {
   images: PostImage[];
   baseUrl?: string;
 }
 
-const ImageGallery: React.FC<ImageGalleryProps> = ({ images, baseUrl = 'https://рыбный-форум.рф' }) => {
+const ImageGallery: React.FC<ImageGalleryProps> = ({ images, baseUrl = IMAGE_BASE_URL }) => {
   const [open, setOpen] = useState(false);
   const [activeStep, setActiveStep] = useState(0);
   const [isImagesLoaded, setIsImagesLoaded] = useState(false);
@@ -186,6 +187,7 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, baseUrl = 'https://
                 borderRadius: '4px',
               }}
               placeholderSrc="/placeholder-image.jpg"
+              imageId={image.id}
             />
           </Box>
         ))}
@@ -234,6 +236,7 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, baseUrl = 'https://
               maxHeight: 'calc(100vh - 96px)',
               objectFit: 'contain',
             }}
+            imageId={images[activeStep].id}
           />
         </DialogContent>
         

@@ -1,8 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import imageCache from '../utils/imageCache';
+import { IMAGE_CACHE_OPTIONS } from '../config/api';
 
 // Стандартное изображение при ошибке загрузки
 const DEFAULT_ERROR_IMAGE = '/placeholder-error.jpg';
+
+// Проверка поддержки Cache API
+const isCacheAPISupported = 'caches' in window;
 
 interface CachedImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   src: string;
@@ -12,6 +16,7 @@ interface CachedImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   errorSrc?: string;
   onLoad?: () => void;
   onError?: () => void;
+  imageId?: number | string;
 }
 
 /**
@@ -25,14 +30,40 @@ const CachedImage: React.FC<CachedImageProps> = ({
   errorSrc = DEFAULT_ERROR_IMAGE,
   onLoad,
   onError,
+  imageId,
   ...props
 }) => {
   const [imageSrc, setImageSrc] = useState<string>(placeholderSrc || '');
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [hasError, setHasError] = useState<boolean>(false);
+  const isMounted = useRef(true);
+  const prevSrc = useRef<string | null>(null);
+  const uniqueRequestId = useRef<string>(Math.random().toString(36).substring(2, 15));
+
+  // Добавляем ключ к URL для предотвращения кеширования браузером
+  const getUniqueUrl = (url: string) => {
+    if (!url) return url;
+    if (url.includes('?')) {
+      return `${url}&_uid=${uniqueRequestId.current}&t=${Date.now()}`;
+    } else {
+      return `${url}?_uid=${uniqueRequestId.current}&t=${Date.now()}`;
+    }
+  };
 
   useEffect(() => {
-    let isMounted = true;
+    // Устанавливаем флаг размонтирования
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    // Если источник не изменился, не загружаем изображение повторно
+    if (prevSrc.current === src) {
+      return;
+    }
+    
+    prevSrc.current = src;
     
     const loadImage = async () => {
       if (!src) {
@@ -45,15 +76,25 @@ const CachedImage: React.FC<CachedImageProps> = ({
         setIsLoading(true);
         setHasError(false);
         
-        // Получаем изображение из кеша или загружаем его
-        const cachedSrc = await imageCache.getImage(src, baseUrl);
+        // Добавляем уникальный идентификатор изображения в URL, если он есть
+        // Внимание: мы не добавляем дополнительные параметры тут, т.к. они приведут к неправильной работе кеша
+        const imageUrlWithId = imageId ? `${src}?id=${imageId}` : src;
         
-        if (isMounted) {
+        // Полный URL изображения
+        const fullUrl = `${baseUrl}${imageUrlWithId}`;
+        
+        console.log(`%c[CachedImage] Загрузка изображения: ${fullUrl}, ID: ${imageId}`, 'background: #795548; color: white; padding: 2px 5px; border-radius: 2px;');
+        
+        // Получаем изображение из кеша с помощью нашего imageCache сервиса
+        // Он уже содержит логику работы с Cache Storage, IndexedDB и т.д.
+        const cachedSrc = await imageCache.getImage(imageUrlWithId, baseUrl);
+        
+        if (isMounted.current) {
           setImageSrc(cachedSrc);
           setIsLoading(false);
         }
       } catch (error) {
-        if (isMounted) {
+        if (isMounted.current) {
           console.error('Ошибка при загрузке изображения:', error);
           setIsLoading(false);
           setHasError(true);
@@ -70,13 +111,10 @@ const CachedImage: React.FC<CachedImageProps> = ({
     };
     
     loadImage();
-    
-    return () => {
-      isMounted = false;
-    };
-  }, [src, baseUrl, errorSrc, onError]);
+  }, [src, baseUrl, errorSrc, onError, imageId]);
 
   const handleLoad = () => {
+    setIsLoading(false);
     if (onLoad) {
       onLoad();
     }
@@ -84,6 +122,7 @@ const CachedImage: React.FC<CachedImageProps> = ({
 
   const handleError = () => {
     setHasError(true);
+    console.error(`[CachedImage] Ошибка загрузки изображения: ${imageSrc}`);
     
     if (errorSrc) {
       setImageSrc(errorSrc);

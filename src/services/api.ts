@@ -16,6 +16,16 @@ const api = axios.create({
   },
 });
 
+// Специальный экземпляр для загрузки изображений с отключенным кешированием
+export const imageApi = axios.create({
+  baseURL: API_URL,
+  headers: {
+    'Cache-Control': 'no-cache, no-store, must-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0'
+  }
+});
+
 // Добавляем интерцептор для установки токена
 api.interceptors.request.use((config) => {
   const token = userStore.accessToken;

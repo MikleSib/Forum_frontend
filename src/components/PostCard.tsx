@@ -1,11 +1,13 @@
 import React from 'react';
-import { Card, CardContent, CardMedia, Typography, Box, Button, Chip, Grid } from '@mui/material';
+import { Card, CardContent, Typography, Box, Button, Chip, Grid } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import CommentIcon from '@mui/icons-material/Comment';
 import { PostImage, Post } from '../shared/types/post.types';
 import styles from '../pages/Dashboard/Dashboard.module.css';
+import CachedImage from './CachedImage';
+import { IMAGE_BASE_URL } from '../config/api';
 
 interface PostCardPropsDetailed {
   title: string;
@@ -78,10 +80,16 @@ const PostCard: React.FC<PostCardProps> = (props) => {
     ? (props.post.images || []).slice(0, 3) // Ограничиваем максимум 3 изображения
     : props.images || (imageUrl ? [imageUrl] : []);
   
-  // Форматируем URL изображения
-  const formatImageUrl = (image: PostImage | undefined) => {
+  // Форматируем URL изображения для извлечения только пути
+  const getImagePath = (image: PostImage | undefined) => {
     if (!image || !image.image_url) return '';
-    return `https://рыбный-форум.рф${image.image_url}`;
+    return image.image_url;
+  };
+
+  // Получаем ID изображения для кеширования
+  const getImageId = (image: PostImage | undefined) => {
+    if (!image || !image.id) return undefined;
+    return image.id;
   };
 
   // Форматируем дату
@@ -120,16 +128,27 @@ const PostCard: React.FC<PostCardProps> = (props) => {
         <Box sx={{ position: 'relative' }}>
           {images.length === 1 ? (
             // Одно изображение - показываем на всю ширину
-            <CardMedia
-              component="img"
-              height="200"
-              image={formatImageUrl(images[0])}
-              alt={title}
+            <Box
               sx={{ 
-                objectFit: 'cover',
-                height: { xs: '400px', sm: '600px' }
+                height: { xs: '200px', sm: '600px' },
+                overflow: 'hidden',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
               }}
-            />
+            >
+              <CachedImage
+                src={getImagePath(images[0])}
+                baseUrl={IMAGE_BASE_URL}
+                alt={title}
+                imageId={getImageId(images[0])}
+                style={{ 
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover'
+                }}
+              />
+            </Box>
           ) : (
             // Несколько изображений - показываем в сетке
             <Grid container spacing={0.5} sx={{ mt: 0 }}>
@@ -140,16 +159,29 @@ const PostCard: React.FC<PostCardProps> = (props) => {
                 >
                   <Box 
                     sx={{
-                      height: { xs: '300px', sm: '600px' },
-                      backgroundImage: `url(${formatImageUrl(image)})`,
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center',
-                      borderRadius: index === 0 ? '12px 0 0 0' : 
-                                 (index === 1 && images.length === 2) ? '0 12px 0 0' :
-                                 (index === 1) ? '0 0 0 0' :
-                                 '0 12px 0 0'
+                      height: { xs: '150px', sm: '600px' },
+                      overflow: 'hidden',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
                     }}
-                  />
+                  >
+                    <CachedImage
+                      src={getImagePath(image)}
+                      baseUrl={IMAGE_BASE_URL}
+                      alt={`${title} - изображение ${index + 1}`}
+                      imageId={getImageId(image)}
+                      style={{ 
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        borderRadius: index === 0 ? '12px 0 0 0' : 
+                                  (index === 1 && images.length === 2) ? '0 12px 0 0' :
+                                  (index === 1) ? '0 0 0 0' :
+                                  '0 12px 0 0'
+                      }}
+                    />
+                  </Box>
                 </Grid>
               ))}
             </Grid>

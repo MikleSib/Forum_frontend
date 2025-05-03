@@ -36,6 +36,8 @@ import logo from '../../assets/logo.svg';
 import { AUTH_STATUS_CHANGED } from '../../components/Header';
 import { userStore } from '../../shared/store/userStore';
 import { YMaps, Map as YMap, Placemark, ZoomControl } from '@pbe/react-yandex-maps';
+import imageCache from '../../utils/imageCache';
+import { IMAGE_BASE_URL } from '../../config/api';
 
 // Другие варианты карт:
 // Esri World Terrain (только природный рельеф): "https://server.arcgisonline.com/ArcGIS/rest/services/World_Terrain_Base/MapServer/tile/{z}/{y}/{x}"
@@ -203,6 +205,32 @@ const Dashboard = () => {
           ...prev,
           posts: postsData.length
         }));
+
+        // Приоритезируем кеширование изображений из постов
+        if (postsData && postsData.length > 0) {
+          // Собираем URL всех изображений
+          const imageUrls: string[] = [];
+          postsData.forEach(post => {
+            if (post.images && Array.isArray(post.images)) {
+              post.images.forEach(image => {
+                if (image && image.image_url) {
+                  imageUrls.push(image.image_url);
+                }
+              });
+            }
+          });
+
+          // Оптимизируем загрузку изображений с приоритетом кеша
+          if (imageUrls.length > 0) {
+            imageCache.prioritizeDashboardImages(imageUrls, IMAGE_BASE_URL)
+              .then(cachedUrls => {
+                console.log(`Обработано ${cachedUrls.length} изображений для Dashboard`);
+              })
+              .catch(err => {
+                console.error('Ошибка при кешировании изображений:', err);
+              });
+          }
+        }
       } catch (err) {
         console.error('Ошибка при загрузке данных:', err);
         setError('Не удалось загрузить данные');
