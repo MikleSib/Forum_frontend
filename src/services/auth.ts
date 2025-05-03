@@ -8,7 +8,9 @@ import { AUTH_STATUS_CHANGED } from '../components/Header';
 export const handleErrors = async (error: any) => {
   if (axios.isAxiosError(error) && error.config) {
     // Если получили ошибку 401, пробуем обновить токен
-    if (error.response?.status === 401 && error.response.data?.detail === "Invalid token") {
+    if (error.response?.status === 401 && 
+        error.response.data?.detail && 
+        (error.response.data?.detail === "Invalid token" || error.response.data?.detail === "Invalid token data")) {
       try {
         const tokens = await refreshToken();
         // Повторяем исходный запрос с новым токеном

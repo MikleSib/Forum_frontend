@@ -47,12 +47,12 @@ api.interceptors.response.use(
         error.response?.data && 
         typeof error.response.data === 'object' &&
         'detail' in error.response.data &&
-        error.response.data.detail === "Invalid token" && 
+        (error.response.data.detail === "Invalid token" || error.response.data.detail === "Invalid token data") && 
         originalRequest &&
         !originalRequest._retry) {
       
       try {
-        console.log('Получена ошибка Invalid token, пробуем обновить токен');
+        console.log('Получена ошибка Invalid token/Invalid token data, пробуем обновить токен');
         // Помечаем запрос как повторный
         originalRequest._retry = true;
         

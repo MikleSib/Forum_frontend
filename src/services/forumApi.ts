@@ -46,7 +46,7 @@ api.interceptors.response.use(
     
     // Проверяем, что это ошибка 401 и запрос не является повторным
     if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
-      console.log('Получена ошибка 401, пробуем обновить токен');
+      console.log('Получена ошибка 401, пробуем обновить токен', error.response?.data);
       
       try {
         // Помечаем запрос как повторный
