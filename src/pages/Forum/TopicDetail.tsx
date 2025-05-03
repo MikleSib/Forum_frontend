@@ -4,7 +4,7 @@ import {
   Breadcrumbs, Avatar, Chip, IconButton, TextField,
   Card, CardContent, CardActions, Grid, Menu, MenuItem,
   ListItemIcon, ListItemText, CircularProgress, Tooltip,
-  Alert, Pagination
+  Alert, Pagination, Dialog, DialogTitle, DialogContent, DialogActions, DialogContentText
 } from '@mui/material';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -73,9 +73,25 @@ const TopicDetail: React.FC = () => {
     postId: number;
   } | null>(null);
   
+  // Состояние для редактирования сообщения
+  const [isEditing, setIsEditing] = useState(false);
+  const [editPostId, setEditPostId] = useState<number | null>(null);
+  const [editContent, setEditContent] = useState('');
+  
+  // Состояние для процесса удаления
+  const [isDeletingPost, setIsDeletingPost] = useState(false);
+  const [deletingPostId, setDeletingPostId] = useState<number | null>(null);
+  
+  // Состояние для диалога жалобы
+  const [reportDialogOpen, setReportDialogOpen] = useState(false);
+  const [reportReason, setReportReason] = useState('');
+  const [reportPostId, setReportPostId] = useState<number | null>(null);
+  const [isSubmittingReport, setIsSubmittingReport] = useState(false);
+  
   const replyBoxRef = useRef<HTMLDivElement>(null);
   const textFieldRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const editTextFieldRef = useRef<HTMLTextAreaElement>(null);
 
   // Функция для генерации градиентного цвета на основе имени пользователя
   const generateGradientColor = (userId: number, username: string) => {
@@ -188,6 +204,20 @@ const TopicDetail: React.FC = () => {
 
   // Загружаем данные при монтировании и при изменении параметров
   useEffect(() => {
+    // Отладочный вывод для проверки статуса администратора
+    console.log('TopicDetail - isAdmin:', userStore.isAdmin);
+    console.log('TopicDetail - user:', userStore.user);
+    
+    // Проверяем наличие токена в localStorage и обновляем состояние
+    const savedAuth = localStorage.getItem('auth');
+    if (savedAuth) {
+      const auth = JSON.parse(savedAuth);
+      console.log('TopicDetail - auth from localStorage:', auth);
+      console.log('TopicDetail - auth.user.is_admin:', auth.user?.is_admin);
+    } else {
+      console.log('TopicDetail - No auth in localStorage');
+    }
+    
     fetchTopicData();
   }, [fetchTopicData, shouldRefresh]);
 
@@ -380,6 +410,158 @@ const TopicDetail: React.FC = () => {
     } catch (error) {
       console.error('Ошибка при удалении реакции:', error);
       setError('Не удалось удалить реакцию. Пожалуйста, попробуйте позже.');
+    }
+  };
+
+  // Обработчик редактирования сообщения
+  const handleEditPost = (postId: number) => {
+    const post = posts.find(p => p.id === postId);
+    if (!post) return;
+    
+    setEditPostId(postId);
+    setEditContent(post.content);
+    setIsEditing(true);
+    handleMenuClose();
+    
+    // Фокус на поле ввода при открытии
+    setTimeout(() => {
+      if (editTextFieldRef.current) {
+        editTextFieldRef.current.focus();
+      }
+    }, 100);
+  };
+  
+  // Обработчик сохранения отредактированного сообщения
+  const handleSaveEdit = async () => {
+    if (!editPostId || !editContent.trim()) return;
+    
+    try {
+      setIsSubmitting(true);
+      const updatedPost = await forumApi.updatePost(editPostId, editContent);
+      
+      // Обновляем сообщение локально
+      setPosts(prevPosts => prevPosts.map(post => 
+        post.id === editPostId 
+          ? { ...post, content: updatedPost.content, is_edited: true, updated_at: updatedPost.updated_at }
+          : post
+      ));
+      
+      // Сбрасываем состояние редактирования
+      setIsEditing(false);
+      setEditPostId(null);
+      setEditContent('');
+    } catch (error) {
+      console.error('Ошибка при обновлении сообщения:', error);
+      setError('Не удалось обновить сообщение. Пожалуйста, попробуйте позже.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  // Обработчик удаления сообщения
+  const handleDeletePost = async (postId: number) => {
+    if (!window.confirm('Вы действительно хотите удалить это сообщение?')) return;
+    
+    try {
+      setIsDeletingPost(true);
+      setDeletingPostId(postId);
+      await forumApi.deletePost(postId);
+      
+      // Удаляем сообщение локально
+      setPosts(prevPosts => prevPosts.filter(post => post.id !== postId));
+      
+      // Если это первое сообщение темы, перенаправляем на страницу категории
+      if (posts.find(p => p.id === postId)?.is_topic_starter && topic?.category_id) {
+        navigate(`/forum/category/${topic.category_id}`);
+        return;
+      }
+      
+      // Обновляем счетчик сообщений в теме
+      if (topic) {
+        setTopic({
+          ...topic,
+          posts_count: Math.max(topic.posts_count - 1, 1)
+        });
+      }
+    } catch (error) {
+      console.error('Ошибка при удалении сообщения:', error);
+      setError('Не удалось удалить сообщение. Пожалуйста, попробуйте позже.');
+    } finally {
+      setIsDeletingPost(false);
+      setDeletingPostId(null);
+      handleMenuClose();
+    }
+  };
+  
+  // Обработчик закрепления/открепления темы
+  const handlePinTopic = async () => {
+    if (!topic) return;
+    
+    try {
+      const updatedTopic = await forumApi.pinTopic(topic.id);
+      
+      // Обновляем тему локально
+      setTopic({
+        ...topic,
+        is_pinned: updatedTopic.is_pinned
+      });
+    } catch (error) {
+      console.error('Ошибка при закреплении/откреплении темы:', error);
+      setError('Не удалось закрепить/открепить тему. Пожалуйста, попробуйте позже.');
+    }
+    
+    handleMenuClose();
+  };
+  
+  // Обработчик закрытия/открытия темы
+  const handleCloseTopic = async () => {
+    if (!topic) return;
+    
+    try {
+      const updatedTopic = await forumApi.closeTopic(topic.id);
+      
+      // Обновляем тему локально
+      setTopic({
+        ...topic,
+        is_closed: updatedTopic.is_closed
+      });
+    } catch (error) {
+      console.error('Ошибка при закрытии/открытии темы:', error);
+      setError('Не удалось закрыть/открыть тему. Пожалуйста, попробуйте позже.');
+    }
+    
+    handleMenuClose();
+  };
+  
+  // Обработчик открытия диалога жалобы
+  const handleOpenReportDialog = (postId: number) => {
+    setReportPostId(postId);
+    setReportReason('');
+    setReportDialogOpen(true);
+    handleMenuClose();
+  };
+  
+  // Обработчик отправки жалобы
+  const handleReportPost = async () => {
+    if (!reportPostId || !reportReason.trim()) return;
+    
+    try {
+      setIsSubmittingReport(true);
+      await forumApi.reportPost(reportPostId, reportReason);
+      
+      // Показываем уведомление
+      setError('Жалоба успешно отправлена. Спасибо за обращение!');
+      setTimeout(() => setError(null), 3000);
+      
+      // Закрываем диалог
+      setReportDialogOpen(false);
+      setReportPostId(null);
+      setReportReason('');
+    } catch (error) {
+      console.error('Ошибка при отправке жалобы:', error);
+      setError('Не удалось отправить жалобу. Пожалуйста, попробуйте позже.');
+    } finally {
+      setIsSubmittingReport(false);
     }
   };
 
@@ -604,6 +786,14 @@ const TopicDetail: React.FC = () => {
                   sx={{ height: 24 }}
                 />
               )}
+              {userStore.isAdmin && (
+                <Chip 
+                  size="small" 
+                  label="Режим администратора" 
+                  color="error" 
+                  sx={{ height: 24, bgcolor: '#f44336', color: 'white' }}
+                />
+              )}
               <Typography variant="h4" component="h1" sx={{ fontWeight: 700 }}>
                 {topic?.title}
               </Typography>
@@ -645,6 +835,48 @@ const TopicDetail: React.FC = () => {
       
       {error && (
         <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>
+      )}
+      
+      {userStore.isAdmin && !loading && (
+        <Box sx={{ mb: 3, display: 'flex', gap: 2 }}>
+          <Button 
+            variant="contained" 
+            color="error"
+            startIcon={<DeleteIcon />}
+            onClick={() => {
+              if (window.confirm('Вы действительно хотите удалить ВСЮ тему?')) {
+                if (topic) {
+                  forumApi.deleteTopic(topic.id)
+                    .then(() => {
+                      navigate(`/forum/category/${topic.category_id}`);
+                    })
+                    .catch(err => {
+                      console.error('Ошибка при удалении темы:', err);
+                      setError('Не удалось удалить тему');
+                    });
+                }
+              }
+            }}
+          >
+            Удалить тему
+          </Button>
+          <Button 
+            variant="outlined" 
+            color="error"
+            startIcon={<LockIcon />}
+            onClick={handleCloseTopic}
+          >
+            {topic?.is_closed ? 'Открыть тему' : 'Закрыть тему'}
+          </Button>
+          <Button 
+            variant="outlined" 
+            color="primary"
+            startIcon={<PushPinIcon />}
+            onClick={handlePinTopic}
+          >
+            {topic?.is_pinned ? 'Открепить тему' : 'Закрепить тему'}
+          </Button>
+        </Box>
       )}
       
       {!loading && posts.map((post, index) => (
@@ -1126,51 +1358,132 @@ const TopicDetail: React.FC = () => {
           <ListItemText>Цитировать</ListItemText>
         </MenuItem>
         {/* Другие пункты меню (только для админов или автора) */}
-        {userStore.isAdmin && (
+        {(userStore.isAdmin || (activePostId && posts.find(p => p.id === activePostId)?.author_id === userStore.user?.id)) && (
           <>
-          <MenuItem>
+          <MenuItem onClick={() => handleEditPost(activePostId!)}>
             <ListItemIcon>
                 <EditIcon fontSize="small" />
             </ListItemIcon>
               <ListItemText>Редактировать</ListItemText>
           </MenuItem>
-          <MenuItem>
+          <MenuItem onClick={() => handleDeletePost(activePostId!)} disabled={isDeletingPost && deletingPostId === activePostId}>
             <ListItemIcon>
                 <DeleteIcon fontSize="small" />
             </ListItemIcon>
-              <ListItemText>Удалить</ListItemText>
+              <ListItemText>{isDeletingPost && deletingPostId === activePostId ? 'Удаление...' : 'Удалить'}</ListItemText>
           </MenuItem>
-            {activePostId === 1 && topic && (
-              <>
-                <Divider />
-          <MenuItem>
-            <ListItemIcon>
-              <PushPinIcon fontSize="small" />
-            </ListItemIcon>
-            <ListItemText>
-                    {topic.is_pinned ? 'Открепить тему' : 'Закрепить тему'}
-            </ListItemText>
-          </MenuItem>
-          <MenuItem>
-            <ListItemIcon>
-                    <LockIcon fontSize="small" />
-            </ListItemIcon>
-                  <ListItemText>
-                    {topic.is_closed ? 'Открыть тему' : 'Закрыть тему'}
-            </ListItemText>
-          </MenuItem>
-              </>
-            )}
+          </>
+        )}
+        {userStore.isAdmin && activePostId === posts[0]?.id && topic && (
+          <>
+            <Divider />
+            <MenuItem onClick={handlePinTopic}>
+              <ListItemIcon>
+                <PushPinIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>
+                {topic.is_pinned ? 'Открепить тему' : 'Закрепить тему'}
+              </ListItemText>
+            </MenuItem>
+            <MenuItem onClick={handleCloseTopic}>
+              <ListItemIcon>
+                <LockIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>
+                {topic.is_closed ? 'Открыть тему' : 'Закрыть тему'}
+              </ListItemText>
+            </MenuItem>
           </>
         )}
         <Divider />
-        <MenuItem>
+        <MenuItem onClick={() => handleOpenReportDialog(activePostId!)}>
           <ListItemIcon>
             <FlagIcon fontSize="small" />
           </ListItemIcon>
           <ListItemText>Пожаловаться</ListItemText>
         </MenuItem>
+        {/* Пункт меню только для администраторов */}
+        {userStore.isAdmin && (
+          <>
+            <Divider />
+            <MenuItem>
+              <ListItemIcon>
+                <PersonIcon fontSize="small" sx={{ color: 'error.main' }} />
+              </ListItemIcon>
+              <ListItemText primaryTypographyProps={{ color: 'error.main' }}>
+                Администраторский доступ
+              </ListItemText>
+            </MenuItem>
+          </>
+        )}
       </Menu>
+      
+      {/* Диалог редактирования сообщения */}
+      <Dialog
+        open={isEditing}
+        onClose={() => setIsEditing(false)}
+        fullWidth
+        maxWidth="md"
+      >
+        <DialogTitle>Редактирование сообщения</DialogTitle>
+        <DialogContent>
+          <TextField
+            fullWidth
+            multiline
+            rows={8}
+            value={editContent}
+            onChange={(e) => setEditContent(e.target.value)}
+            inputRef={editTextFieldRef}
+            variant="outlined"
+            sx={{ mt: 2 }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setIsEditing(false)}>Отмена</Button>
+          <Button 
+            variant="contained"
+            onClick={handleSaveEdit}
+            disabled={!editContent.trim() || isSubmitting}
+          >
+            {isSubmitting ? 'Сохранение...' : 'Сохранить'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+      
+      {/* Диалог отправки жалобы */}
+      <Dialog
+        open={reportDialogOpen}
+        onClose={() => setReportDialogOpen(false)}
+        fullWidth
+        maxWidth="sm"
+      >
+        <DialogTitle>Пожаловаться на сообщение</DialogTitle>
+        <DialogContent>
+          <DialogContentText sx={{ mb: 2 }}>
+            Пожалуйста, укажите причину жалобы на это сообщение. Модераторы рассмотрят вашу жалобу в ближайшее время.
+          </DialogContentText>
+          <TextField
+            fullWidth
+            multiline
+            rows={4}
+            value={reportReason}
+            onChange={(e) => setReportReason(e.target.value)}
+            placeholder="Укажите причину жалобы..."
+            variant="outlined"
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setReportDialogOpen(false)}>Отмена</Button>
+          <Button 
+            variant="contained"
+            color="primary"
+            onClick={handleReportPost}
+            disabled={!reportReason.trim() || isSubmittingReport}
+          >
+            {isSubmittingReport ? 'Отправка...' : 'Отправить жалобу'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };

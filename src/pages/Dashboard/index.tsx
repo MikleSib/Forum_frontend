@@ -543,7 +543,7 @@ const Dashboard = () => {
             <ListItemIcon>
               <FeedIcon color={!showMap ? "primary" : "inherit"} />
             </ListItemIcon>
-            <ListItemText primary="Главная" />
+            <ListItemText primary="Лента новостей" />
           </ListItemButton>
           <ListItemButton 
             onClick={handleMobileNavClick(handleFishingMapClick)}
@@ -554,24 +554,7 @@ const Dashboard = () => {
             </ListItemIcon>
             <ListItemText primary="Карта рыбных мест" />
           </ListItemButton>
-          <ListItemButton onClick={toggleMobileMenu} className={styles.mobileMenuItem}>
-            <ListItemIcon>
-              <EmojiEventsIcon />
-            </ListItemIcon>
-            <ListItemText primary="Соревнования" />
-          </ListItemButton>
-          <ListItemButton onClick={toggleMobileMenu} className={styles.mobileMenuItem}>
-            <ListItemIcon>
-              <InfoOutlinedIcon />
-            </ListItemIcon>
-            <ListItemText primary="О проекте" />
-          </ListItemButton>
-          <ListItemButton onClick={toggleMobileMenu} className={styles.mobileMenuItem}>
-            <ListItemIcon>
-              <HelpOutlineIcon />
-            </ListItemIcon>
-            <ListItemText primary="Помощь" />
-          </ListItemButton>
+
         </List>
         <Divider />
         <Box sx={{ p: 2 }}>
@@ -610,7 +593,7 @@ const Dashboard = () => {
                   <ListItemIcon>
                     <FeedIcon color={!showMap ? "primary" : "inherit"} />
                   </ListItemIcon>
-                  <ListItemText primary="Главная" />
+                  <ListItemText primary="Лента новостей" />
                 </ListItemButton>
                 <ListItemButton onClick={handleFishingMapClick}>
                   <ListItemIcon>
@@ -618,24 +601,7 @@ const Dashboard = () => {
                   </ListItemIcon>
                   <ListItemText primary="Карта рыбных мест" />
                 </ListItemButton>
-                <ListItemButton>
-                  <ListItemIcon>
-                    <EmojiEventsIcon />
-                  </ListItemIcon>
-                  <ListItemText primary="Соревнования" />
-                </ListItemButton>
-                <ListItemButton>
-                  <ListItemIcon>
-                    <InfoOutlinedIcon />
-                  </ListItemIcon>
-                  <ListItemText primary="О проекте" />
-                </ListItemButton>
-                <ListItemButton>
-                  <ListItemIcon>
-                    <HelpOutlineIcon />
-                  </ListItemIcon>
-                  <ListItemText primary="Помощь" />
-                </ListItemButton>
+
               </List>
             </Paper>
           </Box>
