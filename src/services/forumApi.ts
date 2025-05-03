@@ -17,7 +17,7 @@ interface CustomInternalAxiosRequestConfig extends InternalAxiosRequestConfig {
 }
 
 // Базовый URL API
-const API_URL = 'http://localhost:8000';
+const API_URL = 'https://рыбный-форум.рф/api';
 
 // Создаем инстанс axios с базовой конфигурацией
 const api = axios.create({
