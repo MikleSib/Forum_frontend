@@ -297,9 +297,31 @@ const TopicDetail: React.FC = () => {
   // Обработчики для API
   const handleLike = async (postId: number) => {
     try {
-      await forumApi.likePost(postId);
-      // Обновляем данные после лайка
-      setShouldRefresh(true);
+      // Находим пост в текущем состоянии
+      const post = posts.find(p => p.id === postId);
+      if (!post) return;
+      
+      // Если у поста уже есть лайк, вызываем удаление реакции
+      if (post.likes_count > 0) {
+        await handleDeleteReaction(postId);
+        return;
+      }
+      
+      // Иначе вызываем API для добавления лайка
+      const response = await forumApi.likePost(postId);
+      
+      // Локально обновляем данные без обращения к серверу
+      setPosts(prevPosts => prevPosts.map(post => {
+        if (post.id === postId) {
+          // Обновляем количество лайков и устанавливаем дизлайки в 0
+          return {
+            ...post,
+            likes_count: response.likes_count || 1,
+            dislikes_count: 0 // При лайке дизлайк снимается
+          };
+        }
+        return post;
+      }));
     } catch (error) {
       console.error('Ошибка при добавлении лайка:', error);
       setError('Не удалось добавить лайк. Пожалуйста, попробуйте позже.');
@@ -308,9 +330,31 @@ const TopicDetail: React.FC = () => {
 
   const handleDislike = async (postId: number) => {
     try {
-      await forumApi.dislikePost(postId);
-      // Обновляем данные после дизлайка
-      setShouldRefresh(true);
+      // Находим пост в текущем состоянии
+      const post = posts.find(p => p.id === postId);
+      if (!post) return;
+      
+      // Если у поста уже есть дизлайк, вызываем удаление реакции
+      if (post.dislikes_count > 0) {
+        await handleDeleteReaction(postId);
+        return;
+      }
+      
+      // Иначе вызываем API для добавления дизлайка
+      const response = await forumApi.dislikePost(postId);
+      
+      // Локально обновляем данные без обращения к серверу
+      setPosts(prevPosts => prevPosts.map(post => {
+        if (post.id === postId) {
+          // Обновляем количество дизлайков и устанавливаем лайки в 0
+          return {
+            ...post,
+            likes_count: 0, // При дизлайке лайк снимается
+            dislikes_count: response.dislikes_count || 1
+          };
+        }
+        return post;
+      }));
     } catch (error) {
       console.error('Ошибка при добавлении дизлайка:', error);
       setError('Не удалось добавить дизлайк. Пожалуйста, попробуйте позже.');
@@ -319,9 +363,20 @@ const TopicDetail: React.FC = () => {
 
   const handleDeleteReaction = async (postId: number) => {
     try {
-      await forumApi.deleteReaction(postId);
-      // Обновляем данные после удаления реакции
-      setShouldRefresh(true);
+      const response = await forumApi.deleteReaction(postId);
+      
+      // Локально обновляем данные без обращения к серверу
+      setPosts(prevPosts => prevPosts.map(post => {
+        if (post.id === postId) {
+          // Устанавливаем кол-во лайков и дизлайков в 0
+          return {
+            ...post,
+            likes_count: 0,
+            dislikes_count: 0
+          };
+        }
+        return post;
+      }));
     } catch (error) {
       console.error('Ошибка при удалении реакции:', error);
       setError('Не удалось удалить реакцию. Пожалуйста, попробуйте позже.');
@@ -360,16 +415,29 @@ const TopicDetail: React.FC = () => {
       }));
       
       // Отправляем запрос на создание сообщения с изображениями, если они есть
-      await forumApi.createPost(postData);
+      const newPost = await forumApi.createPost(postData);
+      
+      // Добавляем новое сообщение в локальное состояние
+      setPosts(prevPosts => [...prevPosts, newPost]);
+      
+      // Обновляем тему, если нужно (только счетчик сообщений)
+      if (topic) {
+        setTopic({
+          ...topic,
+          posts_count: topic.posts_count + 1,
+          last_post_id: newPost.id,
+          last_post_author_id: newPost.author_id,
+          last_post_date: newPost.created_at,
+          last_post_author_username: newPost.author_username || userStore.user?.username,
+          last_post_author_avatar: newPost.author_avatar || userStore.user?.avatar
+        });
+      }
       
       // Сбрасываем форму
       setReply('');
       setCurrentQuote(null);
       setUploadedImages([]);
       setPreviewImages([]);
-      
-      // Обновляем список сообщений
-      setShouldRefresh(true);
       
       // Прокручиваем страницу вниз к новому сообщению
       setTimeout(() => {
@@ -807,13 +875,16 @@ const TopicDetail: React.FC = () => {
                 }}>
                   <Button
                     size="small"
-                    color="inherit"
+                    color={post.likes_count > 0 ? "primary" : "inherit"}
                     onClick={() => handleLike(post.id)}
                     sx={{ 
                       minWidth: 0,
                       px: 1,
-                      color: post.likes_count > 0 ? '#1976d2' : 'inherit',
-                      borderRadius: 1
+                      bgcolor: post.likes_count > 0 ? 'rgba(25, 118, 210, 0.08)' : 'transparent',
+                      borderRadius: 1,
+                      '&:hover': {
+                        bgcolor: post.likes_count > 0 ? 'rgba(25, 118, 210, 0.12)' : undefined
+                      }
                     }}
                   >
                     <ThumbUpAltIcon fontSize="small" />
@@ -825,13 +896,16 @@ const TopicDetail: React.FC = () => {
                   </Button>
                   <Button 
                     size="small" 
-                    color="inherit"
+                    color={post.dislikes_count > 0 ? "error" : "inherit"}
                     onClick={() => handleDislike(post.id)}
                     sx={{ 
                       minWidth: 0,
                       px: 1,
-                      color: post.dislikes_count > 0 ? '#d32f2f' : 'inherit',
-                      borderRadius: 1
+                      bgcolor: post.dislikes_count > 0 ? 'rgba(211, 47, 47, 0.08)' : 'transparent',
+                      borderRadius: 1,
+                      '&:hover': {
+                        bgcolor: post.dislikes_count > 0 ? 'rgba(211, 47, 47, 0.12)' : undefined
+                      }
                     }}
                   >
                     <ThumbDownAltIcon fontSize="small" />
