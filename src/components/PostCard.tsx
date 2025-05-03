@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, CardContent, CardMedia, Typography, Box, Button, Chip } from '@mui/material';
+import { Card, CardContent, CardMedia, Typography, Box, Button, Chip, Grid } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import FavoriteIcon from '@mui/icons-material/Favorite';
@@ -11,6 +11,7 @@ interface PostCardPropsDetailed {
   title: string;
   content: string;
   imageUrl?: PostImage;
+  images?: PostImage[];
   author: string;
   date: string;
   comments?: any[];
@@ -25,6 +26,7 @@ interface PostCardPropsUnified {
   title?: never;
   content?: never;
   imageUrl?: never;
+  images?: never;
   author?: never;
   date?: never;
   comments?: never;
@@ -71,6 +73,11 @@ const PostCard: React.FC<PostCardProps> = (props) => {
     onClick: props.onClick
   } : props as PostCardPropsDetailed;
   
+  // Получаем массив изображений
+  const images = isUnifiedProps 
+    ? (props.post.images || []).slice(0, 3) // Ограничиваем максимум 3 изображения
+    : props.images || (imageUrl ? [imageUrl] : []);
+  
   // Форматируем URL изображения
   const formatImageUrl = (image: PostImage | undefined) => {
     if (!image || !image.image_url) return '';
@@ -108,17 +115,46 @@ const PostCard: React.FC<PostCardProps> = (props) => {
 
   return (
     <StyledCard className={styles.postCard} onClick={onClick} sx={{ cursor: onClick ? 'pointer' : 'default' }}>
-      {imageUrl && (
-        <CardMedia
-          component="img"
-          height="200"
-          image={formatImageUrl(imageUrl)}
-          alt={title}
-          sx={{ 
-            objectFit: 'cover',
-            height: { xs: '160px', sm: '200px' }
-          }}
-        />
+      {/* Отображение изображений в блочном формате */}
+      {images.length > 0 && (
+        <Box sx={{ position: 'relative' }}>
+          {images.length === 1 ? (
+            // Одно изображение - показываем на всю ширину
+            <CardMedia
+              component="img"
+              height="200"
+              image={formatImageUrl(images[0])}
+              alt={title}
+              sx={{ 
+                objectFit: 'cover',
+                height: { xs: '400px', sm: '600px' }
+              }}
+            />
+          ) : (
+            // Несколько изображений - показываем в сетке
+            <Grid container spacing={0.5} sx={{ mt: 0 }}>
+              {images.map((image, index) => (
+                <Grid 
+                  size={{xs: images.length === 2 ? 6 : 4}}
+                  key={index}
+                >
+                  <Box 
+                    sx={{
+                      height: { xs: '300px', sm: '600px' },
+                      backgroundImage: `url(${formatImageUrl(image)})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                      borderRadius: index === 0 ? '12px 0 0 0' : 
+                                 (index === 1 && images.length === 2) ? '0 12px 0 0' :
+                                 (index === 1) ? '0 0 0 0' :
+                                 '0 12px 0 0'
+                    }}
+                  />
+                </Grid>
+              ))}
+            </Grid>
+          )}
+        </Box>
       )}
       <CardContent className={styles.postCardContent}>
         <Typography variant="h6" className={styles.postCardTitle}>
