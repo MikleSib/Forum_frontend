@@ -11,7 +11,12 @@ import {
   ListItemText,
   ListItemIcon,
   Chip,
-  Avatar
+  Avatar,
+  Tabs,
+  Tab,
+  Grid,
+  Divider,
+  CircularProgress
 } from '@mui/material';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -25,6 +30,7 @@ import FiberNewIcon from '@mui/icons-material/FiberNew';
 import { NewsCategory, NEWS_CATEGORIES, NewsItem } from '../../shared/types/news.types';
 import { newsApi } from '../../services/newsApi';
 import { userStore } from '../../shared/store/userStore';
+import { formatLocalDate } from '../../utils/dateUtils';
 
 // Типы сортировки
 type SortType = 'newest' | 'popular';
@@ -219,7 +225,7 @@ const NewsPage: React.FC = () => {
                           {item.author?.name || 'Рыбный форум'}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          {format(new Date(item.created_at), 'dd MMMM yyyy', { locale: ru })}
+                          {formatLocalDate(item.created_at)}
                         </Typography>
                       </Box>
                     </Box>

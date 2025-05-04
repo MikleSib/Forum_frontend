@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { 
   Container, Box, Typography, Paper, Divider, Button, 
   Breadcrumbs, Avatar, Chip, IconButton, TextField,
-  Card, CardContent, CardActions, Grid, Menu, MenuItem,
+  Card, CardContent, CardHeader, CardActions, Grid, Menu, MenuItem,
   ListItemIcon, ListItemText, CircularProgress, Tooltip,
   Alert, Pagination, Dialog, DialogTitle, DialogContent, DialogActions, DialogContentText
 } from '@mui/material';
@@ -29,6 +29,7 @@ import ImageGallery from '../../components/ImageGallery';
 import { forumApi } from '../../services/forumApi';
 import { ForumTopic, ForumPost, ForumPostImage, PaginatedResponse, ForumUserData } from '../../shared/types/forum.types';
 import { PostImage } from '../../shared/types/post.types';
+import { formatLocalDate, formatRelativeDate } from '../../utils/dateUtils';
 
 // Интерфейс для превью изображений
 interface ImagePreview {
@@ -998,12 +999,12 @@ const TopicDetail: React.FC = () => {
                       <Typography variant="caption" color="text.secondary">Рег.:</Typography>
                       <Typography variant="caption" fontWeight={500}>
                         {post.user?.registration_date 
-                          ? new Date(post.user.registration_date).toLocaleDateString('ru-RU', {
+                          ? formatLocalDate(post.user.registration_date, {
                               year: 'numeric',
                               month: 'long'
                             }) 
                           : post.created_at 
-                              ? new Date(post.created_at).toLocaleDateString('ru-RU', {
+                              ? formatLocalDate(post.created_at, {
                                   year: 'numeric',
                                   month: 'long'
                                 })
@@ -1025,13 +1026,7 @@ const TopicDetail: React.FC = () => {
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Typography variant="body2" color="text.secondary">
                       {post.created_at 
-                        ? new Date(post.created_at).toLocaleString('ru-RU', {
-                            day: 'numeric',
-                            month: 'long',
-                            year: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })
+                        ? formatLocalDate(post.created_at)
                         : '—'
                       }
                     </Typography>

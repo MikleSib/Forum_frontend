@@ -17,6 +17,7 @@ import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
 import { forumApi } from '../../services/forumApi';
 import { ForumCategory, ForumTopic } from '../../shared/types/forum.types';
 import { userStore } from '../../shared/store/userStore';
+import { formatRelativeDate } from '../../utils/dateUtils';
 
 // Удаляем моковые данные и заменяем их на состояние для реальных данных
 const ForumPage: React.FC = () => {
@@ -111,51 +112,6 @@ const ForumPage: React.FC = () => {
         ? prev.filter(id => id !== topicId) 
         : [...prev, topicId]
     );
-  };
-  
-  // Функция для форматирования даты
-  const formatDate = (dateString: string) => {
-    const now = new Date();
-    const date = new Date(dateString);
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMins / 60);
-    const diffDays = Math.floor(diffHours / 24);
-    
-    if (diffMins < 1) {
-      return 'только что';
-    } else if (diffMins < 60) {
-      return `${diffMins} ${getMinutesWord(diffMins)} назад`;
-    } else if (diffHours < 24) {
-      return `${diffHours} ${getHoursWord(diffHours)} назад`;
-    } else if (diffDays < 7) {
-      return `${diffDays} ${getDaysWord(diffDays)} назад`;
-    } else {
-      return date.toLocaleDateString('ru-RU', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric'
-      });
-    }
-  };
-  
-  // Вспомогательные функции для склонения слов
-  const getMinutesWord = (num: number) => {
-    if (num % 10 === 1 && num % 100 !== 11) return 'минуту';
-    if ([2, 3, 4].includes(num % 10) && ![12, 13, 14].includes(num % 100)) return 'минуты';
-    return 'минут';
-  };
-  
-  const getHoursWord = (num: number) => {
-    if (num % 10 === 1 && num % 100 !== 11) return 'час';
-    if ([2, 3, 4].includes(num % 10) && ![12, 13, 14].includes(num % 100)) return 'часа';
-    return 'часов';
-  };
-  
-  const getDaysWord = (num: number) => {
-    if (num % 10 === 1 && num % 100 !== 11) return 'день';
-    if ([2, 3, 4].includes(num % 10) && ![12, 13, 14].includes(num % 100)) return 'дня';
-    return 'дней';
   };
 
   return (
@@ -362,6 +318,8 @@ const ForumPage: React.FC = () => {
       {/* Активные темы */}
       <Paper elevation={0} 
         sx={{ 
+          mt: 4,
+          mb: 2,
           overflow: 'hidden',
           border: '1px solid',
           borderColor: 'divider',
@@ -375,10 +333,11 @@ const ForumPage: React.FC = () => {
             bgcolor: 'primary.main', 
             color: 'white',
             fontWeight: 600,
-            fontSize: { xs: '1rem', sm: '1.25rem' }
+            fontSize: { xs: '1rem', sm: '1.25rem' },
+            textAlign: 'center'
           }}
         >
-          Активные темы
+          Активные темы форума
         </Typography>
         
         {topicsLoading ? (
@@ -422,28 +381,46 @@ const ForumPage: React.FC = () => {
                         width: '100%',
                         alignItems: { xs: 'center', sm: 'flex-start' }
                       }}>
-                        <Typography variant="body2" color="primary" sx={{ fontWeight: 'medium' }}>
+                        <Typography variant="body2" color="primary" sx={{ 
+                          fontWeight: 'medium',
+                          bgcolor: { xs: 'primary.50', sm: 'transparent' },
+                          px: { xs: 1, sm: 0 },
+                          py: { xs: 0.25, sm: 0 },
+                          borderRadius: 1
+                        }}>
                           {topic.category_title || `Категория ${topic.category_id}`}
                         </Typography>
-                        <Typography variant="body2" color="text.secondary" sx={{ display: { xs: 'none', sm: 'block' } }}>
-                          • {topic.last_post_author_username || topic.author_username || `Пользователь ${topic.last_post_author_id || topic.author_id}`}
+                        <Typography variant="body2" color="text.secondary" sx={{ 
+                          display: { xs: 'block', sm: 'block' },
+                          fontSize: '0.75rem'
+                        }}>
+                          {topic.last_post_author_username || topic.author_username || `Пользователь ${topic.last_post_author_id || topic.author_id}`}
                         </Typography>
                       </Box>
                       <Typography variant="subtitle1" sx={{ 
                         fontWeight: 500,
                         fontSize: { xs: '0.95rem', sm: '1rem' },
                         textAlign: { xs: 'center', sm: 'left' },
-                        mb: { xs: 1, sm: 0 }
+                        mb: { xs: 1, sm: 0 },
+                        color: 'text.primary',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical'
                       }}>
                         {topic.title}
                       </Typography>
                       <Box sx={{ 
                         display: 'flex', 
                         alignItems: 'center', 
-                        gap: { xs: 3, sm: 2 }, 
+                        gap: { xs: 2, sm: 2 }, 
                         mt: 0.5, 
                         flexWrap: 'wrap',
-                        justifyContent: { xs: 'center', sm: 'flex-start' }
+                        justifyContent: { xs: 'center', sm: 'flex-start' },
+                        bgcolor: { xs: 'action.hover', sm: 'transparent' },
+                        borderRadius: 1,
+                        py: { xs: 0.5, sm: 0 }
                       }}>
                         <Box sx={{ display: 'flex', alignItems: 'center' }}>
                           <CommentIcon sx={{ fontSize: { xs: 14, sm: 16 }, mr: 0.5, color: 'text.secondary' }} />
@@ -460,7 +437,7 @@ const ForumPage: React.FC = () => {
                         <Box sx={{ display: 'flex', alignItems: 'center' }}>
                           <AccessTimeIcon sx={{ fontSize: { xs: 14, sm: 16 }, mr: 0.5, color: 'text.secondary' }} />
                           <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
-                            {topic.last_post_date ? formatDate(topic.last_post_date) : formatDate(topic.created_at)}
+                            {topic.last_post_date ? formatRelativeDate(topic.last_post_date) : formatRelativeDate(topic.created_at)}
                           </Typography>
                         </Box>
                       </Box>
@@ -468,10 +445,11 @@ const ForumPage: React.FC = () => {
                     <Box
                       sx={{ 
                         cursor: 'pointer',
-                        display: { xs: 'flex', md: 'block' },
-                        justifyContent: 'center',
-                        width: '100%',
-                        mt: { xs: 1, sm: 0 }
+                        display: 'block',
+                        textAlign: { xs: 'center', sm: 'right' },
+                        mt: { xs: 1, sm: 0 },
+                        alignSelf: 'center',
+                        width: 'auto'
                       }}
                       onClick={(e) => {
                         e.stopPropagation();

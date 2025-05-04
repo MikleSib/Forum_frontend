@@ -4,7 +4,7 @@ import {
   Breadcrumbs, Avatar, Chip, IconButton, TextField,
   InputAdornment, Table, TableBody, TableCell, 
   TableContainer, TableHead, TableRow,
-  CircularProgress, Alert
+  CircularProgress, Alert, Skeleton, Pagination
 } from '@mui/material';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -17,10 +17,12 @@ import CommentIcon from '@mui/icons-material/Comment';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import SortIcon from '@mui/icons-material/Sort';
+import FolderIcon from '@mui/icons-material/Folder';
 
 import { forumApi } from '../../services/forumApi';
 import { ForumCategory, ForumTopic } from '../../shared/types/forum.types';
 import { userStore } from '../../shared/store/userStore';
+import { formatLocalDate, formatRelativeDate } from '../../utils/dateUtils';
 
 const CategoryDetail: React.FC = () => {
   const { categoryId } = useParams<{ categoryId: string }>();
@@ -411,12 +413,7 @@ const CategoryDetail: React.FC = () => {
                           •
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                          {topic.created_at ? 
-                            new Date(topic.created_at).toLocaleDateString('ru-RU', {
-                              day: 'numeric',
-                              month: 'long',
-                              year: 'numeric'
-                            }) : ''}
+                          {formatLocalDate(topic.created_at)}
                         </Typography>
                       </Box>
                       {topic.tags && topic.tags.length > 0 && (
@@ -457,12 +454,7 @@ const CategoryDetail: React.FC = () => {
                               {topic.last_post_author_username || (topic.last_post_author_id ? `Пользователь ${topic.last_post_author_id}` : '')}
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
-                              {new Date(topic.last_post_date).toLocaleString('ru-RU', {
-                                day: 'numeric',
-                                month: 'short',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              })}
+                              {formatLocalDate(topic.last_post_date)}
                             </Typography>
                           </Box>
                           <Avatar 

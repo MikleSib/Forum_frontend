@@ -30,6 +30,7 @@ import { Post, Comment } from '../../shared/types/post.types';
 import { userStore } from '../../shared/store/userStore';
 import styles from './PostDetail.module.css';
 import ImageGallery from '../../components/ImageGallery';
+import { formatLocalDate, formatRelativeDate } from '../../utils/dateUtils';
 
 const PostDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -92,15 +93,15 @@ const PostDetail: React.FC = () => {
     fetchPost();
   }, [id]);
 
-  // Форматирование даты
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('ru-RU', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+  // Функция для логирования аватара
+  const logAvatarUrl = (avatarPath?: string) => {
+    if (avatarPath) {
+      console.log('Avatar path:', avatarPath);
+      const baseUrl = 'https://рыбный-форум.рф';
+      console.log('Full avatar URL:', `${baseUrl}/${avatarPath}`);
+      return `${baseUrl}/${avatarPath}`;
+    }
+    return '';
   };
 
   // Обработка лайка
@@ -195,15 +196,6 @@ const PostDetail: React.FC = () => {
     }
   };
 
-  // Вспомогательная функция для логирования URL аватаров
-  const logAvatarUrl = (avatarPath: string | undefined) => {
-    if (avatarPath) {
-      console.log('Avatar path:', avatarPath);
-      console.log('Full avatar URL:', `https://рыбный-форум.рф/${avatarPath}`);
-    }
-    return avatarPath ? `https://рыбный-форум.рф/${avatarPath}` : '';
-  };
-
   if (loading) {
     return (
       <Container maxWidth="md" sx={{ py: 8, textAlign: 'center' }}>
@@ -281,7 +273,7 @@ const PostDetail: React.FC = () => {
                   }}
                 >
                   <AccessTimeIcon sx={{ fontSize: 14, mr: 0.5 }} />
-                  {formatDate(post.created_at)}
+                  {formatLocalDate(post.created_at)}
                 </Typography>
               </Box>
             </Box>
@@ -411,7 +403,7 @@ const PostDetail: React.FC = () => {
                       </Typography>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <Typography variant="caption" color="text.secondary">
-                          {formatDate(comment.created_at)}
+                          {formatLocalDate(comment.created_at)}
                         </Typography>
                         {isAdmin && (
                           <IconButton 

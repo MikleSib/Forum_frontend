@@ -4,6 +4,7 @@ import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { NewsItem, NewsContent } from '../shared/types/news.types';
 import CachedImage from './CachedImage';
+import { formatLocalDate } from '../utils/dateUtils';
 
 interface NewsCardProps {
   news: NewsItem;
@@ -109,7 +110,7 @@ const NewsCard: React.FC<NewsCardProps> = ({ news, onClick }) => {
               {news.author?.name || 'Рыбный форум'}
             </Typography>
             <Typography variant="caption" display="block" color="text.secondary">
-              {format(new Date(news.created_at), 'dd MMMM yyyy', { locale: ru })}
+              {formatLocalDate(news.created_at)}
             </Typography>
           </Box>
         </Box>

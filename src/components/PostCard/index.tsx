@@ -6,6 +6,7 @@ import ShareIcon from '@mui/icons-material/Share';
 import styles from './PostCard.module.css';
 import type { Post } from '../../shared/types/post.types';
 import CachedImage from '../CachedImage';
+import { formatLocalDate } from '../../utils/dateUtils';
 
 interface Props {
   post: Post;
@@ -68,13 +69,7 @@ const PostCard = ({ post, onClick }: Props): React.ReactElement => {
               {post.author?.username || 'Неизвестный автор'}
             </Typography>
             <Typography className={styles.postDate}>
-              {new Date(post.created_at).toLocaleDateString('ru-RU', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-              })}
+              {formatLocalDate(post.created_at)}
             </Typography>
           </Box>
         </Box>
