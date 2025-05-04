@@ -4,6 +4,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import bgImage from '../../assets/bg.png';
 import logo from '../../assets/logo.svg';
 import { userStore } from '../../shared/store/userStore';
+import { IMAGE_BASE_URL } from '../../config/api';
 
 // Создаем пользовательское событие для обновления статуса авторизации
 export const AUTH_STATUS_CHANGED = 'auth_status_changed';
@@ -191,7 +192,7 @@ const Header: React.FC = () => {
             }}>
               <Link to="/profile" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 2 }}>
                 <Avatar 
-                  src={user.avatar} 
+                  src={user.avatar ? `${IMAGE_BASE_URL}${user.avatar}` : undefined} 
                   sx={{ 
                     width: 40, 
                     height: 40,

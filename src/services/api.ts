@@ -43,16 +43,9 @@ api.interceptors.response.use(
     const originalRequest = error.config as CustomInternalAxiosRequestConfig;
     
     // Проверяем, что это ошибка 401 и запрос не является повторным
-    if (error.response?.status === 401 && 
-        error.response?.data && 
-        typeof error.response.data === 'object' &&
-        'detail' in error.response.data &&
-        (error.response.data.detail === "Invalid token" || error.response.data.detail === "Invalid token data") && 
-        originalRequest &&
-        !originalRequest._retry) {
-      
+    if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
       try {
-        console.log('Получена ошибка Invalid token/Invalid token data, пробуем обновить токен');
+        console.log('Получена ошибка 401, пробуем обновить токен');
         // Помечаем запрос как повторный
         originalRequest._retry = true;
         
@@ -381,6 +374,14 @@ export const getUserProfile = async () => {
     return response.data;
   } catch (error) {
     console.error('Ошибка при получении профиля пользователя:', error);
+    
+    // Если проблема в том, что пользователь не авторизован, не выбрасываем ошибку
+    if (axios.isAxiosError(error) && error.response?.status === 401) {
+      console.log('Пользователь не авторизован. Перенаправление на страницу входа.');
+      // Редирект на страницу входа выполняется в интерсепторе, если обновление токена не удалось
+      return null;
+    }
+    
     throw error;
   }
 }; 

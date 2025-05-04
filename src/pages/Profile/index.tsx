@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { authApi } from '../../services/auth';
 import { updateUserAvatar, deleteUserAvatar, updateUserProfile, changeUserPassword, getUserProfile } from '../../services/api';
 import { AUTH_STATUS_CHANGED } from '../../components/Header';
+import ImageCropper from '../../components/ImageCropper';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -50,6 +51,11 @@ const Profile: React.FC = () => {
   const [profileUpdateError, setProfileUpdateError] = useState<string | null>(null);
   const [passwordChangeSuccess, setPasswordChangeSuccess] = useState(false);
   const [passwordChangeError, setPasswordChangeError] = useState<string | null>(null);
+  
+  // Новые состояния для кадрирования изображения
+  const [cropperOpen, setCropperOpen] = useState(false);
+  const [imageToEdit, setImageToEdit] = useState<string | null>(null);
+  
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
     newPassword: '',
@@ -71,15 +77,37 @@ const Profile: React.FC = () => {
         // Загружаем данные профиля с сервера используя правильный эндпоинт
         const profileData = await getUserProfile();
         
-        // Обновляем локальное состояние данными с сервера
-        setUserData({
-          username: profileData.username || '',
-          email: profileData.email || '',
-          about_me: profileData.about_me || '',
-          avatar: profileData.avatar || ''
-        });
-        
-        // Данные уже обновляются в userStore внутри функции getUserProfile
+        if (!profileData) {
+          // Если данных профиля нет (возможно, из-за проблем с авторизацией)
+          console.log('Не удалось получить данные профиля, возможно, проблема с авторизацией');
+          setLoadError('Не удалось загрузить данные профиля. Возможно, вам необходимо войти заново.');
+          
+          // Используем данные из userStore как резервные
+          const user = userStore.user;
+          if (user) {
+            setUserData({
+              username: user.username || '',
+              email: user.email || '',
+              about_me: user.about_me || user.about || '',
+              avatar: user.avatar || ''
+            });
+          } else {
+            // Если нет данных в userStore, перенаправляем на страницу входа
+            navigate('/login', { replace: true });
+            return;
+          }
+        } else {
+          // Обновляем локальное состояние данными с сервера
+          setUserData({
+            username: profileData.username || '',
+            email: profileData.email || '',
+            about_me: profileData.about_me || '',
+            avatar: profileData.avatar || ''
+          });
+          
+          // Генерируем событие для обновления интерфейса в Header
+          window.dispatchEvent(new Event(AUTH_STATUS_CHANGED));
+        }
       } catch (error) {
         console.error('Ошибка при загрузке данных профиля:', error);
         setLoadError('Не удалось загрузить данные профиля. Обновите страницу или попробуйте позже.');
@@ -100,7 +128,7 @@ const Profile: React.FC = () => {
     };
     
     fetchProfileData();
-  }, []);
+  }, [navigate]);
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
@@ -134,6 +162,9 @@ const Profile: React.FC = () => {
           about_me: response.about_me || ''
         }));
         setProfileUpdateSuccess(true);
+        
+        // Генерируем событие для обновления интерфейса в Header
+        window.dispatchEvent(new Event(AUTH_STATUS_CHANGED));
       }
     } catch (error) {
       console.error('Ошибка при обновлении профиля:', error);
@@ -156,25 +187,48 @@ const Profile: React.FC = () => {
     if (!file) return;
     
     try {
-      setIsAvatarUploading(true);
-      setUploadError(null);
-      
       // Проверяем тип файла
       if (!file.type.startsWith('image/')) {
         setUploadError('Выбранный файл не является изображением');
-        setIsAvatarUploading(false);
         return;
       }
       
       // Проверяем размер файла (не более 5 МБ)
       if (file.size > 5 * 1024 * 1024) {
         setUploadError('Размер файла не должен превышать 5 МБ');
-        setIsAvatarUploading(false);
         return;
       }
       
+      // Создаем URL для изображения и открываем кадрирование
+      const imageUrl = URL.createObjectURL(file);
+      setImageToEdit(imageUrl);
+      setCropperOpen(true);
+    } catch (error) {
+      console.error('Ошибка при обработке файла:', error);
+      setUploadError('Не удалось обработать изображение. Пожалуйста, попробуйте еще раз.');
+    }
+  };
+  
+  // Обработчик сохранения кадрированного изображения
+  const handleSaveCroppedImage = async (croppedBlob: Blob) => {
+    setCropperOpen(false);
+    
+    try {
+      setIsAvatarUploading(true);
+      setUploadError(null);
+      
+      // Преобразуем Blob в File с оригинальным именем (или универсальным)
+      const fileName = imageToEdit?.split('/').pop() || 'avatar.jpg';
+      const croppedFile = new File([croppedBlob], fileName, { type: 'image/jpeg' });
+      
       // Отправляем аватар на сервер
-      const response = await updateUserAvatar(file);
+      const response = await updateUserAvatar(croppedFile);
+      
+      // Очищаем временный URL
+      if (imageToEdit) {
+        URL.revokeObjectURL(imageToEdit);
+        setImageToEdit(null);
+      }
       
       // Обновляем аватар в локальном состоянии
       if (response && response.avatar) {
@@ -183,12 +237,24 @@ const Profile: React.FC = () => {
           avatar: response.avatar
         }));
         setUploadSuccess(true);
+        
+        // Генерируем событие для обновления интерфейса в Header
+        window.dispatchEvent(new Event(AUTH_STATUS_CHANGED));
       }
     } catch (error) {
       console.error('Ошибка при загрузке аватара:', error);
       setUploadError('Не удалось загрузить аватар. Пожалуйста, попробуйте еще раз.');
     } finally {
       setIsAvatarUploading(false);
+    }
+  };
+  
+  // Закрытие окна кадрирования
+  const handleCloseCropper = () => {
+    setCropperOpen(false);
+    if (imageToEdit) {
+      URL.revokeObjectURL(imageToEdit);
+      setImageToEdit(null);
     }
   };
   
@@ -213,6 +279,9 @@ const Profile: React.FC = () => {
           avatar: ''
         }));
         setUploadSuccess(true);
+        
+        // Генерируем событие для обновления интерфейса в Header
+        window.dispatchEvent(new Event(AUTH_STATUS_CHANGED));
       }
     } catch (error) {
       console.error('Ошибка при удалении аватара:', error);
@@ -339,6 +408,12 @@ const Profile: React.FC = () => {
       // Загружаем данные профиля с сервера
       const profileData = await getUserProfile();
       
+      if (!profileData) {
+        // Если данных профиля нет (возможно, из-за проблем с авторизацией)
+        setLoadError('Не удалось загрузить данные профиля. Возможно, вам необходимо войти заново.');
+        return;
+      }
+      
       // Обновляем локальное состояние данными с сервера
       setUserData({
         username: profileData.username || '',
@@ -349,6 +424,9 @@ const Profile: React.FC = () => {
       
       // Показываем уведомление об успешном обновлении
       setProfileUpdateSuccess(true);
+      
+      // Генерируем событие для обновления интерфейса в Header
+      window.dispatchEvent(new Event(AUTH_STATUS_CHANGED));
     } catch (error) {
       console.error('Ошибка при обновлении данных профиля:', error);
       setLoadError('Не удалось обновить данные профиля. Попробуйте позже.');
@@ -703,6 +781,16 @@ const Profile: React.FC = () => {
             </TabPanel>
           </Paper>
         </Box>
+      )}
+      
+      {/* Компонент для кадрирования изображения */}
+      {imageToEdit && (
+        <ImageCropper
+          open={cropperOpen}
+          image={imageToEdit}
+          onClose={handleCloseCropper}
+          onSave={handleSaveCroppedImage}
+        />
       )}
       
       {/* Уведомления для аватара */}
