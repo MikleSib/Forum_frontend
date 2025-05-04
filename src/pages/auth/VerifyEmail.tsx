@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, TextField, Button, Paper, Container, CircularProgress, Alert } from '@mui/material';
+import { Box, Typography, TextField, Button, Paper, Container, CircularProgress, Alert, Link } from '@mui/material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead';
@@ -13,6 +13,8 @@ const VerifyEmail: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<boolean>(false);
+  const [resendLoading, setResendLoading] = useState<boolean>(false);
+  const [resendSuccess, setResendSuccess] = useState<boolean>(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -84,6 +86,42 @@ const VerifyEmail: React.FC = () => {
     navigate('/login');
   };
 
+  const handleResendCode = async () => {
+    if (!email) {
+      setError('Email не указан. Пожалуйста, перезагрузите страницу.');
+      return;
+    }
+    
+    try {
+      setResendLoading(true);
+      setError(null);
+      setResendSuccess(false);
+      
+      // Запрос на повторную отправку кода подтверждения
+      const response = await axios.post(`${API_URL}/auth/resend-verification-code`, {
+        email: email
+      });
+      
+      if (response.data && response.data.status === 'success') {
+        setResendSuccess(true);
+        // Сбрасываем сообщение об успехе через 5 секунд
+        setTimeout(() => {
+          setResendSuccess(false);
+        }, 5000);
+      } else {
+        setError('Не удалось отправить код. Пожалуйста, попробуйте позже.');
+      }
+    } catch (err: any) {
+      if (err.response && err.response.data) {
+        setError(err.response.data.detail || 'Произошла ошибка при отправке кода');
+      } else {
+        setError('Произошла ошибка при отправке кода. Пожалуйста, попробуйте позже.');
+      }
+    } finally {
+      setResendLoading(false);
+    }
+  };
+
   return (
     <Container maxWidth="sm" sx={{ py: 8 }}>
       <Paper elevation={3} sx={{ p: 4, borderRadius: 2 }}>
@@ -149,11 +187,37 @@ const VerifyEmail: React.FC = () => {
                   borderRadius: '58px',
                   '&:hover': {
                     bgcolor: '#1565c0',
-                  }
+                  },
+                  mb: 2
                 }}
               >
                 {loading ? <CircularProgress size={24} color="inherit" /> : 'Подтвердить'}
               </Button>
+              
+              {resendSuccess && (
+                <Alert severity="success" sx={{ mb: 2 }}>
+                  Новый код подтверждения отправлен на ваш email
+                </Alert>
+              )}
+              
+              <Box sx={{ textAlign: 'center', mt: 1 }}>
+                <Link
+                  component="button"
+                  variant="body2"
+                  onClick={handleResendCode}
+                  disabled={resendLoading}
+                  sx={{ 
+                    textDecoration: 'none',
+                    cursor: 'pointer',
+                    color: '#1976d5',
+                    '&:hover': {
+                      textDecoration: 'underline'
+                    }
+                  }}
+                >
+                  {resendLoading ? 'Отправка...' : 'Не получили код? Отправить повторно'}
+                </Link>
+              </Box>
             </Box>
           </>
         ) : (

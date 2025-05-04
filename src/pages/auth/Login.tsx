@@ -42,6 +42,13 @@ const Login: React.FC = () => {
       if (err.response?.data) {
         const errorData = err.response.data;
         
+        // Проверка на необходимость подтверждения email (статус 403)
+        if (err.response.status === 403 && errorData.detail === "Необходимо подтвердить email перед входом в систему") {
+          // Перенаправляем на страницу верификации с email в URL
+          navigate(`/verify-email?email=${encodeURIComponent(email)}`);
+          return;
+        }
+        
         // Обработка ошибок валидации FastAPI
         if (errorData.detail) {
           if (Array.isArray(errorData.detail)) {
