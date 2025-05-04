@@ -67,6 +67,12 @@ const PostDetail: React.FC = () => {
           setLikesCount(data.likes ? data.likes.length : 0);
           setComments(data.comments || []);
           
+          // Логируем путь к аватару автора для отладки
+          if (data.author && data.author.avatar) {
+            console.log('Avatar path:', data.author.avatar);
+            console.log('Full avatar URL:', `https://рыбный-форум.рф/${data.author.avatar}`);
+          }
+          
           // Проверяем, поставил ли пользователь лайк
           if (token && data.likes) {
             const currentUserId = userStore.user?.id;
@@ -189,6 +195,15 @@ const PostDetail: React.FC = () => {
     }
   };
 
+  // Вспомогательная функция для логирования URL аватаров
+  const logAvatarUrl = (avatarPath: string | undefined) => {
+    if (avatarPath) {
+      console.log('Avatar path:', avatarPath);
+      console.log('Full avatar URL:', `https://рыбный-форум.рф/${avatarPath}`);
+    }
+    return avatarPath ? `https://рыбный-форум.рф/${avatarPath}` : '';
+  };
+
   if (loading) {
     return (
       <Container maxWidth="md" sx={{ py: 8, textAlign: 'center' }}>
@@ -249,8 +264,9 @@ const PostDetail: React.FC = () => {
                   height: 40,
                   mr: 1.5
                 }}
+                src={logAvatarUrl(post.author.avatar)}
               >
-                {post.author.username[0].toUpperCase()}
+                {!post.author.avatar && post.author.username[0].toUpperCase()}
               </Avatar>
               <Box>
                 <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
@@ -384,8 +400,9 @@ const PostDetail: React.FC = () => {
                       height: 32,
                       mr: 1.5
                     }}
+                    src={logAvatarUrl(comment.author?.avatar)}
                   >
-                    {comment.author?.username?.[0]?.toUpperCase() || '?'}
+                    {!comment.author?.avatar && (comment.author?.username?.[0]?.toUpperCase() || '?')}
                   </Avatar>
                   <Box sx={{ flexGrow: 1 }}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

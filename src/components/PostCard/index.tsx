@@ -28,6 +28,16 @@ const PostCard = ({ post, onClick }: Props): React.ReactElement => {
   // Базовый URL для изображений
   const baseUrl = 'https://рыбный-форум.рф';
 
+  // Функция для логирования аватара
+  const getAvatarUrl = (avatarPath?: string) => {
+    if (avatarPath) {
+      console.log('PostCard Avatar path:', avatarPath);
+      console.log('PostCard Full avatar URL:', `${baseUrl}/${avatarPath}`);
+      return `${baseUrl}/${avatarPath}`;
+    }
+    return '';
+  };
+
   return (
     <Card className={styles.postCard} onClick={onClick} sx={{ cursor: onClick ? 'pointer' : 'default' }}>
       {post.images?.[0] && (
@@ -47,8 +57,11 @@ const PostCard = ({ post, onClick }: Props): React.ReactElement => {
       )}
       <CardContent className={styles.postContent}>
         <Box className={styles.authorSection}>
-          <Avatar className={styles.avatar}>
-            {getInitials(post.author?.username)}
+          <Avatar 
+            className={styles.avatar}
+            src={getAvatarUrl(post.author?.avatar)}
+          >
+            {!post.author?.avatar && getInitials(post.author?.username)}
           </Avatar>
           <Box className={styles.authorInfo}>
             <Typography className={styles.authorName}>

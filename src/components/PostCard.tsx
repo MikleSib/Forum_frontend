@@ -163,6 +163,26 @@ const PostCard: React.FC<PostCardProps> = (props) => {
     if (onClick) onClick();
   };
 
+  // Функция для логирования аватара
+  const getAvatarUrl = (avatarPath?: string) => {
+    if (avatarPath) {
+      console.log('PostCard Avatar path:', avatarPath);
+      console.log('PostCard Full avatar URL:', `${IMAGE_BASE_URL}/${avatarPath}`);
+      return `${IMAGE_BASE_URL}/${avatarPath}`;
+    }
+    return '';
+  };
+
+  // Функция для получения URL аватара в нижней карточке
+  const getFooterAvatarUrl = (avatarPath?: string) => {
+    if (avatarPath) {
+      console.log('PostCard Footer Avatar path:', avatarPath);
+      console.log('PostCard Footer Full URL:', `${IMAGE_BASE_URL}/${avatarPath}`);
+      return `${IMAGE_BASE_URL}/${avatarPath}`;
+    }
+    return undefined;
+  };
+
   return (
     <StyledCard className={styles.postCard} onClick={onClick} sx={{ cursor: onClick ? 'pointer' : 'default' }}>
       {/* Отображение изображений в блочном формате */}
@@ -240,7 +260,15 @@ const PostCard: React.FC<PostCardProps> = (props) => {
         <Box className={styles.postCardFooter}>
           <Box className={styles.postCardAuthor}>
             <Box className={styles.authorAvatar}>
-              {getInitials(author)}
+              {isUnifiedProps && props.post.author.avatar ? (
+                <img 
+                  src={getFooterAvatarUrl(props.post.author.avatar)} 
+                  alt={author} 
+                  style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+                />
+              ) : (
+                getInitials(author)
+              )}
             </Box>
             <Box>
               <Typography variant="subtitle2">{author}</Typography>

@@ -154,10 +154,34 @@ body::before {
   z-index: 1;
 }
 
-/* Стили для скроллбара */
+/* Дополнительные правила для скрытия скроллбара на MUI компонентах */
+.MuiContainer-root, 
+.MuiBox-root, 
+.MuiPaper-root, 
+.MuiCard-root, 
+.MuiList-root,
+.MuiDialog-paper,
+.MuiDrawer-paper,
+[class*="-container"] {
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE and Edge */
+}
+
+.MuiContainer-root::-webkit-scrollbar, 
+.MuiBox-root::-webkit-scrollbar, 
+.MuiPaper-root::-webkit-scrollbar, 
+.MuiCard-root::-webkit-scrollbar, 
+.MuiList-root::-webkit-scrollbar,
+.MuiDialog-paper::-webkit-scrollbar,
+.MuiDrawer-paper::-webkit-scrollbar,
+[class*="-container"]::-webkit-scrollbar {
+  display: none !important; /* Chrome, Safari and Opera */
+}
+
+
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 0px;
+  height: 0px;
 }
 
 ::-webkit-scrollbar-track {
@@ -165,10 +189,10 @@ body::before {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(0, 0, 0, 0.0);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.3);
-} 
+  background: rgba(0, 0, 0, 0.0);
+}

@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
+import { GlobalStyles } from '@mui/material';
 import MainLayout from './layouts/MainLayout';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/auth/Login';
@@ -89,6 +90,17 @@ const theme = createTheme({
   },
 });
 
+// Глобальные стили для скрытия скроллбаров
+const globalStyles = {
+  '*::-webkit-scrollbar': {
+    display: 'none',
+  },
+  '*': {
+    scrollbarWidth: 'none',
+    '-ms-overflow-style': 'none',
+  }
+};
+
 function App() {
   useEffect(() => {
     document.title = 'Рыболовный форум';
@@ -97,6 +109,7 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
+      <GlobalStyles styles={globalStyles} />
       <Router>
         <Routes>
           <Route path="/" element={<MainLayout />}>
