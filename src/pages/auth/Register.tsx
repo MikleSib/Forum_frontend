@@ -35,8 +35,15 @@ const Register: React.FC = () => {
       // Переходим на страницу верификации
       navigate(`/verify-email?email=${encodeURIComponent(formData.email)}`);
     } catch (error: any) {
-      if (error.response?.data?.detail === "User already exists") {
-        setError('Пользователь с таким именем или email уже существует');
+      console.error('Ошибка регистрации:', error);
+      if (error.response?.data?.detail) {
+        if (error.response.data.detail === "User already exists") {
+          setError('Пользователь с таким именем или email уже существует');
+        } else if (error.response.data.detail === "Пользователь с таким именем уже существует") {
+          setError('Пользователь с таким именем уже существует');
+        } else {
+          setError(error.response.data.detail);
+        }
       } else {
         setError(error.message || 'Не удалось зарегистрироваться');
       }
