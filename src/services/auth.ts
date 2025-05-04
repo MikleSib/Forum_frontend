@@ -55,7 +55,9 @@ export const register = async (data: RegisterRequest): Promise<AuthResponse> => 
 export const login = async (data: LoginRequest): Promise<AuthResponse> => {
   try {
     const formData = new FormData();
-    formData.append('username', data.username);
+    // Преобразуем email в нижний регистр перед отправкой
+    const email = data.email.toLowerCase();
+    formData.append('username', email); // Бэкенд по-прежнему ожидает поле username
     formData.append('password', data.password);
 
     const response = await axios.post(`${API_URL}/auth/login`, formData, {
@@ -155,8 +157,11 @@ export const refreshToken = async (): Promise<AuthResponse> => {
 export const authApi = {
   login: async (data: LoginRequest): Promise<AuthResponse> => {
     try {
+      // Преобразуем email в нижний регистр
+      const email = data.email.toLowerCase();
+      
       const response = await axios.post(`${API_URL}/auth/login`, {
-        username: data.username,
+        email: email, // Бэкенд по-прежнему ожидает поле username
         password: data.password
       }, {
         headers: {

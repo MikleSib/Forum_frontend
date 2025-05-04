@@ -14,7 +14,7 @@ import { authApi } from '../../services/auth';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -25,7 +25,7 @@ const Login: React.FC = () => {
     setLoading(true);
 
     try {
-      const response = await authApi.login({ username, password });
+      const response = await authApi.login({ email, password });
       
       // Проверяем, требуется ли верификация email
       if (response.requiresEmailVerification && response.email_verification) {
@@ -52,7 +52,7 @@ const Login: React.FC = () => {
             setError(Object.values(errorData.detail)[0] as string);
           }
         } else {
-          setError('Неверное имя пользователя или пароль');
+          setError('Неверный email или пароль');
         }
       } else {
         setError('Произошла ошибка при попытке входа');
@@ -97,12 +97,13 @@ const Login: React.FC = () => {
               margin="normal"
               required
               fullWidth
-              label="Имя пользователя"
-              name="username"
-              autoComplete="username"
+              label="Email"
+              name="email"
+              type="email"
+              autoComplete="email"
               autoFocus
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               disabled={loading}
             />
             <TextField

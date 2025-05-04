@@ -7,6 +7,12 @@ export interface User {
   lastName?: string;
   about?: string;
   avatar?: string;
+  full_name?: string;
+  about_me?: string;
+  signature?: string;
+  registration_date?: string;
+  posts_count?: number;
+  role?: string;
 }
 
 interface AuthResponse {
@@ -57,6 +63,23 @@ class UserStore {
     this._accessToken = null;
     this._refreshToken = null;
     localStorage.removeItem('auth');
+  }
+
+  public updateUser(userData: Partial<User>) {
+    if (!this._user) return;
+    
+    // Обновляем данные пользователя
+    this._user = { ...this._user, ...userData };
+    
+    // Обновляем в localStorage, сохраняя текущие токены
+    if (this._accessToken && this._refreshToken) {
+      const auth = {
+        user: this._user,
+        access_token: this._accessToken,
+        refresh_token: this._refreshToken
+      };
+      localStorage.setItem('auth', JSON.stringify(auth));
+    }
   }
 
   get user(): User | null {

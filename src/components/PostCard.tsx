@@ -1,13 +1,16 @@
-import React from 'react';
-import { Card, CardContent, Typography, Box, Button, Chip, Grid } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, Typography, Box, Button, Chip, Grid, IconButton, Badge, Tooltip } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import FavoriteIcon from '@mui/icons-material/Favorite';
+import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import CommentIcon from '@mui/icons-material/Comment';
 import { PostImage, Post } from '../shared/types/post.types';
 import styles from '../pages/Dashboard/Dashboard.module.css';
 import CachedImage from './CachedImage';
 import { IMAGE_BASE_URL } from '../config/api';
+import { likePost, unlikePost } from '../services/api';
+import { userStore } from '../shared/store/userStore';
 
 interface PostCardPropsDetailed {
   title: string;
@@ -80,6 +83,45 @@ const PostCard: React.FC<PostCardProps> = (props) => {
     ? (props.post.images || []).slice(0, 3) // Ограничиваем максимум 3 изображения
     : props.images || (imageUrl ? [imageUrl] : []);
   
+  // Состояние для отслеживания лайка
+  const [isLiked, setIsLiked] = useState(false);
+  const [likesCount, setLikesCount] = useState(likes.length);
+  const [isLikeProcessing, setIsLikeProcessing] = useState(false);
+  const [isAuth] = useState(!!localStorage.getItem('access_token'));
+  
+  // Проверяем, поставил ли текущий пользователь лайк
+  useEffect(() => {
+    if (isAuth && 'post' in props && props.post) {
+      const currentUserId = userStore.user?.id;
+      const userLiked = props.post.likes?.some(like => like.user_id === currentUserId);
+      setIsLiked(!!userLiked);
+      setLikesCount(props.post.likes?.length || 0);
+    }
+  }, [isAuth, props]);
+
+  // Обработчик лайка
+  const handleLikeToggle = async (e: React.MouseEvent) => {
+    e.stopPropagation(); // Предотвращаем переход на страницу поста
+    
+    if (!isAuth || isLikeProcessing || !('post' in props) || !props.post) return;
+    
+    try {
+      setIsLikeProcessing(true);
+      
+      const postId = props.post.id.toString();
+      const success = isLiked ? await unlikePost(postId) : await likePost(postId);
+      
+      if (success) {
+        setIsLiked(!isLiked);
+        setLikesCount(prev => isLiked ? prev - 1 : prev + 1);
+      }
+    } catch (err) {
+      console.error('Ошибка при обработке лайка:', err);
+    } finally {
+      setIsLikeProcessing(false);
+    }
+  };
+  
   // Форматируем URL изображения для извлечения только пути
   const getImagePath = (image: PostImage | undefined) => {
     if (!image || !image.image_url) return '';
@@ -127,7 +169,6 @@ const PostCard: React.FC<PostCardProps> = (props) => {
       {images.length > 0 && (
         <Box sx={{ position: 'relative' }}>
           {images.length === 1 ? (
-            // Одно изображение - показываем на всю ширину
             <Box
               sx={{ 
                 height: { xs: '200px', sm: '600px' },
@@ -150,7 +191,6 @@ const PostCard: React.FC<PostCardProps> = (props) => {
               />
             </Box>
           ) : (
-            // Несколько изображений - показываем в сетке
             <Grid container spacing={0.5} sx={{ mt: 0 }}>
               {images.map((image, index) => (
                 <Grid 
@@ -215,48 +255,91 @@ const PostCard: React.FC<PostCardProps> = (props) => {
           
           <Box sx={{ 
             display: 'flex', 
-            gap: '8px',
-            flexWrap: { xs: 'wrap', sm: 'nowrap' },
-            justifyContent: { xs: 'flex-end', sm: 'flex-start' },
+            gap: '12px',
+            alignItems: 'center',
+            justifyContent: 'flex-end',
             mt: { xs: 1, sm: 0 }
           }}>
-            <Chip 
-              icon={<FavoriteIcon sx={{ fontSize: 16 }} />} 
-              label={likes.length > 0 ? likes.length.toString() : "0"} 
-              size="small" 
-              variant={likes.length > 0 ? "filled" : "outlined"}
-              sx={{ 
-                borderColor: 'var(--primary-color)', 
-                color: likes.length > 0 ? 'white' : 'var(--primary-color)',
-                backgroundColor: likes.length > 0 ? 'var(--primary-color)' : 'transparent',
-                '& .MuiChip-icon': { color: likes.length > 0 ? 'white' : 'var(--primary-color)' } 
-              }}
-              onClick={(e) => e.stopPropagation()} // Предотвращаем всплытие события
-            />
-            <Chip 
-              icon={<CommentIcon sx={{ fontSize: 16 }} />} 
-              label={comments.length > 0 ? comments.length.toString() : "0"} 
-              size="small" 
-              variant={comments.length > 0 ? "filled" : "outlined"}
-              sx={{ 
-                borderColor: 'var(--secondary-color)', 
-                color: comments.length > 0 ? 'white' : 'var(--secondary-color)',
-                backgroundColor: comments.length > 0 ? 'var(--secondary-color)' : 'transparent',
-                '& .MuiChip-icon': { color: comments.length > 0 ? 'white' : 'var(--secondary-color)' } 
-              }}
-              onClick={(e) => e.stopPropagation()} // Предотвращаем всплытие события
-            />
+            <Tooltip title={isAuth ? (isLiked ? "Убрать лайк" : "Нравится") : "Войдите, чтобы поставить лайк"}>
+              <IconButton 
+                size="small"
+                color={isLiked ? "primary" : "default"}
+                onClick={handleLikeToggle}
+                disabled={!isAuth || isLikeProcessing}
+                sx={{ 
+                  p: 0.5,
+                  '&:hover': {
+                    background: 'rgba(0, 0, 0, 0.04)',
+                  }
+                }}
+              >
+                <Badge 
+                  badgeContent={likesCount > 0 ? likesCount : 0} 
+                  color="primary"
+                  sx={{
+                    '& .MuiBadge-badge': {
+                      fontSize: '0.7rem',
+                      height: '16px',
+                      minWidth: '16px',
+                      padding: '0 4px'
+                    }
+                  }}
+                >
+                  {isLiked ? 
+                    <FavoriteIcon sx={{ color: 'var(--primary-color)', fontSize: 18 }} /> : 
+                    <FavoriteBorderIcon sx={{ fontSize: 18 }} />
+                  }
+                </Badge>
+              </IconButton>
+            </Tooltip>
+            
+            <Tooltip title="Комментарии">
+              <IconButton 
+                size="small"
+                color="secondary"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (onClick) onClick();
+                }}
+                sx={{ 
+                  p: 0.5,
+                  '&:hover': {
+                    background: 'rgba(0, 0, 0, 0.04)',
+                  }
+                }}
+              >
+                <Badge 
+                  badgeContent={comments.length > 0 ? comments.length : 0} 
+                  color="secondary"
+                  sx={{
+                    '& .MuiBadge-badge': {
+                      fontSize: '0.7rem',
+                      height: '16px',
+                      minWidth: '16px',
+                      padding: '0 4px'
+                    }
+                  }}
+                >
+                  <CommentIcon sx={{ fontSize: 18 }} />
+                </Badge>
+              </IconButton>
+            </Tooltip>
+            
             <Button 
               size="small" 
               sx={{ 
                 ml: { xs: 0, sm: 1 }, 
-                color: 'var(--primary-color)', 
-                borderColor: 'var(--primary-color)',
-                borderRadius: '8px',
+                minWidth: 0, 
                 fontSize: '0.75rem',
-                padding: '2px 8px',
-                minWidth: 'auto'
-              }}
+                textTransform: 'none',
+                fontWeight: 600,
+                color: 'var(--primary-color)',
+                borderColor: 'var(--primary-color)',
+                '&:hover': {
+                  borderColor: 'var(--primary-color)',
+                  backgroundColor: 'rgba(0, 82, 204, 0.04)',
+                }
+              }} 
               variant="outlined"
               onClick={handleReadButtonClick}
             >

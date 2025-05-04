@@ -295,4 +295,92 @@ export const deleteComment = async (commentId: string): Promise<boolean> => {
     console.error(`Ошибка при удалении комментария ${commentId}:`, error);
     return false;
   }
+};
+
+// Обновление аватара пользователя
+export const updateUserAvatar = async (file: File) => {
+  try {
+    // Создаем FormData для отправки файла
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    const response = await api.post('/api/user/avatar', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    
+    // Обновляем данные пользователя в store
+    if (response.data) {
+      userStore.updateUser(response.data);
+    }
+    
+    return response.data;
+  } catch (error) {
+    console.error('Ошибка при обновлении аватара:', error);
+    throw error;
+  }
+};
+
+// Обновление данных профиля пользователя
+export const updateUserProfile = async (userData: { username: string, about_me?: string }) => {
+  try {
+    const response = await api.put('/api/user/profile', userData);
+    
+    // Обновляем данные пользователя в store
+    if (response.data) {
+      userStore.updateUser(response.data);
+    }
+    
+    return response.data;
+  } catch (error) {
+    console.error('Ошибка при обновлении профиля:', error);
+    throw error;
+  }
+};
+
+// Удаление аватара пользователя
+export const deleteUserAvatar = async () => {
+  try {
+    const response = await api.post('/api/user/avatar/delete');
+    
+    // Обновляем данные пользователя в store
+    if (response.data) {
+      userStore.updateUser(response.data);
+    }
+    
+    return response.data;
+  } catch (error) {
+    console.error('Ошибка при удалении аватара:', error);
+    throw error;
+  }
+};
+
+// Смена пароля пользователя
+export const changeUserPassword = async (data: { current_password: string, new_password: string }) => {
+  try {
+    const response = await api.post('/api/user/change-password', {
+      old_password: data.current_password,
+      new_password: data.new_password
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Ошибка при смене пароля:', error);
+    throw error;
+  }
+};
+
+// Получение данных профиля текущего пользователя
+export const getUserProfile = async () => {
+  try {
+    const response = await api.get('/api/user/profile/me');
+    // Обновляем данные пользователя в store
+    if (response.data) {
+      userStore.updateUser(response.data);
+    }
+    return response.data;
+  } catch (error) {
+    console.error('Ошибка при получении профиля пользователя:', error);
+    throw error;
+  }
 }; 

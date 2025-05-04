@@ -286,13 +286,47 @@ const ForumPage: React.FC = () => {
                       {category.description}
                     </Typography>
                   </Box>
-                  <Box sx={{ textAlign: 'right' }}>
-                    <Typography variant="body2" color="text.secondary">
-                      Тем: {category.topics_count}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Сообщений: {category.messages_count}
-                    </Typography>
+                  <Box sx={{ 
+                    textAlign: 'right', 
+                    display: 'flex',
+                    flexDirection: 'row',
+                    gap: 2,
+                    alignItems: 'center'
+                  }}>
+                    <Box sx={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      color: 'primary.main',
+                      px: 2,
+                      py: 1,
+                      borderRadius: 1,
+                      minWidth: '80px'
+                    }}>
+                      <Typography variant="h6" fontWeight="bold">
+                        {category.topics_count}
+                      </Typography>
+                      <Typography variant="caption">
+                        Тем
+                      </Typography>
+                    </Box>
+                    <Box sx={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      color: 'secondary.main',
+                      px: 2,
+                      py: 1,
+                      borderRadius: 1,
+                      minWidth: '80px'
+                    }}>
+                      <Typography variant="h6" fontWeight="bold">
+                        {category.messages_count}
+                      </Typography>
+                      <Typography variant="caption">
+                        Сообщений
+                      </Typography>
+                    </Box>
                   </Box>
                 </Box>
                 {index < categories.length - 1 && <Divider />}

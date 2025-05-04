@@ -22,10 +22,12 @@ import PetsIcon from '@mui/icons-material/Pets';
 import EventIcon from '@mui/icons-material/Event';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import FiberNewIcon from '@mui/icons-material/FiberNew';
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { NewsCategory, NEWS_CATEGORIES, NewsItem } from '../../shared/types/news.types';
 import { newsApi } from '../../services/newsApi';
 import { userStore } from '../../shared/store/userStore';
+
+// Типы сортировки
+type SortType = 'newest' | 'popular';
 
 const CATEGORY_ICONS = {
   [NewsCategory.NEWS]: <NewspaperIcon sx={{ color: 'primary.main' }} />,
@@ -40,6 +42,8 @@ const NewsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAuth] = useState(!!localStorage.getItem('access_token'));
+  // Сортировка по умолчанию - новые (newest)
+  const [sortType, setSortType] = useState<SortType>('newest');
   
   const navigate = useNavigate();
   const location = useLocation();
@@ -79,7 +83,23 @@ const NewsPage: React.FC = () => {
     navigate('/news/create');
   };
 
-  const filteredNews = news.filter(item => item.category === selectedCategory);
+  // Сортировка новостей в зависимости от выбранного типа
+  const getSortedNews = () => {
+    const filtered = news.filter(item => item.category === selectedCategory);
+    
+    if (sortType === 'newest') {
+      // Сортировка по дате (новые вверху)
+      return [...filtered].sort((a, b) => 
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+    } else {
+      // Сортировка по популярности (по лайкам)
+      return [...filtered].sort((a, b) => b.likes - a.likes);
+    }
+  };
+
+  // Отсортированный список новостей
+  const sortedNews = getSortedNews();
 
   // Функция для получения превью из содержимого новости
   const getPreview = (item: NewsItem): string => {
@@ -153,15 +173,26 @@ const NewsPage: React.FC = () => {
               )}
             </Box>
             <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-              <Chip icon={<TrendingUpIcon />} label="Популярные" onClick={() => {}} />
-              <Chip icon={<FiberNewIcon />} label="Новые" onClick={() => {}} />
-              <Chip icon={<AccessTimeIcon />} label="По дате" onClick={() => {}} />
+              <Chip 
+                icon={<TrendingUpIcon />} 
+                label="Популярные" 
+                onClick={() => setSortType('popular')} 
+                color={sortType === 'popular' ? 'primary' : 'default'}
+                variant={sortType === 'popular' ? 'filled' : 'outlined'}
+              />
+              <Chip 
+                icon={<FiberNewIcon />} 
+                label="Новые" 
+                onClick={() => setSortType('newest')} 
+                color={sortType === 'newest' ? 'primary' : 'default'}
+                variant={sortType === 'newest' ? 'filled' : 'outlined'}
+              />
             </Box>
             {loading ? (
               <Typography>Загрузка...</Typography>
             ) : error ? (
               <Typography color="error">{error}</Typography>
-            ) : filteredNews.length === 0 ? (
+            ) : sortedNews.length === 0 ? (
               <Typography>Нет новостей в этой категории</Typography>
             ) : (
               <Box sx={{ 
@@ -169,7 +200,7 @@ const NewsPage: React.FC = () => {
                 flexDirection: 'column', 
                 gap: 2
               }}>
-                {filteredNews.map((item) => (
+                {sortedNews.map((item) => (
                   <Paper 
                     key={item.id}
                     sx={{ 
@@ -198,6 +229,11 @@ const NewsPage: React.FC = () => {
                     <Typography variant="body2" color="text.secondary">
                       {getPreview(item)}
                     </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
+                      <Typography variant="caption" color="text.secondary" sx={{ ml: 'auto' }}>
+                        {item.likes} лайков
+                      </Typography>
+                    </Box>
                   </Paper>
                 ))}
               </Box>

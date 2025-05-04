@@ -46,6 +46,9 @@ import { IMAGE_BASE_URL } from '../../config/api';
 // Thunderforest Landscape: "https://{s}.tile.thunderforest.com/landscape/{z}/{x}/{y}.png"
 // Thunderforest Outdoors: "https://{s}.tile.thunderforest.com/outdoors/{z}/{x}/{y}.png"
 
+// Типы сортировки
+type SortType = 'newest' | 'popular';
+
 interface TabPanelProps {
   children?: React.ReactNode;
   index: number;
@@ -160,6 +163,9 @@ const Dashboard = () => {
     guides: 0,
     fish_species: 0
   });
+  
+  // Сортировка по умолчанию - новые (newest)
+  const [sortType, setSortType] = useState<SortType>('newest');
   
   // Состояние для отображения карты или публикаций
   const [showMap, setShowMap] = useState(false);
@@ -524,6 +530,24 @@ const Dashboard = () => {
     };
   };
 
+  // Сортировка постов в зависимости от выбранного типа
+  const getSortedPosts = useCallback(() => {
+    if (sortType === 'newest') {
+      // Сортировка по дате (новые вверху)
+      return [...posts].sort((a, b) => 
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+    } else {
+      // Сортировка по популярности (по лайкам и комментариям)
+      return [...posts].sort((a, b) => 
+        ((b.likes?.length || 0) + (b.comments?.length || 0)) - ((a.likes?.length || 0) + (a.comments?.length || 0))
+      );
+    }
+  }, [posts, sortType]);
+
+  // Отсортированный список постов
+  const sortedPosts = useMemo(() => getSortedPosts(), [getSortedPosts]);
+
   return (
     <Container maxWidth={false} sx={{ maxWidth: '1600px', p: 0 }}>
       {/* Мобильная шапка с бургер-меню */}
@@ -884,9 +908,20 @@ const Dashboard = () => {
                   )}
                 </Box>
                 <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-                  <Chip icon={<TrendingUpIcon />} label="Популярные" onClick={() => {}} />
-                  <Chip icon={<FiberNewIcon />} label="Новые" onClick={() => {}} />
-                  <Chip icon={<AccessTimeIcon />} label="По дате" onClick={() => {}} />
+                  <Chip 
+                    icon={<TrendingUpIcon />} 
+                    label="Популярные" 
+                    onClick={() => setSortType('popular')} 
+                    color={sortType === 'popular' ? 'primary' : 'default'}
+                    variant={sortType === 'popular' ? 'filled' : 'outlined'}
+                  />
+                  <Chip 
+                    icon={<FiberNewIcon />} 
+                    label="Новые" 
+                    onClick={() => setSortType('newest')} 
+                    color={sortType === 'newest' ? 'primary' : 'default'}
+                    variant={sortType === 'newest' ? 'filled' : 'outlined'}
+                  />
                 </Box>
                 {loading ? (
                   <Typography>Загрузка...</Typography>
@@ -894,7 +929,7 @@ const Dashboard = () => {
                   <Typography color="error">{error}</Typography>
                 ) : (
                   <Box sx={{ width: '100%' }}>
-                    {posts.map((post) => (
+                    {sortedPosts.map((post) => (
                       <Box key={post.id} sx={{ mb: 2 }}>
                         <PostCard
                           post={post}

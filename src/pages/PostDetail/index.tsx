@@ -310,7 +310,7 @@ const PostDetail: React.FC = () => {
         </Box>
         
         {/* Кнопки действий */}
-        <Box className={styles.postActions}>
+        <Box sx={{ display: 'flex', mt: 4 }}>
           <Button
             variant={liked ? "contained" : "outlined"}
             startIcon={liked ? <FavoriteIcon /> : <FavoriteBorderIcon />}
@@ -325,16 +325,6 @@ const PostDetail: React.FC = () => {
             }}
           >
             {liked ? 'Нравится' : 'Оценить'}
-          </Button>
-          
-          <Button
-            variant="outlined"
-            startIcon={<CommentIcon />}
-            onClick={() => document.getElementById('commentInput')?.focus()}
-            sx={{ ml: 2 }}
-            disabled={!isAuth}
-          >
-            Комментировать
           </Button>
         </Box>
       </Paper>
