@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import {
   Container,
   Typography,
@@ -31,11 +31,32 @@ import CachedImage from '../../components/CachedImage';
 const NewsDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const theme = useTheme();
   const [news, setNews] = useState<NewsItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isLiked, setIsLiked] = React.useState(false);
+
+  // Получаем категорию, из которой пришли
+  const getBackUrl = () => {
+    const searchParams = new URLSearchParams(location.search);
+    const fromCategory = searchParams.get('from');
+    
+    // Если указана категория, возвращаемся в нее, иначе просто на страницу новостей
+    if (fromCategory) {
+      return `/news?category=${fromCategory}`;
+    }
+    
+    // Если категория не указана в URL, проверяем localStorage
+    const savedCategory = localStorage.getItem('selectedNewsCategory');
+    if (savedCategory) {
+      return `/news?category=${savedCategory}`;
+    }
+    
+    // Если нигде нет информации о категории, просто возвращаемся на главную страницу новостей
+    return '/news';
+  };
 
   useEffect(() => {
     const fetchNews = async () => {
@@ -163,7 +184,7 @@ const NewsDetail: React.FC = () => {
       <Container maxWidth="lg">
         <Button
           startIcon={<ArrowBackIcon />}
-          onClick={() => navigate('/news')}
+          onClick={() => navigate(getBackUrl())}
           sx={{ mb: 4 }}
         >
           Назад к новостям

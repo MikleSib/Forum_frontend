@@ -51,7 +51,10 @@ const CATEGORY_ICONS = {
 };
 
 const NewsPage: React.FC = () => {
-  const [selectedCategory, setSelectedCategory] = useState<NewsCategory>(NewsCategory.NEWS);
+  const [selectedCategory, setSelectedCategory] = useState<NewsCategory>(
+    // Пытаемся восстановить категорию из localStorage, если нет - используем NEWS
+    localStorage.getItem('selectedNewsCategory') as NewsCategory || NewsCategory.NEWS
+  );
   const [news, setNews] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -66,6 +69,20 @@ const NewsPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Обновляем URL при изменении категории
+  useEffect(() => {
+    // Сохраняем выбранную категорию в localStorage
+    localStorage.setItem('selectedNewsCategory', selectedCategory);
+    
+    // Обновляем URL с параметром категории без перезагрузки страницы
+    const searchParams = new URLSearchParams(location.search);
+    searchParams.set('category', selectedCategory);
+    
+    // Заменяем текущий URL без добавления в историю браузера
+    navigate(`${location.pathname}?${searchParams.toString()}`, { replace: true });
+  }, [selectedCategory, navigate, location.pathname]);
+
+  // Восстанавливаем категорию из URL при загрузке страницы
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
     const categoryParam = searchParams.get('category');
@@ -94,7 +111,8 @@ const NewsPage: React.FC = () => {
   }, []);
 
   const handleNewsClick = (newsId: number) => {
-    navigate(`/news/${newsId}`);
+    // Передаем текущую категорию в URL деталей новости
+    navigate(`/news/${newsId}?from=${selectedCategory}`);
   };
 
   const handleCreateNews = () => {
