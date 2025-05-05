@@ -201,7 +201,7 @@ const CreateNews: React.FC = () => {
   };
   
   // Функция для создания новости с обработкой 403 ошибки и повторной попыткой
-  const createNewsWithRetry = async (isRetry = false) => {
+  const createNewsWithRetry = async (isRetry = false): Promise<void> => {
     try {
       await adminApi.createNews({
         title,
