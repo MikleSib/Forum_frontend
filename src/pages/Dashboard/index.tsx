@@ -945,25 +945,7 @@ const Dashboard = () => {
 
           {/* Правая колонка */}
           <Box sx={{ flex: '0 0 300px', display: { xs: 'none', md: 'block' } }}>
-            <Paper sx={{ p: 2, mb: 2 }}>
-              <Typography variant="h6" sx={{ mb: 2 }}>Темы</Typography>
-              <List>
-                {topics.map((topic) => (
-                  <ListItemButton 
-                    key={topic.id}
-                    onClick={() => handleTopicClick(topic.category)}
-                  >
-                    <ListItemIcon>
-                      {TOPIC_ICONS[topic.category]}
-                    </ListItemIcon>
-                    <ListItemText 
-                      primary={topic.name}
-                      secondary={`${getCategoryCount(topic.category)} ${getPublicationWord(getCategoryCount(topic.category))}`}
-                    />
-                  </ListItemButton>
-                ))}
-              </List>
-            </Paper>
+           
           </Box>
         </Box>
       </Box>

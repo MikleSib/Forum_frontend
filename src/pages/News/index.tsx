@@ -335,28 +335,9 @@ const NewsPage: React.FC = () => {
           display: { xs: 'none', md: 'block' },
           overflow: 'auto'
         }}>
-          <Paper sx={{ p: 2, mb: 2 }}>
-            <Typography variant="h6" sx={{ mb: 2 }}>Статистика</Typography>
-            <List>
-              {Object.entries(NEWS_CATEGORIES).map(([category, { title }]) => {
-                const count = news.filter(item => item.category === category).length;
-                return (
-                  <ListItemButton 
-                    key={category}
-                    onClick={() => setSelectedCategory(category as NewsCategory)}
-                  >
-                    <ListItemIcon>
-                      {CATEGORY_ICONS[category as NewsCategory]}
-                    </ListItemIcon>
-                    <ListItemText 
-                      primary={title}
-                      secondary={`${count} публикаций`}
-                    />
-                  </ListItemButton>
-                );
-              })}
-            </List>
-          </Paper>
+         
+           
+          
         </Box>
       </Box>
     </Container>
