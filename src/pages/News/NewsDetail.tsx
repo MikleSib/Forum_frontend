@@ -26,6 +26,7 @@ import PlaceIcon from '@mui/icons-material/Place';
 import DateRangeIcon from '@mui/icons-material/DateRange';
 import { NEWS_CATEGORIES, NewsItem, NewsContent, NewsCategory } from '../../shared/types/news.types';
 import { newsApi } from '../../services/newsApi';
+import CachedImage from '../../components/CachedImage';
 
 const NewsDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -106,7 +107,7 @@ const NewsDetail: React.FC = () => {
       case 'image':
         return (
           <Box sx={{ my: 4, borderRadius: 2, overflow: 'hidden' }}>
-            <img
+            <CachedImage
               src={content.content}
               alt="News content"
               style={{
@@ -114,6 +115,7 @@ const NewsDetail: React.FC = () => {
                 maxHeight: '600px',
                 objectFit: 'contain'
               }}
+              placeholderSrc="/images/placeholder-image.jpg"
             />
           </Box>
         );

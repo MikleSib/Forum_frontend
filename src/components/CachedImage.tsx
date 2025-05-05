@@ -80,8 +80,8 @@ const CachedImage: React.FC<CachedImageProps> = ({
         // Внимание: мы не добавляем дополнительные параметры тут, т.к. они приведут к неправильной работе кеша
         const imageUrlWithId = imageId ? `${src}?id=${imageId}` : src;
         
-        // Полный URL изображения
-        const fullUrl = `${baseUrl}${imageUrlWithId}`;
+        // Полный URL изображения (с учетом baseUrl, если он указан)
+        const fullUrl = baseUrl ? `${baseUrl}${imageUrlWithId}` : imageUrlWithId;
         
         console.log(`%c[CachedImage] Загрузка изображения: ${fullUrl}, ID: ${imageId}`, 'background: #795548; color: white; padding: 2px 5px; border-radius: 2px;');
         

@@ -15,9 +15,6 @@ interface NewsCardProps {
 }
 
 const NewsCard: React.FC<NewsCardProps> = ({ news, onClick }) => {
-  // Базовый URL для изображений
-  const baseUrl = 'https://рыбный-форум.рф';
-
   // Получаем превью изображения из первого контента с типом "image"
   const getImagePreview = (): string | undefined => {
     const imageContent = news.contents.find(content => content.type === 'image');
@@ -114,7 +111,6 @@ const NewsCard: React.FC<NewsCardProps> = ({ news, onClick }) => {
         }}>
           <CachedImage
             src={imageUrl}
-            baseUrl={baseUrl}
             alt={news.title}
             style={{
               width: '100%',
