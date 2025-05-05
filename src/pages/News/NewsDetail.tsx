@@ -11,7 +11,8 @@ import {
   Stack,
   Button,
   useTheme,
-  CircularProgress
+  CircularProgress,
+  Grid
 } from '@mui/material';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -20,6 +21,9 @@ import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import ShareIcon from '@mui/icons-material/Share';
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
+import FishingIcon from '@mui/icons-material/Phishing';
+import PlaceIcon from '@mui/icons-material/Place';
+import DateRangeIcon from '@mui/icons-material/DateRange';
 import { NEWS_CATEGORIES, NewsItem, NewsContent, NewsCategory } from '../../shared/types/news.types';
 import { newsApi } from '../../services/newsApi';
 
@@ -51,6 +55,39 @@ const NewsDetail: React.FC = () => {
 
     fetchNews();
   }, [id]);
+
+  // Извлечение данных о дисциплине, месте и дате для категории "События"
+  const extractEventData = (): { discipline?: string; place?: string; date?: string } => {
+    if (!news || news.category !== NewsCategory.EVENTS) {
+      return {};
+    }
+    
+    // Ищем конкретные элементы массива contents для каждого типа информации
+    // Согласно API, contents[1] - дисциплина, contents[2] - место, contents[3] - дата
+    const disciplineContent = news.contents.find(content => content.order === 1);
+    const placeContent = news.contents.find(content => content.order === 2);
+    const dateContent = news.contents.find(content => content.order === 3);
+    
+    // Извлекаем чистый текст, удаляя emoji если они есть
+    const extractCleanText = (content?: string): string => {
+      if (!content) return '';
+      // Удаляем emoji и ключевые слова из строки
+      return content
+        .replace(/🎣\s*Дисциплина:\s*/, '')
+        .replace(/🌍\s*Место:\s*/, '')
+        .replace(/📅\s*Дата:\s*/, '')
+        .replace(/Дисциплина:\s*/, '')
+        .replace(/Место:\s*/, '')
+        .replace(/Дата:\s*/, '')
+        .trim();
+    };
+    
+    return {
+      discipline: extractCleanText(disciplineContent?.content),
+      place: extractCleanText(placeContent?.content),
+      date: extractCleanText(dateContent?.content)
+    };
+  };
 
   const renderContent = (content: NewsContent) => {
     switch (content.type) {
@@ -116,6 +153,9 @@ const NewsDetail: React.FC = () => {
     );
   }
 
+  const eventData = extractEventData();
+  const isEvent = news.category === NewsCategory.EVENTS;
+
   return (
     <Box sx={{ bgcolor: 'background.default', minHeight: '100vh', py: 4 }}>
       <Container maxWidth="lg">
@@ -162,16 +202,86 @@ const NewsDetail: React.FC = () => {
               {format(new Date(news.created_at), 'd MMMM yyyy', { locale: ru })}
             </Typography>
           </Box>
+          
+          {/* Блок с информацией о событии (только для категории События) */}
+          {isEvent && (Object.keys(eventData).length > 0) && (
+            <Box 
+              sx={{ 
+                mb: 4, 
+                p: 3, 
+                bgcolor: 'background.paper', 
+                borderRadius: 2,
+                border: '1px solid',
+                borderColor: 'primary.light',
+                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)'
+              }}
+            >
+              <Grid container spacing={3}>
+                {eventData.place && (
+                  <Grid size={{xs:12, sm:4}}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+                      <PlaceIcon color="primary" sx={{ fontSize: 36, mb: 1 }} />
+                      <Typography variant="body2" color="text.secondary" gutterBottom>
+                        Место
+                      </Typography>
+                      <Typography variant="subtitle1" fontWeight={600}>
+                        {eventData.place}
+                      </Typography>
+                    </Box>
+                  </Grid>
+                )}
+                
+                {eventData.date && (
+                  <Grid size={{xs:12, sm:4}}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+                      <DateRangeIcon color="primary" sx={{ fontSize: 36, mb: 1 }} />
+                      <Typography variant="body2" color="text.secondary" gutterBottom>
+                        Дата
+                      </Typography>
+                      <Typography variant="subtitle1" fontWeight={600}>
+                        {eventData.date}
+                      </Typography>
+                    </Box>
+                  </Grid>
+                )}
+                
+                {eventData.discipline && (
+                  <Grid size={{xs:12, sm:4}}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+                      <FishingIcon color="primary" sx={{ fontSize: 36, mb: 1 }} />
+                      <Typography variant="body2" color="text.secondary" gutterBottom>
+                        Дисциплина
+                      </Typography>
+                      <Typography variant="subtitle1" fontWeight={600}>
+                        {eventData.discipline}
+                      </Typography>
+                    </Box>
+                  </Grid>
+                )}
+              </Grid>
+            </Box>
+          )}
 
-          {news.contents
-            .sort((a: NewsContent, b: NewsContent) => a.order - b.order)
-            .map((content: NewsContent, index: number) => (
-              <Box key={index}>
-                {renderContent(content)}
-              </Box>
-            ))}
+          {/* Отображаем контент с учетом специфики для событий */}
+          {isEvent 
+            ? news.contents
+                .filter(content => content.order === 0) // Для событий показываем только основной контент
+                .map((content: NewsContent, index: number) => (
+                  <Box key={index}>
+                    {renderContent(content)}
+                  </Box>
+                ))
+            : news.contents
+                .sort((a: NewsContent, b: NewsContent) => a.order - b.order)
+                .map((content: NewsContent, index: number) => (
+                  <Box key={index}>
+                    {renderContent(content)}
+                  </Box>
+                ))
+          }
 
-          {news.author && (
+          {/* Информация об авторе (не отображается для категории События) */}
+          {news.author && !isEvent && (
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
               <Avatar
                 src={news.author.avatar}

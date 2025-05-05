@@ -16,7 +16,12 @@ import {
   Tab,
   Grid,
   Divider,
-  CircularProgress
+  CircularProgress,
+  TextField,
+  InputAdornment,
+  IconButton,
+  Drawer,
+  SwipeableDrawer
 } from '@mui/material';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -27,10 +32,13 @@ import PetsIcon from '@mui/icons-material/Pets';
 import EventIcon from '@mui/icons-material/Event';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import FiberNewIcon from '@mui/icons-material/FiberNew';
+import SearchIcon from '@mui/icons-material/Search';
+import MenuIcon from '@mui/icons-material/Menu';
 import { NewsCategory, NEWS_CATEGORIES, NewsItem } from '../../shared/types/news.types';
 import { newsApi } from '../../services/newsApi';
 import { userStore } from '../../shared/store/userStore';
 import { formatLocalDate } from '../../utils/dateUtils';
+import NewsCard from '../../components/NewsCard';
 
 // Типы сортировки
 type SortType = 'newest' | 'popular';
@@ -50,6 +58,10 @@ const NewsPage: React.FC = () => {
   const [isAuth] = useState(!!localStorage.getItem('access_token'));
   // Сортировка по умолчанию - новые (newest)
   const [sortType, setSortType] = useState<SortType>('newest');
+  // Состояние для поиска рыб
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  // Состояние для мобильного меню
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
   const navigate = useNavigate();
   const location = useLocation();
@@ -89,10 +101,19 @@ const NewsPage: React.FC = () => {
     navigate('/news/create');
   };
 
-  // Сортировка новостей в зависимости от выбранного типа
-  const getSortedNews = () => {
-    const filtered = news.filter(item => item.category === selectedCategory);
+  // Сортировка новостей в зависимости от выбранного типа и применение поиска для рыб
+  const getFilteredNews = () => {
+    // Сначала фильтруем по категории
+    let filtered = news.filter(item => item.category === selectedCategory);
     
+    // Если это категория рыб и есть поисковый запрос, то фильтруем по названию
+    if (selectedCategory === NewsCategory.FISH_SPECIES && searchTerm.trim()) {
+      filtered = filtered.filter(item =>
+        item.title.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    
+    // Затем применяем сортировку
     if (sortType === 'newest') {
       // Сортировка по дате (новые вверху)
       return [...filtered].sort((a, b) => 
@@ -104,8 +125,8 @@ const NewsPage: React.FC = () => {
     }
   };
 
-  // Отсортированный список новостей
-  const sortedNews = getSortedNews();
+  // Отсортированный и отфильтрованный список новостей
+  const filteredNews = getFilteredNews();
 
   // Функция для получения превью из содержимого новости
   const getPreview = (item: NewsItem): string => {
@@ -114,6 +135,13 @@ const NewsPage: React.FC = () => {
       return textContent.content.slice(0, 150) + '...';
     }
     return 'Нет текстового содержимого';
+  };
+
+  // Функция для обработки выбора категории
+  const handleCategorySelect = (category: NewsCategory) => {
+    setSelectedCategory(category);
+    setSearchTerm('');
+    setMobileMenuOpen(false); // Закрываем меню после выбора
   };
 
   return (
@@ -145,7 +173,7 @@ const NewsPage: React.FC = () => {
                 <ListItemButton
                   key={category}
                   selected={category === selectedCategory}
-                  onClick={() => setSelectedCategory(category as NewsCategory)}
+                  onClick={() => handleCategorySelect(category as NewsCategory)}
                 >
                   <ListItemIcon>
                     {CATEGORY_ICONS[category as NewsCategory]}
@@ -157,6 +185,33 @@ const NewsPage: React.FC = () => {
           </Paper>
         </Box>
 
+        {/* Мобильное меню */}
+        <SwipeableDrawer
+          anchor="left"
+          open={mobileMenuOpen}
+          onClose={() => setMobileMenuOpen(false)}
+          onOpen={() => setMobileMenuOpen(true)}
+          sx={{ display: { xs: 'block', md: 'none' } }}
+        >
+          <Box sx={{ width: 250, p: 2 }}>
+            <Typography variant="h6" sx={{ mb: 2 }}>Навигация</Typography>
+            <List>
+              {Object.entries(NEWS_CATEGORIES).map(([category, { title }]) => (
+                <ListItemButton
+                  key={category}
+                  selected={category === selectedCategory}
+                  onClick={() => handleCategorySelect(category as NewsCategory)}
+                >
+                  <ListItemIcon>
+                    {CATEGORY_ICONS[category as NewsCategory]}
+                  </ListItemIcon>
+                  <ListItemText primary={title} />
+                </ListItemButton>
+              ))}
+            </List>
+          </Box>
+        </SwipeableDrawer>
+
         {/* Центральная колонка */}
         <Box sx={{ 
           flex: 1,
@@ -165,9 +220,18 @@ const NewsPage: React.FC = () => {
         }}>
           <Paper sx={{ p: 2, mb: 2 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-              <Typography variant="h6">
-                {NEWS_CATEGORIES[selectedCategory].title}
-              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                {/* Кнопка бургер-меню для мобильных */}
+                <IconButton 
+                  sx={{ mr: 1, display: { xs: 'block', md: 'none' } }}
+                  onClick={() => setMobileMenuOpen(true)}
+                >
+                  <MenuIcon />
+                </IconButton>
+                <Typography variant="h6">
+                  {NEWS_CATEGORIES[selectedCategory].title}
+                </Typography>
+              </Box>
               {isAuth && userStore.isAdmin && (
                 <Button
                   variant="contained"
@@ -178,71 +242,71 @@ const NewsPage: React.FC = () => {
                 </Button>
               )}
             </Box>
-            <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-              <Chip 
-                icon={<TrendingUpIcon />} 
-                label="Популярные" 
-                onClick={() => setSortType('popular')} 
-                color={sortType === 'popular' ? 'primary' : 'default'}
-                variant={sortType === 'popular' ? 'filled' : 'outlined'}
-              />
-              <Chip 
-                icon={<FiberNewIcon />} 
-                label="Новые" 
-                onClick={() => setSortType('newest')} 
-                color={sortType === 'newest' ? 'primary' : 'default'}
-                variant={sortType === 'newest' ? 'filled' : 'outlined'}
-              />
-            </Box>
+            
+            {/* Поле поиска для категории "Виды рыб" */}
+            {selectedCategory === NewsCategory.FISH_SPECIES && (
+              <Box sx={{ mb: 2 }}>
+                <TextField
+                  fullWidth
+                  variant="outlined"
+                  size="small"
+                  placeholder="Поиск рыбы по названию..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchIcon />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </Box>
+            )}
+            
+            {/* Показываем элементы сортировки только для не-событий и не-видов рыб */}
+            {selectedCategory !== NewsCategory.EVENTS && selectedCategory !== NewsCategory.FISH_SPECIES && (
+              <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+                <Chip 
+                  icon={<TrendingUpIcon />} 
+                  label="Популярные" 
+                  onClick={() => setSortType('popular')} 
+                  color={sortType === 'popular' ? 'primary' : 'default'}
+                  variant={sortType === 'popular' ? 'filled' : 'outlined'}
+                />
+                <Chip 
+                  icon={<FiberNewIcon />} 
+                  label="Новые" 
+                  onClick={() => setSortType('newest')} 
+                  color={sortType === 'newest' ? 'primary' : 'default'}
+                  variant={sortType === 'newest' ? 'filled' : 'outlined'}
+                />
+              </Box>
+            )}
+            
             {loading ? (
-              <Typography>Загрузка...</Typography>
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
+                <CircularProgress />
+              </Box>
             ) : error ? (
               <Typography color="error">{error}</Typography>
-            ) : sortedNews.length === 0 ? (
-              <Typography>Нет новостей в этой категории</Typography>
+            ) : filteredNews.length === 0 ? (
+              <Typography>
+                {searchTerm.trim() 
+                  ? `Нет результатов по запросу "${searchTerm}"` 
+                  : `Нет новостей в категории ${NEWS_CATEGORIES[selectedCategory].title}`}
+              </Typography>
             ) : (
-              <Box sx={{ 
-                display: 'flex', 
-                flexDirection: 'column', 
-                gap: 2
-              }}>
-                {sortedNews.map((item) => (
-                  <Paper 
-                    key={item.id}
-                    sx={{ 
-                      p: 2,
-                      cursor: 'pointer',
-                      '&:hover': { bgcolor: 'action.hover' }
-                    }}
-                    onClick={() => handleNewsClick(item.id)}
-                  >
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
-                      <Avatar src={item.author?.avatar}>
-                        {item.author?.name?.[0]?.toUpperCase() || 'РФ'}
-                      </Avatar>
-                      <Box>
-                        <Typography variant="subtitle2">
-                          {item.author?.name || 'Рыбный форум'}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {formatLocalDate(item.created_at)}
-                        </Typography>
-                      </Box>
-                    </Box>
-                    <Typography variant="h6" sx={{ mb: 1 }}>
-                      {item.title}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {getPreview(item)}
-                    </Typography>
-                    <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
-                      <Typography variant="caption" color="text.secondary" sx={{ ml: 'auto' }}>
-                        {item.likes} лайков
-                      </Typography>
-                    </Box>
-                  </Paper>
+              <Grid container spacing={3}>
+                {filteredNews.map((item) => (
+                  <Grid size={{xs:12, sm:6, md:selectedCategory === NewsCategory.EVENTS ? 6 : 6}} key={item.id}>
+                    <NewsCard 
+                      news={item} 
+                      onClick={() => handleNewsClick(item.id)} 
+                    />
+                  </Grid>
                 ))}
-              </Box>
+              </Grid>
             )}
           </Paper>
         </Box>

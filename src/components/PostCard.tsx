@@ -136,10 +136,20 @@ const PostCard: React.FC<PostCardProps> = (props) => {
 
   // Форматируем дату
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('ru-RU', {
+    const date = new Date(dateString);
+    
+    // Получаем часовой пояс пользователя
+    const userTimezoneOffsetMinutes = new Date().getTimezoneOffset();
+    
+    // Преобразуем из UTC в местное время пользователя
+    const localDate = new Date(date.getTime() - userTimezoneOffsetMinutes * 60000);
+    
+    return localDate.toLocaleDateString('ru-RU', {
       day: 'numeric',
       month: 'long',
-      year: 'numeric'
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
     });
   };
 

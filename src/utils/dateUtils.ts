@@ -18,6 +18,12 @@ export const formatLocalDate = (
   // Проверяем корректность даты
   if (isNaN(date.getTime())) return '—';
   
+  // Получаем часовой пояс пользователя
+  const userTimezoneOffsetMinutes = new Date().getTimezoneOffset();
+  
+  // Преобразуем из UTC в местное время пользователя
+  const localDate = new Date(date.getTime() - userTimezoneOffsetMinutes * 60000);
+  
   // Если опции не указаны, используем стандартные
   const options = formatOptions || {
     year: 'numeric',
@@ -27,7 +33,7 @@ export const formatLocalDate = (
     minute: '2-digit'
   };
   
-  return date.toLocaleString('ru-RU', options);
+  return localDate.toLocaleString('ru-RU', options);
 };
 
 /**

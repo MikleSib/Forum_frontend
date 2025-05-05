@@ -17,13 +17,18 @@ import {
   RadioGroup,
   FormControlLabel,
   Radio,
+  Collapse
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
+import FishingIcon from '@mui/icons-material/Phishing';
+import PlaceIcon from '@mui/icons-material/Place';
+import DateRangeIcon from '@mui/icons-material/DateRange';
 import { NewsCategory } from '../../shared/types/news.types';
 import { adminApi } from '../../services/api';
 import { userStore } from '../../shared/store/userStore';
 import API_URL from '../../config/api';
+import { refreshToken } from '../../services/auth';
 
 interface NewsContent {
   type: 'text' | 'image' | 'video';
@@ -38,6 +43,12 @@ interface NewsContent {
   };
 }
 
+interface EventDetails {
+  discipline: string;
+  place: string;
+  date: string;
+}
+
 const CreateNews: React.FC = () => {
   const navigate = useNavigate();
   const [title, setTitle] = useState('');
@@ -45,6 +56,11 @@ const CreateNews: React.FC = () => {
   const [contents, setContents] = useState<NewsContent[]>([
     { type: 'text', content: '', order: 0 }
   ]);
+  const [eventDetails, setEventDetails] = useState<EventDetails>({
+    discipline: '',
+    place: '',
+    date: ''
+  });
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
@@ -84,6 +100,13 @@ const CreateNews: React.FC = () => {
     setContents(newContents);
   };
 
+  const handleEventDetailsChange = (field: keyof EventDetails, value: string) => {
+    setEventDetails({
+      ...eventDetails,
+      [field]: value
+    });
+  };
+
   const handleFileChange = async (index: number, file: File) => {
     try {
       const formData = new FormData();
@@ -119,27 +142,107 @@ const CreateNews: React.FC = () => {
     }
   };
 
+  const prepareNewsContents = () => {
+    // Если категория "События", добавляем детали события в начало текстового содержимого
+    if (category === NewsCategory.EVENTS) {
+      const textContentIndex = contents.findIndex(content => content.type === 'text');
+      
+      if (textContentIndex !== -1) {
+        const eventFormatting = `
+Место: ${eventDetails.place}
+Дата: ${eventDetails.date}
+Дисциплина: ${eventDetails.discipline}
+
+`;
+        
+        const newContents = [...contents];
+        newContents[textContentIndex] = {
+          ...newContents[textContentIndex],
+          content: eventFormatting + newContents[textContentIndex].content
+        };
+        
+        return newContents.map((content, index) => ({
+          type: content.type,
+          content: content.content,
+          order: index
+        }));
+      }
+    }
+    
+    // Для других категорий возвращаем контент как есть
+    return contents.map((content, index) => ({
+      type: content.type,
+      content: content.content,
+      order: index
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setSuccess(false);
 
+    // Проверка обязательных полей для категории "События"
+    if (category === NewsCategory.EVENTS) {
+      if (!eventDetails.discipline || !eventDetails.place || !eventDetails.date) {
+        setError('Для события необходимо заполнить все поля: дисциплина, место и дата');
+        return;
+      }
+    }
+
     try {
-      await adminApi.createNews({
-        title,
-        category,
-        contents: contents.map((content, index) => ({
-          type: content.type,
-          content: content.content,
-          order: index
-        }))
-      });
-      
+      await createNewsWithRetry();
       setSuccess(true);
       navigate('/news');
       
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Произошла ошибка при создании новости');
+    }
+  };
+  
+  // Функция для создания новости с обработкой 403 ошибки и повторной попыткой
+  const createNewsWithRetry = async (isRetry = false) => {
+    try {
+      await adminApi.createNews({
+        title,
+        category,
+        contents: prepareNewsContents()
+      });
+    } catch (err: any) {
+      // Проверяем ошибку 403 и сообщение "Only administrators can create news"
+      if (
+        err.response && 
+        err.response.status === 403 && 
+        err.response.data?.detail === "Only administrators can create news" && 
+        !isRetry
+      ) {
+        console.log('Получена ошибка 403, обновляем токен и повторяем запрос...');
+        
+        try {
+          // Обновляем токен
+          const tokens = await refreshToken();
+          
+          if (tokens && tokens.access_token) {
+            // Обновляем токены в userStore
+            userStore.setAuth({
+              access_token: tokens.access_token,
+              refresh_token: tokens.refresh_token,
+              user: userStore.user!
+            });
+            
+            // Если обновление токена успешно, повторяем запрос
+            return createNewsWithRetry(true);
+          } else {
+            throw new Error('Не удалось обновить токен. Пожалуйста, войдите в систему заново.');
+          }
+        } catch (refreshError) {
+          console.error('Ошибка при обновлении токена:', refreshError);
+          throw new Error('Не удалось обновить токен. Пожалуйста, войдите в систему заново.');
+        }
+      }
+      
+      // Если это не 403 ошибка или уже была повторная попытка, просто пробрасываем ошибку дальше
+      throw err;
     }
   };
 
@@ -250,68 +353,112 @@ const CreateNews: React.FC = () => {
               <MenuItem value={NewsCategory.EVENTS}>События</MenuItem>
             </Select>
           </FormControl>
+          
+          {/* Специальные поля для категории События */}
+          <Collapse in={category === NewsCategory.EVENTS}>
+            <Paper variant="outlined" sx={{ p: 2, mb: 3 }}>
+              <Typography variant="h6" gutterBottom>
+                Детали события
+              </Typography>
+              
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <PlaceIcon color="primary" sx={{ mr: 1 }} />
+                <TextField
+                  fullWidth
+                  label="Место проведения"
+                  placeholder="Например: Водохранилище Орлово"
+                  value={eventDetails.place}
+                  onChange={(e) => handleEventDetailsChange('place', e.target.value)}
+                  required={category === NewsCategory.EVENTS}
+                />
+              </Box>
+              
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <DateRangeIcon color="primary" sx={{ mr: 1 }} />
+                <TextField
+                  fullWidth
+                  label="Дата проведения"
+                  placeholder="Например: 2025-05-10"
+                  value={eventDetails.date}
+                  onChange={(e) => handleEventDetailsChange('date', e.target.value)}
+                  required={category === NewsCategory.EVENTS}
+                  helperText="Формат: ГГГГ-ММ-ДД или любой удобный формат"
+                />
+              </Box>
+              
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <FishingIcon color="primary" sx={{ mr: 1 }} />
+                <TextField
+                  fullWidth
+                  label="Дисциплина"
+                  placeholder="Например: Ловля спиннингом"
+                  value={eventDetails.discipline}
+                  onChange={(e) => handleEventDetailsChange('discipline', e.target.value)}
+                  required={category === NewsCategory.EVENTS}
+                />
+              </Box>
+            </Paper>
+          </Collapse>
 
           <Typography variant="h6" gutterBottom>
             Содержимое
           </Typography>
 
-          <Stack spacing={3} sx={{ mb: 4 }}>
-            {contents.map((content, index) => (
-              <Box key={index} sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
-                <FormControl sx={{ width: 150 }}>
+          {contents.map((content, index) => (
+            <Stack
+              key={index}
+              direction="row"
+              spacing={2}
+              alignItems="center"
+              sx={{ mb: 3 }}
+            >
+              <Box sx={{ flex: 1 }}>
+                <FormControl fullWidth sx={{ mb: 2 }}>
                   <InputLabel>Тип контента</InputLabel>
                   <Select
                     value={content.type}
                     label="Тип контента"
-                    onChange={(e) => {
-                      const newType = e.target.value as 'text' | 'image' | 'video';
-                      handleContentChange(index, 'type', newType);
-                    }}
-                    required
+                    onChange={(e) => handleContentChange(index, 'type', e.target.value)}
                   >
                     <MenuItem value="text">Текст</MenuItem>
                     <MenuItem value="image">Изображение</MenuItem>
                     <MenuItem value="video">Видео</MenuItem>
                   </Select>
                 </FormControl>
-
                 {renderContentInput(content, index)}
-
-                <IconButton 
-                  color="error" 
-                  onClick={() => handleRemoveContent(index)}
-                  disabled={contents.length === 1}
-                >
-                  <DeleteIcon />
-                </IconButton>
               </Box>
-            ))}
-          </Stack>
 
-          <Button
-            startIcon={<AddIcon />}
+              <IconButton
+                color="error"
+                onClick={() => handleRemoveContent(index)}
+                disabled={contents.length <= 1}
+              >
+                <DeleteIcon />
+              </IconButton>
+            </Stack>
+          ))}
+
+          <Button 
+            startIcon={<AddIcon />} 
             onClick={handleAddContent}
             sx={{ mb: 4 }}
           >
             Добавить контент
           </Button>
 
-          <Box sx={{ display: 'flex', gap: 2 }}>
-            <Button
-              variant="contained"
-              color="primary"
-              type="submit"
-              size="large"
-            >
-              Создать новость
-            </Button>
-
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
             <Button
               variant="outlined"
               onClick={() => navigate('/news')}
-              size="large"
             >
               Отмена
+            </Button>
+            <Button
+              variant="contained"
+              type="submit"
+              disabled={!title || contents.some(content => !content.content)}
+            >
+              Опубликовать
             </Button>
           </Box>
         </Box>
