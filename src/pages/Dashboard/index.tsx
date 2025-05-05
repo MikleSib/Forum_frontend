@@ -38,6 +38,7 @@ import { userStore } from '../../shared/store/userStore';
 import { YMaps, Map as YMap, Placemark, ZoomControl } from '@pbe/react-yandex-maps';
 import imageCache from '../../utils/imageCache';
 import { IMAGE_BASE_URL } from '../../config/api';
+  import YandexAds from '../../components/YandexAds';
 
 // Другие варианты карт:
 // Esri World Terrain (только природный рельеф): "https://server.arcgisonline.com/ArcGIS/rest/services/World_Terrain_Base/MapServer/tile/{z}/{y}/{x}"
@@ -945,7 +946,8 @@ const Dashboard = () => {
 
           {/* Правая колонка */}
           <Box sx={{ flex: '0 0 300px', display: { xs: 'none', md: 'block' } }}>
-           
+            {/* Рекламный блок Яндекс.РСЯ */}
+            <YandexAds blockId="R-A-15369619-1" />
           </Box>
         </Box>
       </Box>

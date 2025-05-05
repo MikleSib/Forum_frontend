@@ -39,6 +39,7 @@ import { newsApi } from '../../services/newsApi';
 import { userStore } from '../../shared/store/userStore';
 import { formatLocalDate } from '../../utils/dateUtils';
 import NewsCard from '../../components/NewsCard';
+import YandexAds from '../../components/YandexAds';
 
 // Типы сортировки
 type SortType = 'newest' | 'popular';
@@ -335,8 +336,9 @@ const NewsPage: React.FC = () => {
           display: { xs: 'none', md: 'block' },
           overflow: 'auto'
         }}>
-         
-           
+          
+          {/* Рекламный блок Яндекс.РСЯ */}
+          <YandexAds blockId="R-A-15369619-1" />
           
         </Box>
       </Box>

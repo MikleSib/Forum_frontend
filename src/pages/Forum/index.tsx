@@ -18,6 +18,7 @@ import { forumApi } from '../../services/forumApi';
 import { ForumCategory, ForumTopic } from '../../shared/types/forum.types';
 import { userStore } from '../../shared/store/userStore';
 import { formatRelativeDate } from '../../utils/dateUtils';
+import YandexAds from '../../components/YandexAds';
 
 // Удаляем моковые данные и заменяем их на состояние для реальных данных
 const ForumPage: React.FC = () => {
@@ -476,6 +477,16 @@ const ForumPage: React.FC = () => {
           </Box>
         )}
       </Paper>
+
+      {/* Боковая колонка с рекламой */}
+      <Box sx={{ 
+        width: '300px', 
+        flexShrink: 0,
+        display: { xs: 'none', md: 'block' }
+      }}>
+        {/* Рекламный блок Яндекс.РСЯ */}
+        <YandexAds blockId="R-A-15369619-1" />
+      </Box>
     </Container>
   );
 };
