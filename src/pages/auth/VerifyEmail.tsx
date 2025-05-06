@@ -7,6 +7,13 @@ import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import { API_URL } from '../../config/api';
 
+// Декларация типа для window._tmr
+declare global {
+  interface Window {
+    _tmr?: any[];
+  }
+}
+
 const VerifyEmail: React.FC = () => {
   const [code, setCode] = useState<string>('');
   const [email, setEmail] = useState<string>('');
@@ -54,6 +61,10 @@ const VerifyEmail: React.FC = () => {
         
         // Если всё хорошо, показываем успех
         setSuccess(true);
+        // Отправляем метрику успешной регистрации
+        if (window._tmr) {
+          window._tmr.push({ type: 'reachGoal', id: 3644598, goal: 'REG_SUCCESS'});
+        }
       } else {
         setError('Получен некорректный ответ от сервера');
       }
