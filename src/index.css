@@ -12,7 +12,6 @@
 
 html, body, #root {
   height: 100%;
-  overflow: hidden;
 }
 
 @keyframes move {
@@ -30,7 +29,6 @@ body {
   -moz-osx-font-smoothing: grayscale;
   background: #ffffff;
   position: relative;
-  overflow: hidden;
 }
 
 body::before {

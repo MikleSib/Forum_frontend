@@ -348,6 +348,50 @@ const Header: React.FC = () => {
                 </Button>
               </Link>
             </Box>
+            
+            <Box 
+              sx={{ 
+                display: { xs: 'block', md: 'none' }, 
+                width: '1px', 
+                bgcolor: 'rgba(255,255,255,0.3)',
+                alignSelf: 'stretch'
+              }} 
+            />
+            <Box sx={{ 
+              flex: { xs: 1, md: 'none' },
+              display: 'flex'
+            }}>
+              <Link to="/marketplace" style={{ textDecoration: 'none' }}>
+                <Button 
+                  sx={{ 
+                    color: { 
+                      xs: '#FFFFFF',
+                      md: isCurrentPath('/marketplace') ? '#0F1817' : '#FFFFFF'
+                    },
+                    bgcolor: { 
+                      xs: 'transparent', 
+                      md: isCurrentPath('/marketplace') ? '#D9D9D9' : 'rgba(255,255,255,0)' 
+                    },
+                    '&:hover': {
+                      bgcolor: { xs: 'transparent', md: 'rgba(255,255,255,0.3)' }
+                    },
+                    fontWeight: { 
+                      xs: 500,
+                      md: isCurrentPath('/marketplace') ? 700 : 500
+                    },
+                    px: 3,
+                    py: 1,
+                    borderRadius: { xs: 0, md: '58px' },
+                    fontSize: '1rem',
+                    height: { xs: '32px', md: 'auto' },
+                    minWidth: { xs: 'auto', md: '120px' },
+                    flex: { xs: 1, md: 0 }
+                  }}
+                >
+                  Маркетплейс
+                </Button>
+              </Link>
+            </Box>
           </Box>
           <Box sx={{ 
             position: { xs: 'static', md: 'absolute' }, 
