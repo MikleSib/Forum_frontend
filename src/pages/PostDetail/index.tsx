@@ -32,6 +32,13 @@ import styles from './PostDetail.module.css';
 import ImageGallery from '../../components/ImageGallery';
 import { formatLocalDate, formatRelativeDate } from '../../utils/dateUtils';
 
+// Декларация типа для window._tmr
+declare global {
+  interface Window {
+    _tmr?: any[];
+  }
+}
+
 const PostDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -154,6 +161,11 @@ const PostDetail: React.FC = () => {
             full_name:  '',
             about_me:  ''
           };
+        }
+        
+        // Отправляем метрику при успешной отправке комментария
+        if (window._tmr) {
+          window._tmr.push({ type: 'reachGoal', id: 3644598, goal: 'SEND_MSG_POST'});
         }
         
         setComments(prevComments => [...prevComments, newComment]);

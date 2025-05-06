@@ -31,6 +31,13 @@ import { ForumTopic, ForumPost, ForumPostImage, PaginatedResponse, ForumUserData
 import { PostImage } from '../../shared/types/post.types';
 import { formatLocalDate, formatRelativeDate } from '../../utils/dateUtils';
 
+// Декларация типа для window._tmr
+declare global {
+  interface Window {
+    _tmr?: any[];
+  }
+}
+
 // Интерфейс для превью изображений
 interface ImagePreview {
   id: number;
@@ -602,6 +609,11 @@ const TopicDetail: React.FC = () => {
       
       // Добавляем новое сообщение в локальное состояние
       setPosts(prevPosts => [...prevPosts, newPost]);
+      
+      // Отправляем метрику успешной отправки сообщения на форуме
+      if (window._tmr) {
+        window._tmr.push({ type: 'reachGoal', id: 3644598, goal: 'SEND_MSG_FORUM'});
+      }
       
       // Обновляем тему, если нужно (только счетчик сообщений)
       if (topic) {

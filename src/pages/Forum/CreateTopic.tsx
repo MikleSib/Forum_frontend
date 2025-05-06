@@ -11,6 +11,13 @@ import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import { forumApi } from '../../services/forumApi';
 import { ForumCategory } from '../../shared/types/forum.types';
 
+// Декларация типа для window._tmr
+declare global {
+  interface Window {
+    _tmr?: any[];
+  }
+}
+
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
 const MenuProps = {
@@ -212,6 +219,11 @@ const CreateTopic: React.FC = () => {
         message: 'Тема успешно создана!',
         severity: 'success'
       });
+      
+      // Отправляем метрику после успешного создания топика на форуме
+      if (window._tmr) {
+        window._tmr.push({ type: 'reachGoal', id: 3644598, goal: 'CREATE_TOPIC'});
+      }
       
       // После успешного создания перенаправляем на страницу категории
       setTimeout(() => {

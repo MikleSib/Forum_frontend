@@ -10,6 +10,13 @@ import { createPost } from '../../services/api';
 import TipTapEditor from './TipTapEditor';
 import { compressMultipleImages } from '../../utils/imageCompressor';
 
+// Декларация типа для window._tmr
+declare global {
+  interface Window {
+    _tmr?: any[];
+  }
+}
+
 const CreatePost: React.FC = () => {
   const navigate = useNavigate();
   const [title, setTitle] = useState('');
@@ -146,6 +153,11 @@ const CreatePost: React.FC = () => {
       
       // Очищаем ресурсы превью URL перед перенаправлением
       previewUrls.forEach(url => URL.revokeObjectURL(url));
+      
+      // Отправляем метрику создания поста
+      if (window._tmr) {
+        window._tmr.push({ type: 'reachGoal', id: 3644598, goal: 'CREATE_POST'});
+      }
       
       // Показываем сообщение об успехе
       setSuccessMessage('Пост успешно создан!');
