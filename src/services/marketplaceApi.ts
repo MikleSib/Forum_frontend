@@ -148,10 +148,28 @@ export const addProduct = async (productData: Product): Promise<Product> => {
   
   try {
     // Преобразуем image в image_url для API
-    const { image, ...restData } = productData;
+    const { image, status, store, ...restData } = productData;
+    
+    // Преобразуем статус
+    const statusMap: Record<string, string> = {
+      'in-stock': 'В наличии',
+      'out-of-stock': 'Нет в наличии',
+      'sale': 'Распродажа'
+    };
+
+    // Преобразуем название магазина
+    const storeMap: Record<string, string> = {
+      'ozon': 'Ozon',
+      'wildberries': 'Wildberries',
+      'aliexpress': 'Aliexpress',
+      'other': 'Другие'
+    };
+
     const dataToSend = {
       ...restData,
-      image_url: image
+      image_url: image,
+      status: statusMap[status] || status,
+      store: storeMap[store] || store
     };
 
     const response = await fetchWithAuth(`${API_URL}/marketplace/products`, {
