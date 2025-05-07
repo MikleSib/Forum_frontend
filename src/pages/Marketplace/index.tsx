@@ -26,7 +26,12 @@ import {
   IconButton,
   InputLabel,
   SelectChangeEvent,
-  Alert
+  Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import FilterListIcon from '@mui/icons-material/FilterList';
@@ -37,11 +42,13 @@ import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import AddIcon from '@mui/icons-material/Add';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { styled } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
 import { userStore } from '../../shared/store/userStore';
 import * as marketplaceApi from '../../services/marketplaceApi';
-import { Product, ProductFilters } from '../../services/marketplaceApi';
+import { Product, ProductFilters, Filters } from '../../services/marketplaceApi';
 
 // Стилизованные компоненты
 const ProductCard = styled(Card)(({ theme }) => ({
@@ -345,36 +352,48 @@ const mockProducts: Product[] = [
   }
 ];
 
-// Фильтры
-const categories = ['Спиннинги', 'Катушки', 'Приманки', 'Леска и шнуры', 'Аксессуары', 'Ящики и сумки'];
-const brands = ['SuperGoods', 'FishMaster', 'RiboLove', 'FishPro', 'АкваМир', 'Рыбак', 'Клёвое место', 'Охотник и Рыболов'];
-const stores = [
-  { value: 'ozon', label: 'Ozon' },
-  { value: 'wildberries', label: 'Wildberries' },
-  { value: 'aliexpress', label: 'AliExpress' },
-  { value: 'other', label: 'Другие' }
-];
-
 const Marketplace: React.FC = () => {
   const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [pagination, setPagination] = useState({
+    total: 0,
+    page: 1,
+    limit: 30
+  });
   
   // Состояния для фильтров
+  const [filters, setFilters] = useState<Filters | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [selectedStores, setSelectedStores] = useState<string[]>([]);
+  const [selectedMarketplaces, setSelectedMarketplaces] = useState<string[]>([]);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000]);
   const [sortOption, setSortOption] = useState<string>('default');
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
   
-  // Загрузка товаров с сервера
+  // Загрузка фильтров и товаров
   useEffect(() => {
+    fetchFilters();
     fetchProducts();
   }, []);
+  
+  // Функция получения фильтров
+  const fetchFilters = async () => {
+    try {
+      const data = await marketplaceApi.getFilters();
+      setFilters(data);
+      // Устанавливаем начальный диапазон цен
+      setPriceRange([data.price_range.min, data.price_range.max]);
+    } catch (err) {
+      console.error('Ошибка при загрузке фильтров:', err);
+      setError('Не удалось загрузить фильтры');
+    }
+  };
   
   // Функция получения товаров
   const fetchProducts = async () => {
@@ -386,16 +405,21 @@ const Marketplace: React.FC = () => {
       const filters: ProductFilters = {
         search: searchQuery || undefined,
         categories: selectedCategories.length > 0 ? selectedCategories : undefined,
-        brands: selectedBrands.length > 0 ? selectedBrands : undefined,
-        stores: selectedStores.length > 0 ? selectedStores as any : undefined,
+        stores: selectedStores.length > 0 ? selectedStores : undefined,
+        marketplaces: selectedMarketplaces.length > 0 ? selectedMarketplaces : undefined,
         min_price: priceRange[0],
         max_price: priceRange[1],
         sort: sortOption !== 'default' ? sortOption as any : undefined
       };
       
-      const data = await marketplaceApi.getProducts(filters);
-      setProducts(data);
-      setFilteredProducts(data);
+      const response = await marketplaceApi.getProducts(filters);
+      setProducts(response.products);
+      setFilteredProducts(response.products);
+      setPagination({
+        total: response.total,
+        page: response.page,
+        limit: response.limit
+      });
     } catch (err) {
       console.error('Ошибка при загрузке товаров:', err);
       setError('Не удалось загрузить товары. Пожалуйста, попробуйте позже.');
@@ -421,19 +445,19 @@ const Marketplace: React.FC = () => {
     );
   };
   
-  const handleBrandChange = (brand: string) => {
-    setSelectedBrands(prev => 
-      prev.includes(brand) 
-        ? prev.filter(b => b !== brand) 
-        : [...prev, brand]
-    );
-  };
-  
   const handleStoreChange = (store: string) => {
     setSelectedStores(prev => 
       prev.includes(store) 
         ? prev.filter(s => s !== store) 
         : [...prev, store]
+    );
+  };
+  
+  const handleMarketplaceChange = (marketplace: string) => {
+    setSelectedMarketplaces(prev => 
+      prev.includes(marketplace) 
+        ? prev.filter(m => m !== marketplace) 
+        : [...prev, marketplace]
     );
   };
   
@@ -453,11 +477,41 @@ const Marketplace: React.FC = () => {
     navigate('/marketplace/add-product');
   };
   
+  const handleHideProduct = async (productId: number) => {
+    try {
+      await marketplaceApi.hideProduct(productId);
+      // Обновляем список товаров
+      fetchProducts();
+    } catch (error) {
+      console.error('Ошибка при скрытии товара:', error);
+      setError('Не удалось скрыть товар');
+    }
+  };
+  
+  const handleDeleteClick = (productId: number) => {
+    setSelectedProductId(productId);
+    setDeleteDialogOpen(true);
+  };
+  
+  const handleDeleteConfirm = async () => {
+    if (selectedProductId) {
+      try {
+        await marketplaceApi.deleteProductAdmin(selectedProductId);
+        setDeleteDialogOpen(false);
+        // Обновляем список товаров
+        fetchProducts();
+      } catch (error) {
+        console.error('Ошибка при удалении товара:', error);
+        setError('Не удалось удалить товар');
+      }
+    }
+  };
+  
   // Применение фильтров
   useEffect(() => {
     // Вызываем API с новыми фильтрами при изменении параметров
     fetchProducts();
-  }, [searchQuery, selectedCategories, selectedBrands, selectedStores, priceRange, sortOption]);
+  }, [searchQuery, selectedCategories, selectedStores, selectedMarketplaces, priceRange, sortOption]);
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -520,95 +574,106 @@ const Marketplace: React.FC = () => {
             </Typography>
             
             {/* Фильтр по категориям */}
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="subtitle1" gutterBottom fontWeight="bold">
-                Категории
-              </Typography>
-              <FormGroup>
-                {categories.map((category) => (
-                  <FormControlLabel
-                    key={category}
-                    control={
-                      <Checkbox 
-                        checked={selectedCategories.includes(category)} 
-                        onChange={() => handleCategoryChange(category)}
-                        size="small"
+            {filters && (
+              <>
+                <Box sx={{ mb: 3 }}>
+                  <Typography variant="subtitle1" gutterBottom fontWeight="bold">
+                    Категории
+                  </Typography>
+                  <FormGroup>
+                    {filters.categories.map((category) => (
+                      <FormControlLabel
+                        key={category}
+                        control={
+                          <Checkbox 
+                            checked={selectedCategories.includes(category)} 
+                            onChange={() => handleCategoryChange(category)}
+                            size="small"
+                          />
+                        }
+                        label={<Typography variant="body2">{category}</Typography>}
                       />
-                    }
-                    label={<Typography variant="body2">{category}</Typography>}
-                  />
-                ))}
-              </FormGroup>
-            </Box>
-            
-            <Divider sx={{ my: 2 }} />
-            
-            {/* Фильтр по брендам */}
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="subtitle1" gutterBottom fontWeight="bold">
-                Магазины
-              </Typography>
-              <FormGroup>
-                {brands.map((brand) => (
-                  <FormControlLabel
-                    key={brand}
-                    control={
-                      <Checkbox 
-                        checked={selectedBrands.includes(brand)} 
-                        onChange={() => handleBrandChange(brand)}
-                        size="small"
+                    ))}
+                  </FormGroup>
+                </Box>
+                
+                <Divider sx={{ my: 2 }} />
+                
+                {/* Фильтр по магазинам */}
+                <Box sx={{ mb: 3 }}>
+                  <Typography variant="subtitle1" gutterBottom fontWeight="bold">
+                    Магазины
+                  </Typography>
+                  <FormGroup>
+                    {filters.stores.map((store) => (
+                      <FormControlLabel
+                        key={store}
+                        control={
+                          <Checkbox 
+                            checked={selectedStores.includes(store)} 
+                            onChange={() => handleStoreChange(store)}
+                            size="small"
+                          />
+                        }
+                        label={<Typography variant="body2">{store}</Typography>}
                       />
-                    }
-                    label={<Typography variant="body2">{brand}</Typography>}
-                  />
-                ))}
-              </FormGroup>
-            </Box>
-            
-            <Divider sx={{ my: 2 }} />
-            
-            {/* Фильтр по магазинам */}
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="subtitle1" gutterBottom fontWeight="bold">
-                Маркетплейсы
-              </Typography>
-              <FormGroup>
-                {stores.map((store) => (
-                  <FormControlLabel
-                    key={store.value}
-                    control={
-                      <Checkbox 
-                        checked={selectedStores.includes(store.value)} 
-                        onChange={() => handleStoreChange(store.value)}
-                        size="small"
+                    ))}
+                  </FormGroup>
+                </Box>
+                
+                <Divider sx={{ my: 2 }} />
+                
+                {/* Фильтр по маркетплейсам */}
+                <Box sx={{ mb: 3 }}>
+                  <Typography variant="subtitle1" gutterBottom fontWeight="bold">
+                    Маркетплейсы
+                  </Typography>
+                  <FormGroup>
+                    {filters.marketplaces.map((marketplace) => (
+                      <FormControlLabel
+                        key={marketplace}
+                        control={
+                          <Checkbox 
+                            checked={selectedMarketplaces.includes(marketplace)} 
+                            onChange={() => handleMarketplaceChange(marketplace)}
+                            size="small"
+                          />
+                        }
+                        label={
+                          <Typography variant="body2">
+                            {marketplace === 'Ozon' ? 'Ozon' :
+                             marketplace === 'Wildberries' ? 'Wildberries' :
+                             marketplace === 'Aliexpress' ? 'Aliexpress' :
+                             marketplace === 'Другие' ? 'Другие' : marketplace}
+                          </Typography>
+                        }
                       />
-                    }
-                    label={<Typography variant="body2">{store.label}</Typography>}
+                    ))}
+                  </FormGroup>
+                </Box>
+                
+                <Divider sx={{ my: 2 }} />
+                
+                {/* Фильтр по цене */}
+                <Box sx={{ mb: 3 }}>
+                  <Typography variant="subtitle1" gutterBottom fontWeight="bold">
+                    Цена
+                  </Typography>
+                  <Slider
+                    value={priceRange}
+                    onChange={handlePriceRangeChange}
+                    valueLabelDisplay="auto"
+                    min={filters.price_range.min}
+                    max={filters.price_range.max}
+                    step={100}
                   />
-                ))}
-              </FormGroup>
-            </Box>
-            
-            <Divider sx={{ my: 2 }} />
-            
-            {/* Фильтр по цене */}
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="subtitle1" gutterBottom fontWeight="bold">
-                Цена
-              </Typography>
-              <Slider
-                value={priceRange}
-                onChange={handlePriceRangeChange}
-                valueLabelDisplay="auto"
-                min={0}
-                max={10000}
-                step={100}
-              />
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
-                <Typography variant="body2">от {priceRange[0]} ₽</Typography>
-                <Typography variant="body2">до {priceRange[1]} ₽</Typography>
-              </Box>
-            </Box>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
+                    <Typography variant="body2">от {priceRange[0]} ₽</Typography>
+                    <Typography variant="body2">до {priceRange[1]} ₽</Typography>
+                  </Box>
+                </Box>
+              </>
+            )}
             
             {/* Кнопка сброса фильтров (для мобильной версии) */}
             <Box sx={{ display: { xs: 'block', md: 'none' }, mt: 2 }}>
@@ -618,8 +683,8 @@ const Marketplace: React.FC = () => {
                 fullWidth
                 onClick={() => {
                   setSelectedCategories([]);
-                  setSelectedBrands([]);
                   setSelectedStores([]);
+                  setSelectedMarketplaces([]);
                   setPriceRange([0, 10000]);
                   setSearchQuery('');
                   setSortOption('default');
@@ -792,11 +857,38 @@ const Marketplace: React.FC = () => {
           {/* Пагинация */}
           {filteredProducts.length > 0 && (
             <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-              <Pagination count={1} color="primary" />
+              <Pagination 
+                count={Math.ceil(pagination.total / pagination.limit)} 
+                page={pagination.page}
+                onChange={(_, page) => {
+                  setPagination(prev => ({ ...prev, page }));
+                  // Здесь можно добавить загрузку новой страницы
+                }}
+                color="primary" 
+              />
             </Box>
           )}
         </Grid>
       </Grid>
+      
+      {/* Диалог подтверждения удаления */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+      >
+        <DialogTitle>Подтверждение удаления</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Вы уверены, что хотите удалить этот товар? Это действие нельзя отменить.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialogOpen(false)}>Отмена</Button>
+          <Button onClick={handleDeleteConfirm} color="error" autoFocus>
+            Удалить
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };

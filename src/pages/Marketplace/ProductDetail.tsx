@@ -13,7 +13,12 @@ import {
   IconButton,
   CircularProgress,
   Link,
-  Rating
+  Rating,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
@@ -25,9 +30,12 @@ import RestoreIcon from '@mui/icons-material/Restore';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { styled } from '@mui/material/styles';
 import * as marketplaceApi from '../../services/marketplaceApi';
 import { Product } from '../../services/marketplaceApi';
+import { userStore } from '../../shared/store/userStore';
 
 // Моковые данные для демонстрации (используем в режиме разработки при недоступности API)
 const mockProduct: Product = {
@@ -88,6 +96,7 @@ const ProductDetail: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   // Получение данных о продукте
   useEffect(() => {
@@ -134,6 +143,37 @@ const ProductDetail: React.FC = () => {
       case 'wildberries': return 'Wildberries';
       case 'aliexpress': return 'AliExpress';
       default: return 'Другой магазин';
+    }
+  };
+
+  const handleHideProduct = async () => {
+    if (!productId) return;
+    
+    try {
+      await marketplaceApi.hideProduct(productId);
+      // Обновляем данные о товаре
+      fetchProductDetails();
+    } catch (error) {
+      console.error('Ошибка при скрытии товара:', error);
+      setError('Не удалось скрыть товар');
+    }
+  };
+
+  const handleDeleteClick = () => {
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!productId) return;
+    
+    try {
+      await marketplaceApi.deleteProductAdmin(productId);
+      setDeleteDialogOpen(false);
+      // Возвращаемся к списку товаров
+      navigate('/marketplace');
+    } catch (error) {
+      console.error('Ошибка при удалении товара:', error);
+      setError('Не удалось удалить товар');
     }
   };
 
@@ -233,9 +273,35 @@ const ProductDetail: React.FC = () => {
 
             {/* Информация о товаре */}
             <Grid size={{xs: 12, md: 6}}>
-              <Typography variant="h4" component="h1" gutterBottom>
-                {product.title}
-              </Typography>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                <Typography variant="h4" component="h1">
+                  {product.title}
+                </Typography>
+                
+                {/* Кнопки администратора */}
+                {userStore.isAdmin && (
+                  <Box sx={{ display: 'flex', gap: 1 }}>
+                    <Button
+                      variant="outlined"
+                      color="primary"
+                      startIcon={<VisibilityOffIcon />}
+                      onClick={handleHideProduct}
+                      size="small"
+                    >
+                      Скрыть
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      color="error"
+                      startIcon={<DeleteIcon />}
+                      onClick={handleDeleteClick}
+                      size="small"
+                    >
+                      Удалить
+                    </Button>
+                  </Box>
+                )}
+              </Box>
               
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                 <Rating value={product.rating} precision={0.1} readOnly />
@@ -493,6 +559,25 @@ const ProductDetail: React.FC = () => {
           </Button>
         </Paper>
       )}
+
+      {/* Диалог подтверждения удаления */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+      >
+        <DialogTitle>Подтверждение удаления</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Вы уверены, что хотите удалить этот товар? Это действие нельзя отменить.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialogOpen(false)}>Отмена</Button>
+          <Button onClick={handleDeleteConfirm} color="error" autoFocus>
+            Удалить
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };

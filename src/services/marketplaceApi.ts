@@ -34,9 +34,27 @@ export interface ProductFilters {
   categories?: string[];
   brands?: string[];
   stores?: string[];
+  marketplaces?: string[];
   min_price?: number;
   max_price?: number;
   sort?: 'price-asc' | 'price-desc' | 'rating' | 'discount' | 'default';
+}
+
+export interface ProductsResponse {
+  total: number;
+  page: number;
+  limit: number;
+  products: Product[];
+}
+
+export interface Filters {
+  categories: string[];
+  stores: string[];
+  marketplaces: string[];
+  price_range: {
+    min: number;
+    max: number;
+  }
 }
 
 // Функция для защищенных запросов (требующих авторизации)
@@ -95,7 +113,7 @@ const fetchPublic = async (url: string, options: RequestInit = {}): Promise<Resp
 /**
  * Получение списка товаров с возможностью фильтрации
  */
-export const getProducts = async (filters?: ProductFilters): Promise<Product[]> => {
+export const getProducts = async (filters?: ProductFilters): Promise<ProductsResponse> => {
   try {
     const params = new URLSearchParams();
     
@@ -260,11 +278,75 @@ export const getProductCategories = async (): Promise<string[]> => {
   }
 };
 
+export const hideProduct = async (productId: string | number): Promise<Product> => {
+  if (!userStore.isAdmin) {
+    throw new Error('Недостаточно прав для выполнения операции');
+  }
+  
+  try {
+    const response = await fetchWithAuth(`${API_URL}/marketplace/admin/products/${productId}/hide`, {
+      method: 'POST'
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || 'Ошибка при скрытии товара');
+    }
+    
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error(`Ошибка при скрытии товара ${productId}:`, error);
+    throw error;
+  }
+};
+
+export const deleteProductAdmin = async (productId: string | number): Promise<void> => {
+  if (!userStore.isAdmin) {
+    throw new Error('Недостаточно прав для выполнения операции');
+  }
+  
+  try {
+    const response = await fetchWithAuth(`${API_URL}/marketplace/admin/products/${productId}`, {
+      method: 'DELETE'
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || 'Ошибка при удалении товара');
+    }
+  } catch (error) {
+    console.error(`Ошибка при удалении товара ${productId}:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Получение списка фильтров
+ */
+export const getFilters = async (): Promise<Filters> => {
+  try {
+    const response = await fetchPublic(`${API_URL}/marketplace/filters`);
+    const data = await response.json();
+    // Добавляем маркетплейсы, если их нет в ответе
+    if (!data.marketplaces) {
+      data.marketplaces = ['Ozon', 'Wildberries', 'Aliexpress', 'Другие'];
+    }
+    return data;
+  } catch (error) {
+    console.error('Ошибка при получении фильтров:', error);
+    throw error;
+  }
+};
+
 export default {
   getProducts,
   getProductById,
   addProduct,
   updateProduct,
   deleteProduct,
-  getProductCategories
+  getProductCategories,
+  hideProduct,
+  deleteProductAdmin,
+  getFilters
 }; 
