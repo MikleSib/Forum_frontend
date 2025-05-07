@@ -39,12 +39,64 @@ export interface ProductFilters {
   sort?: 'price-asc' | 'price-desc' | 'rating' | 'discount' | 'default';
 }
 
+// Функция для защищенных запросов (требующих авторизации)
+const fetchWithAuth = async (url: string, options: RequestInit = {}): Promise<Response> => {
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      ...options.headers,
+      'Authorization': `Bearer ${userStore.accessToken}`
+    }
+  });
+
+  if (response.status === 401) {
+    // Пробуем обновить токен
+    try {
+      // Обновляем токен через API
+      const refreshResponse = await fetch(`${API_URL}/auth/refresh`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          refresh_token: userStore.refreshToken
+        })
+      });
+
+      if (!refreshResponse.ok) {
+        throw new Error('Не удалось обновить токен');
+      }
+
+      const authData = await refreshResponse.json();
+      userStore.setAuth(authData);
+      
+      // Повторяем запрос с новым токеном
+      return fetch(url, {
+        ...options,
+        headers: {
+          ...options.headers,
+          'Authorization': `Bearer ${userStore.accessToken}`
+        }
+      });
+    } catch (error) {
+      console.error('Ошибка при обновлении токена:', error);
+      throw new Error('Не удалось авторизоваться');
+    }
+  }
+
+  return response;
+};
+
+// Функция для публичных запросов (не требующих авторизации)
+const fetchPublic = async (url: string, options: RequestInit = {}): Promise<Response> => {
+  return fetch(url, options);
+};
+
 /**
  * Получение списка товаров с возможностью фильтрации
  */
 export const getProducts = async (filters?: ProductFilters): Promise<Product[]> => {
   try {
-    // Построение параметров запроса
     const params = new URLSearchParams();
     
     if (filters) {
@@ -63,7 +115,7 @@ export const getProducts = async (filters?: ProductFilters): Promise<Product[]> 
         params.append('sort', filters.sort);
     }
     
-    const response = await fetch(`${API_URL}/marketplace/products${params.toString() ? `?${params.toString()}` : ''}`);
+    const response = await fetchPublic(`${API_URL}/marketplace/products${params.toString() ? `?${params.toString()}` : ''}`);
     const data = await response.json();
     return data;
   } catch (error) {
@@ -77,7 +129,7 @@ export const getProducts = async (filters?: ProductFilters): Promise<Product[]> 
  */
 export const getProductById = async (productId: string | number): Promise<Product> => {
   try {
-    const response = await fetch(`${API_URL}/marketplace/products/${productId}`);
+    const response = await fetchPublic(`${API_URL}/marketplace/products/${productId}`);
     const data = await response.json();
     return data;
   } catch (error) {
@@ -95,11 +147,10 @@ export const addProduct = async (productData: Product): Promise<Product> => {
   }
   
   try {
-    const response = await fetch(`${API_URL}/marketplace/products`, {
+    const response = await fetchWithAuth(`${API_URL}/marketplace/products`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${userStore.accessToken}`
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify(productData)
     });
@@ -126,11 +177,10 @@ export const updateProduct = async (productId: string | number, productData: Par
   }
   
   try {
-    const response = await fetch(`${API_URL}/marketplace/products/${productId}`, {
+    const response = await fetchWithAuth(`${API_URL}/marketplace/products/${productId}`, {
       method: 'PUT',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${userStore.accessToken}`
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify(productData)
     });
@@ -157,11 +207,8 @@ export const deleteProduct = async (productId: string | number): Promise<void> =
   }
   
   try {
-    const response = await fetch(`${API_URL}/marketplace/products/${productId}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${userStore.accessToken}`
-      }
+    const response = await fetchWithAuth(`${API_URL}/marketplace/products/${productId}`, {
+      method: 'DELETE'
     });
     
     if (!response.ok) {
@@ -179,7 +226,7 @@ export const deleteProduct = async (productId: string | number): Promise<void> =
  */
 export const getProductCategories = async (): Promise<string[]> => {
   try {
-    const response = await fetch(`${API_URL}/marketplace/categories`);
+    const response = await fetchPublic(`${API_URL}/marketplace/categories`);
     const data = await response.json();
     return data;
   } catch (error) {
