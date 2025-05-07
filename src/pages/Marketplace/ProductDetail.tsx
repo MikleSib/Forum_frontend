@@ -26,54 +26,31 @@ import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import { styled } from '@mui/material/styles';
+import * as marketplaceApi from '../../services/marketplaceApi';
+import { Product } from '../../services/marketplaceApi';
 
-// Типы данных
-interface Product {
-  id: number;
-  title: string;
-  price: number;
-  oldPrice?: number;
-  discount?: number;
-  image: string;
-  category: string;
-  brand: string;
-  status: 'in-stock' | 'out-of-stock' | 'sale';
-  rating: number;
-  externalUrl: string;
-  store: 'ozon' | 'wildberries' | 'aliexpress' | 'other';
-  description?: string;
-  company?: {
-    name: string;
-    rating: number;
-    productsCount: number;
-    isPremium?: boolean;
-    hasOzonDelivery?: boolean;
-    returnPeriod?: number;
-  };
-}
-
-// Моковые данные для демонстрации
+// Моковые данные для демонстрации (используем в режиме разработки при недоступности API)
 const mockProduct: Product = {
   id: 1,
   title: 'Спиннинг для рыбалки 12-в-1 спиннинг телескопический, катушка, плетенка, набор блесен, воблер, поводки',
   price: 2499,
-  oldPrice: 3500,
+  old_price: 3500,
   discount: 28,
   image: 'https://ir-5.ozone.ru/s3/multimedia-1-y/wc1000/7429171930.jpg',
   category: 'Спиннинги',
   brand: '',
   status: 'in-stock',
   rating: 4.5,
-  externalUrl: 'https://www.ozon.ru/product/spinning-dlya-rybalki-12-v-1-spinning-teleskopicheskiy-katushka-pletenka-nabor-blesen-vobler-povodki-1535817603/',
+  external_url: 'https://www.ozon.ru/product/spinning-dlya-rybalki-12-v-1-spinning-teleskopicheskiy-katushka-pletenka-nabor-blesen-vobler-povodki-1535817603/',
   store: 'ozon',
   description: 'Спиннинг телескопический 12-в-1 представляет собой готовый комплект для начинающих и опытных рыболовов. В набор входит телескопическое удилище длиной 2.1 м с тестом 10-30 г, безынерционная катушка с передним фрикционом, набор блесен, воблер, поводки и плетеная леска. Удилище изготовлено из высококачественного стекловолокна, обеспечивающего оптимальное сочетание прочности и чувствительности.',
   company: {
     name: 'SuperGoods',
     rating: 4.7,
-    productsCount: 128,
-    isPremium: true,
-    hasOzonDelivery: true,
-    returnPeriod: 7
+    products_count: 128,
+    is_premium: true,
+    has_ozon_delivery: true,
+    return_period: 7
   }
 };
 
@@ -109,18 +86,36 @@ const ProductDetail: React.FC = () => {
   const navigate = useNavigate();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [isFavorite, setIsFavorite] = useState(false);
 
   // Получение данных о продукте
   useEffect(() => {
-    setLoading(true);
-    // Имитация загрузки данных
-    setTimeout(() => {
-      // В реальном приложении здесь был бы API запрос
-      setProduct(mockProduct);
-      setLoading(false);
-    }, 500);
+    fetchProductDetails();
   }, [productId]);
+  
+  // Функция получения данных о товаре
+  const fetchProductDetails = async () => {
+    if (!productId) return;
+    
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const data = await marketplaceApi.getProductById(productId);
+      setProduct(data);
+    } catch (err) {
+      console.error('Ошибка при загрузке товара:', err);
+      setError('Не удалось загрузить данные о товаре');
+      
+      // В режиме разработки используем моковые данные
+      if (process.env.NODE_ENV === 'development') {
+        setProduct(mockProduct);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Обработчик добавления в избранное
   const handleToggleFavorite = () => {
@@ -167,6 +162,25 @@ const ProductDetail: React.FC = () => {
           )}
         </Box>
       </Box>
+
+      {error && (
+        <Paper sx={{ p: 4, textAlign: 'center', mb: 3 }}>
+          <Typography variant="h5" color="error" gutterBottom>
+            Ошибка
+          </Typography>
+          <Typography variant="body1" paragraph>
+            {error}
+          </Typography>
+          <Button 
+            variant="contained" 
+            color="primary"
+            onClick={handleBackToList}
+            startIcon={<ArrowBackIcon />}
+          >
+            Вернуться к списку товаров
+          </Button>
+        </Paper>
+      )}
 
       {loading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', my: 8 }}>
@@ -248,9 +262,9 @@ const ProductDetail: React.FC = () => {
                 <Typography variant="h5">
                   {product.price} ₽
                 </Typography>
-                {product.oldPrice && (
+                {product.old_price && (
                   <OldPrice variant="h6">
-                    {product.oldPrice} ₽
+                    {product.old_price} ₽
                   </OldPrice>
                 )}
               </PriceWrapper>
@@ -311,7 +325,7 @@ const ProductDetail: React.FC = () => {
                         </Button>
                       </Box>
                       <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
-                        {product.company.isPremium && (
+                        {product.company.is_premium && (
                           <Box component="span" sx={{ 
                             display: 'flex', 
                             alignItems: 'center', 
@@ -336,7 +350,7 @@ const ProductDetail: React.FC = () => {
                     </Box>
                   </Box>
                   
-                  {product.company.hasOzonDelivery && (
+                  {product.company.has_ozon_delivery && (
                     <Box sx={{ 
                       display: 'flex', 
                       alignItems: 'center', 
@@ -364,7 +378,7 @@ const ProductDetail: React.FC = () => {
                     </Typography>
                   </Box>
                   
-                  {product.company.returnPeriod && (
+                  {product.company.return_period && (
                     <Box sx={{ 
                       display: 'flex', 
                       alignItems: 'center', 
@@ -374,7 +388,7 @@ const ProductDetail: React.FC = () => {
                       <Box sx={{ display: 'flex', alignItems: 'center' }}>
                         <RestoreIcon fontSize="small" sx={{ color: 'action.active', mr: 2 }} />
                         <Typography variant="body2">
-                          Можно вернуть в течение {product.company.returnPeriod} дней
+                          Можно вернуть в течение {product.company.return_period} дней
                         </Typography>
                       </Box>
                       <ArrowForwardIosIcon fontSize="small" sx={{ color: 'action.active', fontSize: 14 }} />
@@ -390,7 +404,7 @@ const ProductDetail: React.FC = () => {
                   size="large"
                   startIcon={<ShoppingCartIcon />}
                   fullWidth
-                  href={product.externalUrl}
+                  href={product.external_url}
                   target="_blank"
                   disabled={product.status === 'out-of-stock'}
                 >

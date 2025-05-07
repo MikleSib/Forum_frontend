@@ -25,7 +25,8 @@ import {
   Pagination,
   IconButton,
   InputLabel,
-  SelectChangeEvent
+  SelectChangeEvent,
+  Alert
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import FilterListIcon from '@mui/icons-material/FilterList';
@@ -35,33 +36,12 @@ import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
+import AddIcon from '@mui/icons-material/Add';
 import { styled } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
-
-// Типы данных
-interface Product {
-  id: number;
-  title: string;
-  price: number;
-  oldPrice?: number;
-  discount?: number;
-  image: string;
-  category: string;
-  brand?: string;
-  status: 'in-stock' | 'out-of-stock' | 'sale';
-  rating: number;
-  externalUrl: string;
-  store: 'ozon' | 'wildberries' | 'aliexpress' | 'other';
-  description: string;
-  company?: {
-    name: string;
-    rating: number;
-    productsCount: number;
-    isPremium?: boolean;
-    hasOzonDelivery?: boolean;
-    returnPeriod?: number;
-  };
-}
+import { userStore } from '../../shared/store/userStore';
+import * as marketplaceApi from '../../services/marketplaceApi';
+import { Product, ProductFilters } from '../../services/marketplaceApi';
 
 // Стилизованные компоненты
 const ProductCard = styled(Card)(({ theme }) => ({
@@ -223,147 +203,146 @@ const DeliveryDate = styled(Box)(({ theme }) => ({
   boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
 }));
 
-// Моковые данные для демонстрации
+// Используем mockProducts только если API не работает
 const mockProducts: Product[] = [
   {
     id: 1,
     title: 'Спиннинг для рыбалки 12-в-1 спиннинг телескопический, катушка, плетенка, набор блесен, воблер, поводки',
     price: 2499,
-    oldPrice: 3500,
+    old_price: 3500,
     discount: 28,
     image: 'https://ir-5.ozone.ru/s3/multimedia-1-y/wc1000/7429171930.jpg',
     category: 'Спиннинги',
     brand: 'Рыболов',
     status: 'in-stock',
     rating: 4.5,
-    externalUrl: 'https://www.ozon.ru/product/spinning-dlya-rybalki-12-v-1-spinning-teleskopicheskiy-katushka-pletenka-nabor-blesen-vobler-povodki-1535817603/',
+    external_url: 'https://www.ozon.ru/product/spinning-dlya-rybalki-12-v-1-spinning-teleskopicheskiy-katushka-pletenka-nabor-blesen-vobler-povodki-1535817603/',
     store: 'ozon',
     description: 'Спиннинг телескопический 12-в-1 представляет собой готовый комплект для начинающих и опытных рыболовов. В набор входит телескопическое удилище длиной 2.1 м с тестом 10-30 г, безынерционная катушка с передним фрикционом, набор блесен, воблер, поводки и плетеная леска. Удилище изготовлено из высококачественного стекловолокна, обеспечивающего оптимальное сочетание прочности и чувствительности.',
     company: {
       name: 'SuperGoods',
       rating: 4.7,
-      productsCount: 128,
-      isPremium: true,
-      hasOzonDelivery: true,
-      returnPeriod: 7
+      products_count: 128,
+      is_premium: true,
+      has_ozon_delivery: true,
+      return_period: 7
     }
   },
   {
     id: 2,
     title: 'Удочка телескопическая углепластиковая для рыбалки 2.7м с катушкой и набором снастей',
     price: 3199,
-    oldPrice: 4000,
+    old_price: 4000,
     discount: 20,
     image: 'https://ir-5.ozone.ru/s3/multimedia-1-d/wc1000/7459493989.jpg',
     category: 'Спиннинги',
     brand: 'Рыболов',
     status: 'in-stock',
     rating: 4.3,
-    externalUrl: 'https://www.ozon.ru/product/udochka-dlya-rybalki-4m-katushka-rybolovnaya-leska-2-poplavka-stoporki-gruzila-kryuchki-2001380389',
+    external_url: 'https://www.ozon.ru/product/udochka-dlya-rybalki-4m-katushka-rybolovnaya-leska-2-poplavka-stoporki-gruzila-kryuchki-2001380389',
     store: 'ozon',
     description: 'Удочка телескопическая с катушкой и набором снастей',
     company: {
       name: 'FishMaster',
       rating: 4.5,
-      productsCount: 89,
-      isPremium: false,
-      hasOzonDelivery: true,
-      returnPeriod: 14
+      products_count: 89,
+      is_premium: false,
+      has_ozon_delivery: true,
+      return_period: 14
     }
   },
   {
     id: 3,
     title: 'Катушка безынерционная Salmo Premium 2000FD с передним фрикционом',
     price: 1899,
-    oldPrice: 2500,
+    old_price: 2500,
     discount: 24,
     image: 'https://ir-5.ozone.ru/s3/multimedia-1-k/wc1000/6996048284.jpg',
     category: 'Катушки',
     brand: 'Salmo',
     status: 'sale',
     rating: 4.8,
-    externalUrl: 'https://www.ozon.ru/product/udochka-dlya-rybalki-6m-katushka-rybolovnaya-leska-2-poplavka-stoporki-gruzila-kryuchki-2001380400',
+    external_url: 'https://www.ozon.ru/product/udochka-dlya-rybalki-6m-katushka-rybolovnaya-leska-2-poplavka-stoporki-gruzila-kryuchki-2001380400',
     store: 'ozon',
     description: 'Катушка безынерционная с передним фрикционом',
     company: {
       name: 'РыбоLove',
       rating: 4.9,
-      productsCount: 145,
-      isPremium: true,
-      hasOzonDelivery: true,
-      returnPeriod: 30
+      products_count: 145,
+      is_premium: true,
+      has_ozon_delivery: true,
+      return_period: 30
     }
   },
   {
     id: 4,
     title: 'Набор воблеров для ловли щуки, окуня, судака 10 штук с коробкой',
     price: 1299,
-    oldPrice: 1799,
+    old_price: 1799,
     discount: 28,
     image: 'https://ir-5.ozone.ru/s3/multimedia-1-t/wc1000/7459565609.jpg',
     category: 'Приманки',
     brand: 'FishPro',
     status: 'in-stock',
     rating: 4.6,
-    externalUrl: 'https://www.ozon.ru/product/udochka-dlya-rybalki-5m-katushka-rybolovnaya-leska-2-poplavka-stoporki-gruzila-kryuchki-2001381521',
+    external_url: 'https://www.ozon.ru/product/udochka-dlya-rybalki-5m-katushka-rybolovnaya-leska-2-poplavka-stoporki-gruzila-kryuchki-2001381521',
     store: 'ozon',
     description: 'Набор из 10 воблеров для ловли хищной рыбы',
     company: {
       name: 'FishPro',
       rating: 4.4,
-      productsCount: 67,
-      isPremium: false,
-      hasOzonDelivery: true,
-      returnPeriod: 14
+      products_count: 67,
+      is_premium: false,
+      has_ozon_delivery: true,
+      return_period: 14
     }
   },
   {
     id: 5,
     title: 'Плетеная леска 0.14мм 100м зеленая для спиннинга',
     price: 899,
-    oldPrice: 1100,
+    old_price: 1100,
     discount: 18,
     image: 'https://ir-5.ozone.ru/s3/multimedia-1-m/wc1000/7232886706.jpg',
     category: 'Леска и шнуры',
     brand: 'Sunline',
     status: 'in-stock',
     rating: 4.7,
-    externalUrl: 'https://www.ozon.ru/product/spinning-dlya-rybalki-7-v-1-spinning-teleskopicheskiy-katushka-blesna-vobler-povodki-1535766653',
+    external_url: 'https://www.ozon.ru/product/spinning-dlya-rybalki-7-v-1-spinning-teleskopicheskiy-katushka-blesna-vobler-povodki-1535766653',
     store: 'ozon',
     description: 'Плетеная леска для спиннинговой ловли',
     company: {
       name: 'АкваМир',
       rating: 4.3,
-      productsCount: 112,
-      isPremium: false,
-      hasOzonDelivery: true,
-      returnPeriod: 7
+      products_count: 112,
+      is_premium: false,
+      has_ozon_delivery: true,
+      return_period: 7
     }
   },
   {
     id: 6,
     title: 'Ящик рыболовный трехъярусный со съемными отделениями',
     price: 2299,
-    oldPrice: 2799,
+    old_price: 2799,
     discount: 18,
     image: 'https://ir-5.ozone.ru/s3/multimedia-1-e/wc1000/7429182098.jpg',
     category: 'Ящики и сумки',
     brand: 'FishBox',
     status: 'in-stock',
     rating: 4.4,
-    externalUrl: 'https://www.ozon.ru/product/udochka-dlya-zimney-rybalki-kivok-poplavok-motylnitsa-leska-puchkovyaz-nozhnitsy-motyl-mormyshki-1751874655',
+    external_url: 'https://www.ozon.ru/product/udochka-dlya-zimney-rybalki-kivok-poplavok-motylnitsa-leska-puchkovyaz-nozhnitsy-motyl-mormyshki-1751874655',
     store: 'ozon',
     description: 'Ящик для рыболовных снастей с тремя отделениями',
     company: {
       name: 'Рыбак',
       rating: 4.2,
-      productsCount: 53,
-      isPremium: false,
-      hasOzonDelivery: true,
-      returnPeriod: 14
+      products_count: 53,
+      is_premium: false,
+      has_ozon_delivery: true,
+      return_period: 14
     }
   }
-  
 ];
 
 // Фильтры
@@ -378,9 +357,10 @@ const stores = [
 
 const Marketplace: React.FC = () => {
   const navigate = useNavigate();
-  const [products, setProducts] = useState<Product[]>(mockProducts);
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>(mockProducts);
-  const [loading, setLoading] = useState(false);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
   // Состояния для фильтров
   const [searchQuery, setSearchQuery] = useState('');
@@ -390,6 +370,43 @@ const Marketplace: React.FC = () => {
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000]);
   const [sortOption, setSortOption] = useState<string>('default');
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  
+  // Загрузка товаров с сервера
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+  
+  // Функция получения товаров
+  const fetchProducts = async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      // Подготавливаем фильтры для API
+      const filters: ProductFilters = {
+        search: searchQuery || undefined,
+        categories: selectedCategories.length > 0 ? selectedCategories : undefined,
+        brands: selectedBrands.length > 0 ? selectedBrands : undefined,
+        stores: selectedStores.length > 0 ? selectedStores as any : undefined,
+        min_price: priceRange[0],
+        max_price: priceRange[1],
+        sort: sortOption !== 'default' ? sortOption as any : undefined
+      };
+      
+      const data = await marketplaceApi.getProducts(filters);
+      setProducts(data);
+      setFilteredProducts(data);
+    } catch (err) {
+      console.error('Ошибка при загрузке товаров:', err);
+      setError('Не удалось загрузить товары. Пожалуйста, попробуйте позже.');
+      
+      // Используем моковые данные в случае ошибки
+      setProducts(mockProducts);
+      setFilteredProducts(mockProducts);
+    } finally {
+      setLoading(false);
+    }
+  };
   
   // Обработчики изменения фильтров
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -432,77 +449,33 @@ const Marketplace: React.FC = () => {
     navigate(`/marketplace/product/${id}`);
   };
   
+  const handleAddProduct = () => {
+    navigate('/marketplace/add-product');
+  };
+  
   // Применение фильтров
   useEffect(() => {
-    setLoading(true);
-    
-    // Фильтрация продуктов по всем критериям
-    let filtered = [...products];
-    
-    // Поиск по запросу
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(product => 
-        product.title.toLowerCase().includes(query) || 
-        product.brand?.toLowerCase().includes(query) ||
-        product.category.toLowerCase().includes(query)
-      );
-    }
-    
-    // Фильтрация по категориям
-    if (selectedCategories.length > 0) {
-      filtered = filtered.filter(product => 
-        selectedCategories.includes(product.category)
-      );
-    }
-    
-    // Фильтрация по брендам
-    if (selectedBrands.length > 0) {
-      filtered = filtered.filter(product => 
-        selectedBrands.includes(product.brand || '')
-      );
-    }
-    
-    // Фильтрация по магазинам
-    if (selectedStores.length > 0) {
-      filtered = filtered.filter(product => 
-        selectedStores.includes(product.store)
-      );
-    }
-    
-    // Фильтрация по цене
-    filtered = filtered.filter(product => 
-      product.price >= priceRange[0] && product.price <= priceRange[1]
-    );
-    
-    // Сортировка
-    switch (sortOption) {
-      case 'price-asc':
-        filtered.sort((a, b) => a.price - b.price);
-        break;
-      case 'price-desc':
-        filtered.sort((a, b) => b.price - a.price);
-        break;
-      case 'rating':
-        filtered.sort((a, b) => b.rating - a.rating);
-        break;
-      case 'discount':
-        filtered.sort((a, b) => (b.discount || 0) - (a.discount || 0));
-        break;
-      default:
-        // По умолчанию - без сортировки
-        break;
-    }
-    
-    setFilteredProducts(filtered);
-    setLoading(false);
-  }, [products, searchQuery, selectedCategories, selectedBrands, selectedStores, priceRange, sortOption]);
+    // Вызываем API с новыми фильтрами при изменении параметров
+    fetchProducts();
+  }, [searchQuery, selectedCategories, selectedBrands, selectedStores, priceRange, sortOption]);
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Typography variant="h4" component="h1" gutterBottom>
-        Магазин рыболовных товаров
-      </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Typography variant="h4" component="h1" gutterBottom>
+          Магазин рыболовных товаров
+        </Typography>
+        {userStore.isAdmin && (
+          <Button 
+            variant="contained" 
+            color="primary" 
+            startIcon={<AddIcon />}
+            onClick={handleAddProduct}
+          >
+            Добавить товар
+          </Button>
+        )}
+      </Box>
       <Typography variant="body1" color="text.secondary" paragraph>
         Здесь вы найдете лучшие товары для рыбалки от проверенных продавцов с разных маркетплейсов.
       </Typography>
@@ -707,6 +680,13 @@ const Marketplace: React.FC = () => {
             </Typography>
           </Box>
           
+          {/* Добавляем отображение ошибки */}
+          {error && (
+            <Alert severity="error" sx={{ mb: 3 }}>
+              {error}
+            </Alert>
+          )}
+          
           {/* Список товаров */}
           {loading ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', my: 8 }}>
@@ -723,7 +703,7 @@ const Marketplace: React.FC = () => {
                     p: '2.5px'
                   }}>
                     <ProductCard 
-                      onClick={() => handleProductClick(product.id)} 
+                      onClick={() => handleProductClick(product.id || 0)} 
                       sx={{ 
                         height: '580px',
                         position: 'relative',

@@ -21,6 +21,7 @@ import CreateTopic from './pages/Forum/CreateTopic';
 import CreateCategory from './pages/Forum/CreateCategory';
 import Marketplace from './pages/Marketplace';
 import ProductDetail from './pages/Marketplace/ProductDetail';
+import AddProduct from './pages/Marketplace/AddProduct';
 import { userStore } from './shared/store/userStore';
 
 const theme = createTheme({
@@ -133,6 +134,7 @@ function App() {
                 <Route path="news/create" element={<CreateNews />} />
                 <Route path="forum/create-category" element={<CreateCategory />} />
                 <Route path="forum/category/:categoryId/create-subcategory" element={<CreateCategory />} />
+                <Route path="marketplace/add-product" element={<AddProduct />} />
               </>
             )}
           </Route>
