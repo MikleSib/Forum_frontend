@@ -147,12 +147,19 @@ export const addProduct = async (productData: Product): Promise<Product> => {
   }
   
   try {
+    // Преобразуем image в image_url для API
+    const { image, ...restData } = productData;
+    const dataToSend = {
+      ...restData,
+      image_url: image
+    };
+
     const response = await fetchWithAuth(`${API_URL}/marketplace/products`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(productData)
+      body: JSON.stringify(dataToSend)
     });
     
     if (!response.ok) {
