@@ -51,10 +51,10 @@ const SocialCallback: React.FC = () => {
           const response = await authApi.socialAuth.vk(code, deviceId || undefined);
           console.log('Ответ от сервера:', response);
           
-          // После успешной авторизации перенаправляем на главную страницу
-          console.log('Авторизация успешна, перенаправление на главную страницу...');
           setError(null);
-          navigate('/');
+          setLoading(false);
+          console.log('Авторизация успешна, перенаправление на главную страницу...');
+          navigate('https://рыбный-форум.рф');
         } catch (apiError: any) {
           console.error('Ошибка при отправке запроса:', apiError);
           setError(apiError.message || 'Ошибка при авторизации');
