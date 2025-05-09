@@ -49,7 +49,8 @@ const SocialLoginButtons: React.FC<SocialLoginButtonsProps> = ({ onSuccess, onEr
 
     try {
       // Формируем URL для возврата
-      const redirectUrl = `https://xn----7sbabmzz6b9c.xn--p1ai`;
+      const redirectUrl = `https://xn----9sbyncijf1ah6ec.xn--p1ai`;
+      
       console.log('Используем redirect URL:', redirectUrl);
 
       // Инициализация SDK в соответствии с документацией
