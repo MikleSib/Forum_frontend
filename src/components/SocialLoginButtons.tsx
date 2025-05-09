@@ -3,6 +3,8 @@ import { Box } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { authApi } from '../services/auth';
 import * as VKID from '@vkid/sdk';
+import { userStore } from '../shared/store/userStore';
+import { AUTH_STATUS_CHANGED } from '../components/Header';
 
 declare global {
   interface Window {
@@ -20,10 +22,26 @@ const SocialLoginButtons: React.FC<SocialLoginButtonsProps> = ({ onSuccess, onEr
   const navigate = useNavigate();
 
   const handleSuccess = (data: any) => {
+    console.log('Успешная авторизация:', data);
+    
+    // Сохраняем токены
+    if (data.access_token && data.refresh_token) {
+      localStorage.setItem('access_token', data.access_token);
+      localStorage.setItem('refresh_token', data.refresh_token);
+    }
+
+    // Обновляем состояние пользователя
+    if (data.user) {
+      userStore.setAuth(data);
+    }
+
+    // Оповещаем компоненты об изменении статуса авторизации
+    window.dispatchEvent(new Event(AUTH_STATUS_CHANGED));
+
     if (onSuccess) {
       onSuccess(data);
     } else {
-      navigate('/');
+      navigate('/dashboard');
     }
   };
 
