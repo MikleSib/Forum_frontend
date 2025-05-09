@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { CircularProgress, Box, Typography, Container, Paper } from '@mui/material';
-import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { authApi } from '../../services/auth';
 
 // Объявляем глобальный объект VKIDSDK
@@ -14,130 +14,49 @@ declare global {
 const SocialCallback: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { provider } = useParams<{ provider: string }>();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<string>('Выполняется вход...');
 
   useEffect(() => {
-    // Функция для загрузки VK ID SDK
-    const loadVKIDSDK = () => {
-      return new Promise<void>((resolve, reject) => {
-        if (window.VKIDSDK) {
-          resolve();
-          return;
-        }
-
-        const script = document.createElement('script');
-        script.src = 'https://id.vk.com/js/sdk/oauth.js';
-        script.async = true;
-        script.onload = () => resolve();
-        script.onerror = () => reject(new Error('Не удалось загрузить VK ID SDK'));
-        
-        document.body.appendChild(script);
-      });
-    };
-
     const processAuth = async () => {
       try {
-        // Загружаем SDK, если он еще не загружен
-        await loadVKIDSDK();
-        
+        console.log('Начало обработки авторизации...');
         const searchParams = new URLSearchParams(location.search);
         const code = searchParams.get('code');
-        const payload = searchParams.get('payload');
-        const error = searchParams.get('error');
-        const errorDescription = searchParams.get('error_description');
+        const state = searchParams.get('state');
+        const expiresIn = searchParams.get('expires_in');
+        const deviceId = searchParams.get('device_id');
+        const extId = searchParams.get('ext_id');
+        const type = searchParams.get('type');
 
-        // Проверяем наличие ошибок в параметрах
-        if (error) {
-          throw new Error(errorDescription || `Ошибка OAuth: ${error}`);
+        console.log('Получены параметры авторизации:', {
+          code,
+          state,
+          expiresIn,
+          deviceId,
+          extId,
+          type
+        });
+
+        if (!code) {
+          throw new Error('Код авторизации не найден');
         }
 
-        // Инициализируем SDK
-        if (window.VKIDSDK) {
-          const VKID = window.VKIDSDK;
+        setMessage('Обмен кода авторизации на токен...');
+        console.log('Отправка запроса на обмен кода...');
+
+        try {
+          // Отправляем запрос к нашему API для обмена кода на токен
+          const response = await authApi.socialAuth.vk(code);
+          console.log('Ответ от сервера:', response);
           
-          VKID.Config.init({
-            app: 53543107,
-            redirectUrl: window.location.origin,
-          });
-
-          // Если есть код авторизации в параметрах URL
-          if (code) {
-            setMessage('Обмен кода авторизации на токен...');
-            
-            // Определяем тип провайдера из URL
-            let apiProvider: 'vk' | 'mailru' | 'ok' | null = null;
-            if (provider) {
-              switch (provider) {
-                case 'vk':
-                  apiProvider = 'vk';
-                  break;
-                case 'mailru':
-                  apiProvider = 'mailru';
-                  break;
-                case 'ok':
-                  apiProvider = 'ok';
-                  break;
-              }
-            }
-
-            if (apiProvider) {
-              // Отправляем запрос к нашему API для обмена кода на токен
-              await authApi.socialAuth[apiProvider](code);
-              navigate('/');
-              return;
-            } else {
-              // Стандартный обмен кода на токен через VK ID API
-              const result = await VKID.Auth.exchangeCode(code);
-              console.log('Обмен кода успешно выполнен:', result);
-              navigate('/');
-              return;
-            }
-          } 
-          // Если есть payload в параметрах URL (для VKID SDK)
-          else if (payload) {
-            setMessage('Обработка данных авторизации...');
-            try {
-              // Декодируем payload
-              const decodedPayload = JSON.parse(decodeURIComponent(payload));
-              console.log('Получен payload:', decodedPayload);
-              
-              const { code: vkidCode, oauth_name: oauthName } = decodedPayload;
-              
-              // Преобразуем имя провайдера в формат нашего API
-              let apiProvider: 'vk' | 'mailru' | 'ok' | null = null;
-              
-              switch (oauthName) {
-                case 'vkid':
-                  apiProvider = 'vk';
-                  break;
-                case 'mail_ru':
-                  apiProvider = 'mailru';
-                  break;
-                case 'ok_ru':
-                  apiProvider = 'ok';
-                  break;
-              }
-
-              if (apiProvider && vkidCode) {
-                // Отправляем запрос к нашему API
-                await authApi.socialAuth[apiProvider](vkidCode);
-                navigate('/');
-                return;
-              } else {
-                throw new Error('В payload отсутствуют необходимые данные');
-              }
-            } catch (err) {
-              console.error('Ошибка при обработке payload:', err);
-              throw new Error('Ошибка при обработке данных авторизации');
-            }
-          } else {
-            throw new Error('Не найдены данные для авторизации в URL');
-          }
-        } else {
-          throw new Error('Не удалось инициализировать VK ID SDK');
+          // После успешной авторизации перенаправляем на главную страницу
+          console.log('Авторизация успешна, перенаправление на главную страницу...');
+          navigate('/');
+        } catch (apiError: any) {
+          console.error('Ошибка при отправке запроса:', apiError);
+          throw new Error(`Ошибка при обмене кода: ${apiError.message || 'Неизвестная ошибка'}`);
         }
       } catch (err: any) {
         console.error('Ошибка при авторизации:', err);
@@ -147,7 +66,7 @@ const SocialCallback: React.FC = () => {
     };
 
     processAuth();
-  }, [location.search, navigate, provider]);
+  }, [location.search, navigate]);
 
   // Отображаем индикатор загрузки
   if (loading) {

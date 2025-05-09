@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { GlobalStyles } from '@mui/material';
@@ -116,7 +116,14 @@ function App() {
       <GlobalStyles styles={globalStyles} />
       <Router>
         <Routes>
-          <Route path="/" element={<MainLayout />}>
+          {/* Обработка callback от VK на корневом URL */}
+          <Route path="/" element={
+            window.location.search.includes('code=') ? (
+              <SocialCallback />
+            ) : (
+              <MainLayout />
+            )
+          }>
             <Route index element={<Dashboard />} />
             <Route path="profile" element={<Profile />} />
             <Route path="create-post" element={<CreatePost />} />

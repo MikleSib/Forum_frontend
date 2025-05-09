@@ -295,7 +295,15 @@ export const authApi = {
     window.dispatchEvent(new Event(AUTH_STATUS_CHANGED));
   },
   socialAuth: {
-    vk: (code: string) => socialLogin('vk', code),
+    vk: async (code: string) => {
+      const response = await axios.post(`${API_URL}/auth/social/vk`, null, {
+        params: {
+          code,
+          provider: 'vk'
+        }
+      });
+      return response.data;
+    },
     mailru: (code: string) => socialLogin('mailru', code),
     ok: (code: string) => socialLogin('ok', code),
     getVKAuthUrl,
