@@ -3,7 +3,6 @@ import API_URL from '../config/api';
 import axios from 'axios';
 import { userStore } from '../shared/store/userStore';
 import { AUTH_STATUS_CHANGED } from '../components/Header';
-import crypto from 'crypto-js';
 
 // Функция для обработки HTTP ошибок с обновлением токена
 export const handleErrors = async (error: any) => {
@@ -194,20 +193,26 @@ const generateCodeVerifier = (): string => {
 };
 
 // Функция для создания code_challenge из code_verifier
-const createCodeChallenge = (verifier: string): string => {
-  const hash = crypto.SHA256(verifier);
-  return crypto.enc.Base64.stringify(hash)
+const createCodeChallenge = async (verifier: string): Promise<string> => {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(verifier);
+  const hash = await window.crypto.subtle.digest('SHA-256', data);
+  
+  // Конвертируем ArrayBuffer в Base64
+  const base64 = btoa(String.fromCharCode(...new Uint8Array(hash)))
     .replace(/\+/g, '-')
     .replace(/\//g, '_')
     .replace(/=/g, '');
+    
+  return base64;
 };
 
 // Генерация URL для авторизации через VK
-export const getVKAuthUrl = (): string => {
+export const getVKAuthUrl = async (): Promise<string> => {
   // Генерируем code_verifier
   const codeVerifier = generateCodeVerifier();
   // Создаем code_challenge
-  const codeChallenge = createCodeChallenge(codeVerifier);
+  const codeChallenge = await createCodeChallenge(codeVerifier);
   
   // Сохраняем code_verifier в localStorage
   localStorage.setItem('vk_code_verifier', codeVerifier);
