@@ -85,6 +85,7 @@ const Login: React.FC = () => {
 
   const handleSocialSuccess = (data: any) => {
     console.log('Успешный вход через соцсеть:', data);
+    setError(null);
     navigate('/');
   };
 
