@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { Box } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { authApi } from '../services/auth';
+import * as VKID from '@vkid/sdk';
 
 declare global {
   interface Window {
@@ -33,19 +34,44 @@ const SocialLoginButtons: React.FC<SocialLoginButtonsProps> = ({ onSuccess, onEr
     }
   };
 
-  const initVKID = () => {
-    if (!window.VKIDSDK) {
-      console.error('VKID SDK не загружен');
-      return;
-    }
+  // Функция для генерации state
+  const generateState = (): string => {
+    const array = new Uint8Array(32);
+    window.crypto.getRandomValues(array);
+    return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+  };
 
+  // Функция для генерации code_verifier
+  const generateCodeVerifier = (): string => {
+    const array = new Uint8Array(32);
+    window.crypto.getRandomValues(array);
+    return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+  };
+
+  // Функция для создания code_challenge
+  const createCodeChallenge = async (verifier: string): Promise<string> => {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(verifier);
+    const hash = await window.crypto.subtle.digest('SHA-256', data);
+    
+    const bytes = new Uint8Array(hash);
+    let binary = '';
+    for (let i = 0; i < bytes.byteLength; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    const base64 = btoa(binary)
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=/g, '');
+      
+    return base64;
+  };
+
+  const initVKID = async () => {
     if (!containerRef.current) {
       console.error('Контейнер для кнопок не найден');
       return;
     }
-
-    const VKID = window.VKIDSDK;
-    console.log('Инициализация VKID SDK...', VKID);
 
     try {
       // Формируем URL для возврата
@@ -53,14 +79,22 @@ const SocialLoginButtons: React.FC<SocialLoginButtonsProps> = ({ onSuccess, onEr
       
       console.log('Используем redirect URL:', redirectUrl);
 
+      // Генерируем state
+      const state = generateState();
+      localStorage.setItem('vk_auth_state', state);
+
+      // Генерируем code_verifier и code_challenge
+      const codeVerifier = generateCodeVerifier();
+      const codeChallenge = await createCodeChallenge(codeVerifier);
+      localStorage.setItem('vk_code_verifier', codeVerifier);
+
       // Инициализация SDK в соответствии с документацией
       VKID.Config.init({
         app: 53543107,
         redirectUrl: redirectUrl,
-        responseType: 'code',
-        responseMode: 'redirect',
-        source: 'lowcode',
         scope: 'email',
+        state: state,
+        codeChallenge: codeChallenge,
       });
 
       // Создаем список методов авторизации
@@ -72,9 +106,8 @@ const SocialLoginButtons: React.FC<SocialLoginButtonsProps> = ({ onSuccess, onEr
         container: containerRef.current,
         styles: {
           borderRadius: 23,
-          theme: 'light',
         },
-        oauthList: ['vkid', 'ok_ru', 'mail_ru']
+        oauthList: [VKID.OAuthName.VK, VKID.OAuthName.OK, VKID.OAuthName.MAIL]
       })
       .on('error', (error: any) => {
         console.error('Ошибка VK ID:', error);
@@ -86,27 +119,32 @@ const SocialLoginButtons: React.FC<SocialLoginButtonsProps> = ({ onSuccess, onEr
         const code = payload.code;
         const deviceId = payload.device_id;
         const provider = payload.oauth_name;
+        const returnedState = payload.state;
+
+        // Проверяем state
+        const savedState = localStorage.getItem('vk_auth_state');
+        if (returnedState !== savedState) {
+          console.error('Неверный state параметр');
+          handleError(new Error('Ошибка безопасности: неверный state параметр'));
+          return;
+        }
 
         let apiProvider: 'vk' | 'mailru' | 'ok' | null = null;
         
         switch (provider) {
-          case 'vkid':
+          case VKID.OAuthName.VK:
             apiProvider = 'vk';
             break;
-          case 'mail_ru':
+          case VKID.OAuthName.MAIL:
             apiProvider = 'mailru';
             break;
-          case 'ok_ru':
+          case VKID.OAuthName.OK:
             apiProvider = 'ok';
             break;
         }
 
         if (apiProvider) {
-          authApi.socialAuth[apiProvider](code)
-            .then(handleSuccess)
-            .catch(handleError);
-        } else {
-          VKID.Auth.exchangeCode(code, deviceId)
+          authApi.socialAuth[apiProvider](code, deviceId)
             .then(handleSuccess)
             .catch(handleError);
         }
@@ -123,24 +161,7 @@ const SocialLoginButtons: React.FC<SocialLoginButtonsProps> = ({ onSuccess, onEr
   };
 
   useEffect(() => {
-    // Динамически загружаем скрипт VKID SDK
-    const script = document.createElement('script');
-    script.src = 'https://unpkg.com/@vkid/sdk@2.5.2/dist-sdk/umd/index.js';
-    script.async = true;
-    script.onload = initVKID;
-    script.onerror = () => {
-      console.error('Ошибка при загрузке VKID SDK');
-      handleError(new Error('Не удалось загрузить SDK для социальной авторизации'));
-    };
-    
-    document.body.appendChild(script);
-
-    return () => {
-      const scriptElement = document.querySelector('script[src="https://unpkg.com/@vkid/sdk@2.5.2/dist-sdk/umd/index.js"]');
-      if (scriptElement && scriptElement.parentNode) {
-        scriptElement.parentNode.removeChild(scriptElement);
-      }
-    };
+    initVKID();
   }, []);
 
   return (

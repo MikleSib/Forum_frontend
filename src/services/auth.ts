@@ -212,15 +212,26 @@ const createCodeChallenge = async (verifier: string): Promise<string> => {
   return base64;
 };
 
+// Функция для генерации state
+const generateState = (): string => {
+  const array = new Uint8Array(32);
+  window.crypto.getRandomValues(array);
+  return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+};
+
 // Генерация URL для авторизации через VK
 export const getVKAuthUrl = async (): Promise<string> => {
   // Генерируем code_verifier
   const codeVerifier = generateCodeVerifier();
+  console.log('Сгенерирован code_verifier:', codeVerifier);
+  
   // Создаем code_challenge
   const codeChallenge = await createCodeChallenge(codeVerifier);
+  console.log('Создан code_challenge:', codeChallenge);
   
   // Сохраняем code_verifier в localStorage
   localStorage.setItem('vk_code_verifier', codeVerifier);
+  console.log('code_verifier сохранен в localStorage:', localStorage.getItem('vk_code_verifier'));
   
   // ID приложения из личного кабинета VK ID
   const clientId = '53543107';
@@ -232,7 +243,7 @@ export const getVKAuthUrl = async (): Promise<string> => {
   const scope = 'email';
   
   // Формируем URL для OAuth 2.1 с PKCE
-  return `https://id.vk.com/auth?app_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}&response_type=code&code_challenge=${codeChallenge}&code_challenge_method=S256`;
+  return `https://id.vk.com/auth?app_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}&response_type=code&code_challenge=${codeChallenge}&code_challenge_method=S256&state=${generateState()}`;
 };
 
 // Генерация URL для авторизации через Mail.ru
@@ -333,8 +344,16 @@ export const authApi = {
     vk: async (code: string, deviceId?: string) => {
       // Получаем сохраненный code_verifier
       const codeVerifier = localStorage.getItem('vk_code_verifier');
+      console.log('Получен code_verifier из localStorage:', codeVerifier);
+      
+      if (!codeVerifier) {
+        console.error('code_verifier не найден в localStorage');
+        throw new Error('Не удалось найти code_verifier для обмена кода');
+      }
+      
       // Удаляем его из localStorage, так как он больше не нужен
       localStorage.removeItem('vk_code_verifier');
+      console.log('code_verifier удален из localStorage');
 
       const response = await axios.post(`${API_URL}/auth/social/vk`, null, {
         params: {
