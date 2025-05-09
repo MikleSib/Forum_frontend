@@ -53,10 +53,12 @@ const SocialCallback: React.FC = () => {
           
           // После успешной авторизации перенаправляем на главную страницу
           console.log('Авторизация успешна, перенаправление на главную страницу...');
+          setError(null);
           navigate('/');
         } catch (apiError: any) {
           console.error('Ошибка при отправке запроса:', apiError);
-          throw new Error(`Ошибка при обмене кода: ${apiError.message || 'Неизвестная ошибка'}`);
+          setError(apiError.message || 'Ошибка при авторизации');
+          setLoading(false);
         }
       } catch (err: any) {
         console.error('Ошибка при авторизации:', err);
