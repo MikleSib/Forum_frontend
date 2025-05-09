@@ -41,7 +41,7 @@ const SocialLoginButtons: React.FC<SocialLoginButtonsProps> = ({ onSuccess, onEr
     if (onSuccess) {
       onSuccess(data);
     } else {
-      navigate('/dashboard');
+      navigate('/');
     }
   };
 
