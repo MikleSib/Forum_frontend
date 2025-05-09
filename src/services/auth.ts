@@ -295,11 +295,12 @@ export const authApi = {
     window.dispatchEvent(new Event(AUTH_STATUS_CHANGED));
   },
   socialAuth: {
-    vk: async (code: string) => {
+    vk: async (code: string, deviceId?: string) => {
       const response = await axios.post(`${API_URL}/auth/social/vk`, null, {
         params: {
           code,
-          provider: 'vk'
+          provider: 'vk',
+          device_id: deviceId
         }
       });
       return response.data;
