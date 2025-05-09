@@ -116,14 +116,8 @@ function App() {
       <GlobalStyles styles={globalStyles} />
       <Router>
         <Routes>
-          {/* Обработка callback от VK на корневом URL */}
-          <Route path="/" element={
-            window.location.search.includes('code=') ? (
-              <SocialCallback />
-            ) : (
-              <MainLayout />
-            )
-          }>
+          {/* Главная страница и дашборд */}
+          <Route path="/" element={<MainLayout />}>
             <Route index element={<Dashboard />} />
             <Route path="profile" element={<Profile />} />
             <Route path="create-post" element={<CreatePost />} />
@@ -149,7 +143,8 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
-          <Route path="/auth/:provider/callback" element={<SocialCallback />} />
+          {/* Обработка callback от соцсетей */}
+          <Route path="/auth/social/:provider" element={<SocialCallback />} />
         </Routes>
       </Router>
     </ThemeProvider>
