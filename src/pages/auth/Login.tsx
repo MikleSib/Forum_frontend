@@ -8,9 +8,11 @@ import {
   Button,
   Box,
   Alert,
-  Link
+  Link,
+  Divider
 } from '@mui/material';
 import { authApi } from '../../services/auth';
+import SocialLoginButtons from '../../components/SocialLoginButtons';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -67,6 +69,23 @@ const Login: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSocialError = (err: any) => {
+    console.error('Ошибка при входе через соцсеть:', err);
+    let errorMessage = 'Произошла ошибка при входе через социальную сеть';
+    
+    // Если есть сообщение об ошибке в объекте ошибки
+    if (err && err.message) {
+      errorMessage = err.message;
+    }
+    
+    setError(errorMessage);
+  };
+
+  const handleSocialSuccess = (data: any) => {
+    console.log('Успешный вход через соцсеть:', data);
+    navigate('/');
   };
 
   return (
@@ -134,7 +153,17 @@ const Login: React.FC = () => {
             >
               {loading ? 'Вход...' : 'Войти'}
             </Button>
-            <Box sx={{ textAlign: 'center' }}>
+            
+            <Divider sx={{ my: 2 }}>или войти через</Divider>
+            
+            <Box sx={{ mt: 2, mb: 2 }}>
+              <SocialLoginButtons 
+                onError={handleSocialError} 
+                onSuccess={handleSocialSuccess}
+              />
+            </Box>
+            
+            <Box sx={{ textAlign: 'center', mt: 2 }}>
               <Link href="/register" variant="body2">
                 {"Нет аккаунта? Зарегистрируйтесь"}
               </Link>

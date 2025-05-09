@@ -23,6 +23,7 @@ import Marketplace from './pages/Marketplace';
 import ProductDetail from './pages/Marketplace/ProductDetail';
 import AddProduct from './pages/Marketplace/AddProduct';
 import { userStore } from './shared/store/userStore';
+import SocialCallback from './pages/auth/SocialCallback';
 
 const theme = createTheme({
   palette: {
@@ -141,6 +142,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
+          <Route path="/auth/:provider/callback" element={<SocialCallback />} />
         </Routes>
       </Router>
     </ThemeProvider>

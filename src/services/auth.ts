@@ -154,6 +154,76 @@ export const refreshToken = async (): Promise<AuthResponse> => {
   }
 };
 
+// Вход через социальные сети
+export const socialLogin = async (provider: 'vk' | 'mailru' | 'ok', code: string): Promise<AuthResponse> => {
+  try {
+    // Формируем параметры запроса в зависимости от провайдера
+    const payload = { code, provider };
+
+    // Делаем запрос к серверу для обмена кода на токены
+    const response = await axios.post(`${API_URL}/auth/social/${provider}`, payload);
+    
+    if (response.data) {
+      // Сохраняем токены в localStorage
+      localStorage.setItem('access_token', response.data.access_token);
+      localStorage.setItem('refresh_token', response.data.refresh_token);
+      
+      // Обновляем состояние в UserStore
+      userStore.setAuth(response.data);
+      
+      // Оповещаем компоненты, что статус авторизации изменился
+      window.dispatchEvent(new Event(AUTH_STATUS_CHANGED));
+    }
+    
+    return response.data;
+  } catch (error) {
+    console.error(`Ошибка при входе через ${provider}:`, error);
+    if (axios.isAxiosError(error) && error.response) {
+      console.error('Детали ошибки:', error.response.data);
+    }
+    throw error;
+  }
+};
+
+// Генерация URL для авторизации через VK
+export const getVKAuthUrl = (): string => {
+  // ID приложения из личного кабинета VK ID
+  const clientId = '53543107';
+  
+  // URL для возврата после авторизации
+  const redirectUri = encodeURIComponent(`${window.location.origin}/auth/vk/callback`);
+  
+  // Запрашиваемый доступ - email обязателен для идентификации
+  const scope = 'email';
+  
+  // Формируем URL для OAuth 2.1
+  return `https://id.vk.com/auth?app_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}&response_type=code`;
+};
+
+// Генерация URL для авторизации через Mail.ru
+export const getMailRuAuthUrl = (): string => {
+  // ID приложения из личного кабинета VK ID
+  const clientId = '53543107';
+  
+  // URL для возврата после авторизации
+  const redirectUri = encodeURIComponent(`${window.location.origin}/auth/mailru/callback`);
+  
+  // Формируем URL для OAuth 2.0
+  return `https://oauth.mail.ru/login?client_id=${clientId}&response_type=code&redirect_uri=${redirectUri}&scope=userinfo`;
+};
+
+// Генерация URL для авторизации через Одноклассники
+export const getOKAuthUrl = (): string => {
+  // ID приложения из личного кабинета VK ID
+  const clientId = '53543107';
+  
+  // URL для возврата после авторизации
+  const redirectUri = encodeURIComponent(`${window.location.origin}/auth/ok/callback`);
+  
+  // Формируем URL для OAuth 2.0
+  return `https://connect.ok.ru/oauth/authorize?client_id=${clientId}&scope=GET_EMAIL&response_type=code&redirect_uri=${redirectUri}`;
+};
+
 export const authApi = {
   login: async (data: LoginRequest): Promise<AuthResponse> => {
     try {
@@ -223,5 +293,13 @@ export const authApi = {
     
     // Оповещаем компоненты, что статус авторизации изменился
     window.dispatchEvent(new Event(AUTH_STATUS_CHANGED));
+  },
+  socialAuth: {
+    vk: (code: string) => socialLogin('vk', code),
+    mailru: (code: string) => socialLogin('mailru', code),
+    ok: (code: string) => socialLogin('ok', code),
+    getVKAuthUrl,
+    getMailRuAuthUrl,
+    getOKAuthUrl
   }
 }; 
