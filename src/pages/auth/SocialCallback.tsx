@@ -54,7 +54,7 @@ const SocialCallback: React.FC = () => {
           setError(null);
           setLoading(false);
           console.log('Авторизация успешна, перенаправление на главную страницу...');
-          navigate('https://рыбный-форум.рф');
+          navigate('/');
         } catch (apiError: any) {
           console.error('Ошибка при отправке запроса:', apiError);
           setError(apiError.message || 'Ошибка при авторизации');
