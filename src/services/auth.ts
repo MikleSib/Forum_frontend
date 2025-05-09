@@ -198,8 +198,13 @@ const createCodeChallenge = async (verifier: string): Promise<string> => {
   const data = encoder.encode(verifier);
   const hash = await window.crypto.subtle.digest('SHA-256', data);
   
-  // Конвертируем ArrayBuffer в Base64
-  const base64 = btoa(String.fromCharCode(...new Uint8Array(hash)))
+  // Конвертируем ArrayBuffer в Base64 без использования spread оператора
+  const bytes = new Uint8Array(hash);
+  let binary = '';
+  for (let i = 0; i < bytes.byteLength; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  const base64 = btoa(binary)
     .replace(/\+/g, '-')
     .replace(/\//g, '_')
     .replace(/=/g, '');
