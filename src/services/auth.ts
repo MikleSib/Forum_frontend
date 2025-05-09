@@ -3,6 +3,7 @@ import API_URL from '../config/api';
 import axios from 'axios';
 import { userStore } from '../shared/store/userStore';
 import { AUTH_STATUS_CHANGED } from '../components/Header';
+import crypto from 'crypto-js';
 
 // Функция для обработки HTTP ошибок с обновлением токена
 export const handleErrors = async (error: any) => {
@@ -185,8 +186,32 @@ export const socialLogin = async (provider: 'vk' | 'mailru' | 'ok', code: string
   }
 };
 
+// Функция для генерации code_verifier
+const generateCodeVerifier = (): string => {
+  const array = new Uint8Array(32);
+  window.crypto.getRandomValues(array);
+  return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+};
+
+// Функция для создания code_challenge из code_verifier
+const createCodeChallenge = (verifier: string): string => {
+  const hash = crypto.SHA256(verifier);
+  return crypto.enc.Base64.stringify(hash)
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=/g, '');
+};
+
 // Генерация URL для авторизации через VK
 export const getVKAuthUrl = (): string => {
+  // Генерируем code_verifier
+  const codeVerifier = generateCodeVerifier();
+  // Создаем code_challenge
+  const codeChallenge = createCodeChallenge(codeVerifier);
+  
+  // Сохраняем code_verifier в localStorage
+  localStorage.setItem('vk_code_verifier', codeVerifier);
+  
   // ID приложения из личного кабинета VK ID
   const clientId = '53543107';
   
@@ -196,8 +221,8 @@ export const getVKAuthUrl = (): string => {
   // Запрашиваемый доступ - email обязателен для идентификации
   const scope = 'email';
   
-  // Формируем URL для OAuth 2.1
-  return `https://id.vk.com/auth?app_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}&response_type=code`;
+  // Формируем URL для OAuth 2.1 с PKCE
+  return `https://id.vk.com/auth?app_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}&response_type=code&code_challenge=${codeChallenge}&code_challenge_method=S256`;
 };
 
 // Генерация URL для авторизации через Mail.ru
@@ -296,11 +321,17 @@ export const authApi = {
   },
   socialAuth: {
     vk: async (code: string, deviceId?: string) => {
+      // Получаем сохраненный code_verifier
+      const codeVerifier = localStorage.getItem('vk_code_verifier');
+      // Удаляем его из localStorage, так как он больше не нужен
+      localStorage.removeItem('vk_code_verifier');
+
       const response = await axios.post(`${API_URL}/auth/social/vk`, null, {
         params: {
           code,
           provider: 'vk',
-          device_id: deviceId
+          device_id: deviceId,
+          code_verifier: codeVerifier
         }
       });
       return response.data;
