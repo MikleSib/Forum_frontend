@@ -48,7 +48,7 @@ const SocialCallback: React.FC = () => {
 
         try {
           // Отправляем запрос к нашему API для обмена кода на токен
-          const response = await authApi.socialAuth.vk(code);
+          const response = await authApi.socialAuth.vk(code, deviceId || undefined);
           console.log('Ответ от сервера:', response);
           
           // После успешной авторизации перенаправляем на главную страницу
