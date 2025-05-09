@@ -48,12 +48,16 @@ const SocialLoginButtons: React.FC<SocialLoginButtonsProps> = ({ onSuccess, onEr
     console.log('Инициализация VKID SDK...', VKID);
 
     try {
+      // Формируем URL для возврата
+      const redirectUrl = `https://рыбный-форум.рф`;
+      console.log('Используем redirect URL:', redirectUrl);
+
       // Инициализация SDK в соответствии с документацией
       VKID.Config.init({
         app: 53543107,
-        redirectUrl: window.location.origin,
+        redirectUrl: redirectUrl,
         responseType: 'code',
-        responseMode: 'popup',
+        responseMode: 'redirect',
         source: 'lowcode',
         scope: 'email',
       });
