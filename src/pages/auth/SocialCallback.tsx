@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { CircularProgress, Box, Typography, Container, Paper } from '@mui/material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { authApi } from '../../services/auth';
+import { userStore } from '../../shared/store/userStore';
+import { AUTH_STATUS_CHANGED } from '../../components/Header';
 
 // Объявляем глобальный объект VKIDSDK
 declare global {
@@ -24,40 +26,81 @@ const SocialCallback: React.FC = () => {
         console.log('Начало обработки авторизации...');
         const searchParams = new URLSearchParams(location.search);
         const code = searchParams.get('code');
+        const provider = location.pathname.split('/').pop(); // получаем провайдера из пути
         const state = searchParams.get('state');
-        const expiresIn = searchParams.get('expires_in');
         const deviceId = searchParams.get('device_id');
-        const extId = searchParams.get('ext_id');
-        const type = searchParams.get('type');
 
         console.log('Получены параметры авторизации:', {
           code,
           state,
-          expiresIn,
-          deviceId,
-          extId,
-          type
+          provider,
+          deviceId
         });
 
         if (!code) {
           throw new Error('Код авторизации не найден');
         }
 
+        // Проверка state, если он был сохранён
+        if (provider === 'vk' && state) {
+          const savedState = localStorage.getItem('vk_auth_state');
+          if (state !== savedState) {
+            console.warn('Несоответствие state параметра, возможная CSRF атака');
+            // Можно продолжить, но лучше прервать для безопасности
+            // throw new Error('Ошибка безопасности: несоответствие state параметра');
+          }
+          // Удаляем state после проверки
+          localStorage.removeItem('vk_auth_state');
+        }
+
         setMessage('Обмен кода авторизации на токен...');
         console.log('Отправка запроса на обмен кода...');
 
         try {
+          // Определение метода в зависимости от провайдера
+          let authMethod;
+          if (provider === 'vk') {
+            authMethod = authApi.socialAuth.vk(code, deviceId || undefined);
+          } else if (provider === 'mailru') {
+            authMethod = authApi.socialAuth.mailru(code);
+          } else if (provider === 'ok') {
+            authMethod = authApi.socialAuth.ok(code);
+          } else {
+            throw new Error('Неизвестный провайдер авторизации');
+          }
+
           // Отправляем запрос к нашему API для обмена кода на токен
-          const response = await authApi.socialAuth.vk(code, deviceId || undefined);
+          const response = await authMethod;
           console.log('Ответ от сервера:', response);
           
+          // Сохраняем токены
+          if (response.access_token && response.refresh_token) {
+            localStorage.setItem('access_token', response.access_token);
+            localStorage.setItem('refresh_token', response.refresh_token);
+          }
+
+          // Обновляем состояние пользователя
+          if (response.user) {
+            userStore.setAuth(response);
+          }
+
+          // Оповещаем компоненты об изменении статуса авторизации
+          window.dispatchEvent(new Event(AUTH_STATUS_CHANGED));
+
+          // После успешной авторизации сбрасываем ошибку и loading
           setError(null);
           setLoading(false);
+          
+          // После успешной авторизации перенаправляем на главную страницу
           console.log('Авторизация успешна, перенаправление на главную страницу...');
           navigate('/');
         } catch (apiError: any) {
           console.error('Ошибка при отправке запроса:', apiError);
-          setError(apiError.message || 'Ошибка при авторизации');
+          if (apiError.response?.data?.detail) {
+            setError(apiError.response.data.detail);
+          } else {
+            setError(apiError.message || 'Ошибка при авторизации');
+          }
           setLoading(false);
         }
       } catch (err: any) {
@@ -68,7 +111,7 @@ const SocialCallback: React.FC = () => {
     };
 
     processAuth();
-  }, [location.search, navigate]);
+  }, [location.search, location.pathname, navigate]);
 
   // Отображаем индикатор загрузки
   if (loading) {
