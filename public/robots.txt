@@ -67,8 +67,8 @@ Crawl-delay: 10
 
 
 # Указание на sitemap
-Sitemap: https://xn----9sbyncijf1ah6ec.xn--p1ai/sitemap.xml
+Sitemap: https://xn----9sbd2aijefbenj3bl0hg.xn--p1ai/sitemap.xml
 
 # Дополнительные директивы
 Clean-param: utm_source&utm_medium&utm_campaign&utm_content&utm_term
-Host: https://xn----9sbyncijf1ah6ec.xn--p1ai
+Host: https://xn----9sbd2aijefbenj3bl0hg.xn--p1ai

@@ -18,7 +18,7 @@ export const NotFound: React.FC = () => {
         data={{
           name: 'Страница не найдена',
           description: 'К сожалению, запрашиваемая страница не найдена. Вернитесь на главную страницу рыболовного форума.',
-          url: 'https://xn----9sbyncijf1ah6ec.xn--p1ai/404'
+          url: 'https://xn----9sbd2aijefbenj3bl0hg.xn--p1ai/404'
         }}
       />
       <Container maxWidth="md">

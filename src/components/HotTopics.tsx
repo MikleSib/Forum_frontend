@@ -24,7 +24,7 @@ const HotTopics = () => {
 
   useEffect(() => {
     // API запрос для получения горячих тем
-    fetch('https://xn----9sbyncijf1ah6ec.xn--p1ai/api/forum/active-topics?limit=5')
+    fetch('https://xn----9sbd2aijefbenj3bl0hg.xn--p1ai/api/forum/active-topics?limit=5')
       .then(response => response.json())
       .then(data => {
         console.log('Данные горячих тем получены:', data);
@@ -153,7 +153,7 @@ const HotTopics = () => {
               <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
                   <Avatar 
-                    src={topic.author_avatar ? `https://xn----9sbyncijf1ah6ec.xn--p1ai${topic.author_avatar}` : undefined}
+                    src={topic.author_avatar ? `https://xn----9sbd2aijefbenj3bl0hg.xn--p1ai${topic.author_avatar}` : undefined}
                     alt={topic.author_username}
                     sx={{ 
                       width: 28, 

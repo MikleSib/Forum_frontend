@@ -78,7 +78,7 @@ const PostDetail: React.FC = () => {
           // Логируем путь к аватару автора для отладки
           if (data.author && data.author.avatar) {
             console.log('Avatar path:', data.author.avatar);
-            console.log('Full avatar URL:', `https://рыбный-форум.рф/${data.author.avatar}`);
+            console.log('Full avatar URL:', `https://рыболовный-форум.рф/${data.author.avatar}`);
           }
           
           // Проверяем, поставил ли пользователь лайк
@@ -104,7 +104,7 @@ const PostDetail: React.FC = () => {
   const logAvatarUrl = (avatarPath?: string) => {
     if (avatarPath) {
       console.log('Avatar path:', avatarPath);
-      const baseUrl = 'https://рыбный-форум.рф';
+      const baseUrl = 'https://рыболовный-форум.рф';
       console.log('Full avatar URL:', `${baseUrl}/${avatarPath}`);
       return `${baseUrl}/${avatarPath}`;
     }

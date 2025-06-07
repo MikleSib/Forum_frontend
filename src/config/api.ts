@@ -1,6 +1,6 @@
 export const API_URL = process.env.NODE_ENV === 'development' 
-  ? 'https://рыбный-форум.рф/api'
-  : 'https://рыбный-форум.рф/api';
+  ? 'https://рыболовный-форум.рф/api'
+  : 'https://рыболовный-форум.рф/api';
 
 // Настройки кеширования изображений
 export const IMAGE_CACHE_OPTIONS = {
@@ -45,6 +45,6 @@ export const IMAGE_CACHE_OPTIONS = {
 };
 
 // Базовый URL для изображений
-export const IMAGE_BASE_URL = 'https://рыбный-форум.рф';
+export const IMAGE_BASE_URL = 'https://рыболовный-форум.рф';
 
 export default API_URL;

@@ -16,7 +16,7 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ items }) => {
       '@type': 'ListItem',
       position: index + 1,
       name: item.label,
-      item: `https://xn----9sbyncijf1ah6ec.xn--p1ai${item.path}`
+      item: `https://xn----9sbd2aijefbenj3bl0hg.xn--p1ai${item.path}`
     }))
   };
 

@@ -27,7 +27,7 @@ const PostCard = ({ post, onClick }: Props): React.ReactElement => {
   };
 
   // Базовый URL для изображений
-  const baseUrl = 'https://рыбный-форум.рф';
+  const baseUrl = 'https://рыболовный-форум.рф';
 
   // Функция для логирования аватара
   const getAvatarUrl = (avatarPath?: string) => {

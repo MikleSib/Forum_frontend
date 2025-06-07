@@ -63,7 +63,7 @@ const Footer: React.FC = () => {
         <Grid container spacing={3}>
           <Grid size={{xs: 12, md: 4}}>
             <FooterTitle variant="h6">
-              Рыбный форум
+              Рыболовный форум
             </FooterTitle>
             <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
               Место встречи всех любителей рыбалки, где делятся опытом, советами и историями.
@@ -94,8 +94,8 @@ const Footer: React.FC = () => {
               <IconWrapper>
                 <EmailIcon fontSize="small" />
               </IconWrapper>
-              <FooterLink href="mailto:sales@рыбный-форум.рф">
-                sales@рыбный-форум.рф
+              <FooterLink href="mailto:sales@рыболовный-форум.рф">
+                sales@рыболовный-форум.рф
               </FooterLink>
             </FooterItem>
           </Grid>
@@ -124,7 +124,7 @@ const Footer: React.FC = () => {
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <CopyrightIcon sx={{ mr: 0.5, fontSize: '1rem', color: 'text.secondary' }} />
             <Typography variant="body2" color="text.secondary">
-              {currentYear} Рыбный форум. Все права защищены.
+              {currentYear} Рыболовный форум. Все права защищены.
             </Typography>
           </Box>
           
