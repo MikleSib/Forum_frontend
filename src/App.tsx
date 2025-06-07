@@ -140,16 +140,13 @@ function App() {
                 <Route path="marketplace/add-product" element={<AddProduct />} />
               </>
             )}
-            {/* Добавляем маршрут 404 внутрь MainLayout */}
-            <Route path="*" element={<NotFound />} />
           </Route>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
           {/* Обработка callback от соцсетей */}
           <Route path="/auth/social/:provider" element={<SocialCallback />} />
-          {/* Добавляем маршрут 404 на верхний уровень */}
-          <Route path="*" element={<NotFound />} />
+        
         </Routes>
       </Router>
     </ThemeProvider>
