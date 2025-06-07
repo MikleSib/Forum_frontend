@@ -195,6 +195,7 @@ const Header: React.FC = () => {
                     color: '#0F1817',
                     borderRadius: '58px',
                     minWidth: '120px',
+                    maxWidth: '150px',
                     height: '40px',
                     fontWeight: 700,
                     '&:hover': {
