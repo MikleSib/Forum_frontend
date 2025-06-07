@@ -5,6 +5,15 @@ import bgImage from '../../assets/bg.png';
 import logo from '../../assets/logo.svg';
 import { userStore } from '../../shared/store/userStore';
 import { IMAGE_BASE_URL } from '../../config/api';
+import MenuIcon from '@mui/icons-material/Menu';
+import IconButton from '@mui/material/IconButton';
+import Drawer from '@mui/material/Drawer';
+import CloseIcon from '@mui/icons-material/Close';
+import HomeIcon from '@mui/icons-material/Home';
+import NewspaperIcon from '@mui/icons-material/Article';
+import ForumIcon from '@mui/icons-material/Forum';
+import StoreIcon from '@mui/icons-material/Storefront';
+import Divider from '@mui/material/Divider';
 
 // Создаем пользовательское событие для обновления статуса авторизации
 export const AUTH_STATUS_CHANGED = 'auth_status_changed';
@@ -14,6 +23,7 @@ const Header: React.FC = () => {
   const location = useLocation();
   const [isAuth, setIsAuth] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Функция для проверки статуса авторизации
   const checkAuthStatus = () => {
@@ -61,7 +71,8 @@ const Header: React.FC = () => {
         background: `url(${bgImage})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
-        flexShrink: 0
+        flexShrink: 0,
+        position: 'relative'
       }}
     >
       <Container 
@@ -85,6 +96,49 @@ const Header: React.FC = () => {
             pb: { xs: 3, md: 0 }
           }}
         >
+          {/* Drawer для мобильного меню */}
+          <Drawer
+            anchor="right"
+            open={mobileMenuOpen}
+            onClose={() => setMobileMenuOpen(false)}
+            PaperProps={{ sx: { background: '#f7f7f7', color: '#222', width: '80vw', maxWidth: 340, p: 0 } }}
+          >
+            {/* Шапка Drawer */}
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', bgcolor: 'teal', color: '#000', px: 2, py: 2 }}>
+              <Typography variant="h6" sx={{ fontWeight: 600, color: '#000' }}>Навигация</Typography>
+              <IconButton onClick={() => setMobileMenuOpen(false)} sx={{ color: '#000' }}>
+                <CloseIcon />
+              </IconButton>
+            </Box>
+            <Divider />
+            {/* Пункты меню */}
+            <Box sx={{ display: 'flex', flexDirection: 'column', p: 0 }}>
+              <Link to="/" style={{ textDecoration: 'none' }} onClick={() => setMobileMenuOpen(false)}>
+                <Box sx={{ display: 'flex', alignItems: 'center', px: 2, py: 2, gap: 2, cursor: 'pointer', '&:hover': { bgcolor: '#e0f2f1' }, transition: 'background 0.2s' }}>
+                  <HomeIcon sx={{ color: 'teal' }} />
+                  <Typography sx={{ color: '#222', fontWeight: 500 }}>Главная</Typography>
+                </Box>
+              </Link>
+              <Link to="/news" style={{ textDecoration: 'none' }} onClick={() => setMobileMenuOpen(false)}>
+                <Box sx={{ display: 'flex', alignItems: 'center', px: 2, py: 2, gap: 2, cursor: 'pointer', '&:hover': { bgcolor: '#e0f2f1' }, transition: 'background 0.2s' }}>
+                  <NewspaperIcon sx={{ color: 'teal' }} />
+                  <Typography sx={{ color: '#222', fontWeight: 500 }}>Новости</Typography>
+                </Box>
+              </Link>
+              <Link to="/forum" style={{ textDecoration: 'none' }} onClick={() => setMobileMenuOpen(false)}>
+                <Box sx={{ display: 'flex', alignItems: 'center', px: 2, py: 2, gap: 2, cursor: 'pointer', '&:hover': { bgcolor: '#e0f2f1' }, transition: 'background 0.2s' }}>
+                  <ForumIcon sx={{ color: 'teal' }} />
+                  <Typography sx={{ color: '#222', fontWeight: 500 }}>Форум</Typography>
+                </Box>
+              </Link>
+              <Link to="/marketplace" style={{ textDecoration: 'none' }} onClick={() => setMobileMenuOpen(false)}>
+                <Box sx={{ display: 'flex', alignItems: 'center', px: 2, py: 2, gap: 2, cursor: 'pointer', '&:hover': { bgcolor: '#e0f2f1' }, transition: 'background 0.2s' }}>
+                  <StoreIcon sx={{ color: 'teal' }} />
+                  <Typography sx={{ color: '#222', fontWeight: 500 }}>Маркетплейс</Typography>
+                </Box>
+              </Link>
+            </Box>
+          </Drawer>
           <Box sx={{ 
             display: 'flex',
             flexDirection: 'column',
@@ -217,9 +271,9 @@ const Header: React.FC = () => {
             </Box>
           )}
           <Box sx={{ 
-            display: 'flex',
-            gap: { xs: 0, md: 2 },
-            mt: { xs: 0, md: 2 },
+            display: { xs: 'none', md: 'flex' }, // Скрываем меню на мобилках, показываем на десктопе
+            gap: 2,
+            mt: 2,
             flexDirection: 'row',
             width: '100%',
             position: 'relative'
@@ -228,171 +282,79 @@ const Header: React.FC = () => {
               <Button 
                 fullWidth
                 sx={{ 
-                  color: { 
-                    xs: '#FFFFFF',
-                    md: isCurrentPath('/') ? '#0F1817' : '#FFFFFF'
-                  },
-                  bgcolor: { 
-                    xs: 'transparent', 
-                    md: isCurrentPath('/') ? '#D9D9D9' : 'rgba(255,255,255,0)' 
-                  },
+                  color: isCurrentPath('/') ? '#0F1817' : '#FFFFFF',
+                  bgcolor: isCurrentPath('/') ? '#D9D9D9' : 'rgba(255,255,255,0)',
                   '&:hover': {
-                    bgcolor: { xs: 'transparent', md: 'rgba(255,255,255,0.3)' }
+                    bgcolor: 'rgba(255,255,255,0.3)'
                   },
-                  fontWeight: { 
-                    xs: 500,
-                    md: isCurrentPath('/') ? 700 : 500
-                  },
+                  fontWeight: isCurrentPath('/') ? 700 : 500,
                   px: 3,
                   py: 1,
-                  borderRadius: { xs: 0, md: '58px' },
+                  borderRadius: '58px',
                   fontSize: '1rem',
-                  height: { xs: '32px', md: 'auto' },
-                  minWidth: { xs: 'auto', md: '120px' }
+                  minWidth: '120px'
                 }}
               >
                 Главная
               </Button>
             </Link>
-            <Box 
-              sx={{ 
-                display: { xs: 'block', md: 'none' }, 
-                width: '1px', 
-                bgcolor: 'rgba(255,255,255,0.3)',
-                alignSelf: 'stretch'
-              }} 
-            />
-            <Box sx={{ 
-              flex: { xs: 1, md: 'none' },
-              display: 'flex'
-            }}>
-              <Link to="/news" style={{ textDecoration: 'none' }}>
-                <Button 
-                  sx={{ 
-                    color: { 
-                      xs: '#FFFFFF',
-                      md: isCurrentPath('/news') ? '#0F1817' : '#FFFFFF'
-                    },
-                    bgcolor: { 
-                      xs: 'transparent', 
-                      md: isCurrentPath('/news') ? '#D9D9D9' : 'rgba(65, 40, 40, 0)' 
-                    },
-                    '&:hover': {
-                      bgcolor: { xs: 'transparent', md: 'rgba(255,255,255,0.3)' }
-                    },
-                    fontWeight: { 
-                      xs: 500,
-                      md: isCurrentPath('/news') ? 700 : 500
-                    },
-                    px: 3,
-                    py: 1,
-                    borderRadius: { xs: 0, md: '58px' },
-                    fontSize: '1rem',
-                    height: { xs: '32px', md: 'auto' },
-                    minWidth: { xs: 'auto', md: '120px' },
-                    flex: { xs: 1, md: 0 }
-                  }}
-                >
-                  Новости
-                </Button>
-              </Link>
-            </Box>
-            <Box 
-              sx={{ 
-                display: { xs: 'block', md: 'none' }, 
-                width: '1px', 
-                bgcolor: 'rgba(255,255,255,0.3)',
-                alignSelf: 'stretch'
-              }} 
-            />
-
-            <Box 
-              sx={{ 
-                display: { xs: 'block', md: 'none' }, 
-                width: '1px', 
-                bgcolor: 'rgba(255,255,255,0.3)',
-                alignSelf: 'stretch'
-              }} 
-            />
-            <Box sx={{ 
-              flex: { xs: 1, md: 'none' },
-              display: 'flex'
-            }}>
-              <Link to="/forum" style={{ textDecoration: 'none' }}>
-                <Button 
-                  sx={{ 
-                    color: { 
-                      xs: '#FFFFFF',
-                      md: isCurrentPath('/forum') ? '#0F1817' : '#FFFFFF'
-                    },
-                    bgcolor: { 
-                      xs: 'transparent', 
-                      md: isCurrentPath('/forum') ? '#D9D9D9' : 'rgba(255,255,255,0)' 
-                    },
-                    '&:hover': {
-                      bgcolor: { xs: 'transparent', md: 'rgba(255,255,255,0.3)' }
-                    },
-                    fontWeight: { 
-                      xs: 500,
-                      md: isCurrentPath('/forum') ? 700 : 500
-                    },
-                    px: 3,
-                    py: 1,
-                    borderRadius: { xs: 0, md: '58px' },
-                    fontSize: '1rem',
-                    height: { xs: '32px', md: 'auto' },
-                    minWidth: { xs: 'auto', md: '120px' },
-                    flex: { xs: 1, md: 0 }
-                  }}
-                >
-                  Форум
-                </Button>
-              </Link>
-            </Box>
-            
-            <Box 
-              sx={{ 
-                display: { xs: 'block', md: 'none' }, 
-                width: '1px', 
-                bgcolor: 'rgba(255,255,255,0.3)',
-                alignSelf: 'stretch'
-              }} 
-            />
-            <Box sx={{ 
-              flex: { xs: 1, md: 'none' },
-              display: 'flex'
-            }}>
-              <Link to="/marketplace" style={{ textDecoration: 'none' }}>
-                <Button 
-                  sx={{ 
-                    color: { 
-                      xs: '#FFFFFF',
-                      md: isCurrentPath('/marketplace') ? '#0F1817' : '#FFFFFF'
-                    },
-                    bgcolor: { 
-                      xs: 'transparent', 
-                      md: isCurrentPath('/marketplace') ? '#D9D9D9' : 'rgba(255,255,255,0)' 
-                    },
-                    '&:hover': {
-                      bgcolor: { xs: 'transparent', md: 'rgba(255,255,255,0.3)' }
-                    },
-                    fontWeight: { 
-                      xs: 500,
-                      md: isCurrentPath('/marketplace') ? 700 : 500
-                    },
-                    px: 3,
-                    py: 1,
-                    borderRadius: { xs: 0, md: '58px' },
-                    fontSize: '1rem',
-                    height: { xs: '32px', md: 'auto' },
-                    minWidth: { xs: 'auto', md: '120px' },
-                    flex: { xs: 1, md: 0 }
-                  }}
-                >
-                  Маркетплейс
-                </Button>
-              </Link>
-            </Box>
+            <Link to="/news" style={{ textDecoration: 'none' }}>
+              <Button 
+                sx={{ 
+                  color: isCurrentPath('/news') ? '#0F1817' : '#FFFFFF',
+                  bgcolor: isCurrentPath('/news') ? '#D9D9D9' : 'rgba(255,255,255,0)',
+                  '&:hover': {
+                    bgcolor: 'rgba(255,255,255,0.3)'
+                  },
+                  fontWeight: isCurrentPath('/news') ? 700 : 500,
+                  px: 3,
+                  py: 1,
+                  borderRadius: '58px',
+                  fontSize: '1rem',
+                  minWidth: '120px'
+                }}
+              >
+                Новости
+              </Button>
+            </Link>
+            <Link to="/forum" style={{ textDecoration: 'none' }}>
+              <Button 
+                sx={{ 
+                  color: isCurrentPath('/forum') ? '#0F1817' : '#FFFFFF',
+                  bgcolor: isCurrentPath('/forum') ? '#D9D9D9' : 'rgba(255,255,255,0)',
+                  '&:hover': {
+                    bgcolor: 'rgba(255,255,255,0.3)'
+                  },
+                  fontWeight: isCurrentPath('/forum') ? 700 : 500,
+                  px: 3,
+                  py: 1,
+                  borderRadius: '58px',
+                  fontSize: '1rem',
+                  minWidth: '120px'
+                }}
+              >
+                Форум
+              </Button>
+            </Link>
+            <Link to="/marketplace" style={{ textDecoration: 'none' }}>
+              <Button 
+                sx={{ 
+                  color: isCurrentPath('/marketplace') ? '#0F1817' : '#FFFFFF',
+                  bgcolor: isCurrentPath('/marketplace') ? '#D9D9D9' : 'rgba(255,255,255,0)',
+                  '&:hover': {
+                    bgcolor: 'rgba(255,255,255,0.3)'
+                  },
+                  fontWeight: isCurrentPath('/marketplace') ? 700 : 500,
+                  px: 3,
+                  py: 1,
+                  borderRadius: '58px',
+                  fontSize: '1rem',
+                  minWidth: '120px'
+                }}
+              >
+                Маркетплейс
+              </Button>
+            </Link>
           </Box>
           <Box sx={{ 
             position: { xs: 'static', md: 'absolute' }, 
@@ -412,6 +374,18 @@ const Header: React.FC = () => {
           </Box>
         </Toolbar>
       </Container>
+      {/* Новый бургер внизу справа */}
+      <Box sx={{ display: { xs: 'flex', md: 'none' }, position: 'absolute', bottom: 16, right: 16, zIndex: 1201 }}>
+        <IconButton
+          size="large"
+          edge="start"
+          color="inherit"
+          aria-label="menu"
+          onClick={() => setMobileMenuOpen(true)}
+        >
+          <MenuIcon sx={{ color: 'white', fontSize: 32 }} />
+        </IconButton>
+      </Box>
     </Box>
   );
 };
