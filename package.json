@@ -38,6 +38,7 @@
     "react-dom": "^19.1.0",
     "react-easy-crop": "^5.4.1",
     "react-helmet": "^6.1.0",
+    "react-helmet-async": "^2.0.5",
     "react-leaflet": "^5.0.0",
     "react-router-dom": "^7.5.3",
     "react-scripts": "5.0.1",
@@ -48,7 +49,8 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "test": "vitest"
+    "test": "vitest",
+    "deploy": "npm run build && rsync -avz --delete dist/ user@your-server:/usr/share/nginx/html/"
   },
   "eslintConfig": {
     "extends": [

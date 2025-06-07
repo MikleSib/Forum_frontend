@@ -1,0 +1,56 @@
+.not-found {
+  max-width: 800px;
+  margin: 4rem auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.not-found h1 {
+  font-size: 2.5rem;
+  color: #1976d5;
+  margin-bottom: 1.5rem;
+}
+
+.not-found p {
+  font-size: 1.2rem;
+  color: #666;
+  margin-bottom: 1rem;
+}
+
+.not-found ul {
+  list-style: none;
+  padding: 0;
+  margin: 2rem 0;
+}
+
+.not-found li {
+  margin: 1rem 0;
+  font-size: 1.1rem;
+}
+
+.not-found a {
+  color: #1976d5;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.not-found a:hover {
+  color: #1565c0;
+  text-decoration: underline;
+}
+
+.home-button {
+  display: inline-block;
+  padding: 1rem 2rem;
+  background-color: #1976d5;
+  color: white;
+  text-decoration: none;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+  margin-top: 2rem;
+}
+
+.home-button:hover {
+  background-color: #1565c0;
+  text-decoration: none;
+} 
