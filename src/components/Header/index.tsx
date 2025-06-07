@@ -105,13 +105,14 @@ const Header: React.FC = () => {
               />
               <Box>
                 <Typography
-                  variant="h4"
+                  variant="h1"
                   component="h1"
                   sx={{
                     color: 'white',
                     fontWeight: 700,
-                    fontSize: { xs: '1.5rem', md: '2rem' },
-                    lineHeight: 1.2
+                    fontSize: { xs: '1.5rem', md: '2.5rem' },
+                    lineHeight: 1.2,
+                    margin: 0
                   }}
                 >
                   Рыболовный форум

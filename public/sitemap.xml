@@ -3,7 +3,7 @@
   <!-- Главная страница -->
   <url>
     <loc>https://xn----9sbyncijf1ah6ec.xn--p1ai/</loc>
-    <lastmod>2024-03-07</lastmod>
+    <lastmod>2025-06-06</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
@@ -11,53 +11,25 @@
   <!-- Новости -->
   <url>
     <loc>https://xn----9sbyncijf1ah6ec.xn--p1ai/news</loc>
-    <lastmod>2024-03-07</lastmod>
+    <lastmod>2025-06-07</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
-  <url>
-    <loc>https://xn----9sbyncijf1ah6ec.xn--p1ai/news?category=fish_species</loc>
-    <lastmod>2024-03-07</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://xn----9sbyncijf1ah6ec.xn--p1ai/news?category=events</loc>
-    <lastmod>2024-03-07</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
+
 
   <!-- Форум -->
   <url>
     <loc>https://xn----9sbyncijf1ah6ec.xn--p1ai/forum</loc>
-    <lastmod>2024-03-07</lastmod>
+    <lastmod>2025-06-05</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
-  <url>
-    <loc>https://xn----9sbyncijf1ah6ec.xn--p1ai/forum/category/1</loc>
-    <lastmod>2024-03-07</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://xn----9sbyncijf1ah6ec.xn--p1ai/forum/category/2</loc>
-    <lastmod>2024-03-07</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://xn----9sbyncijf1ah6ec.xn--p1ai/forum/category/3</loc>
-    <lastmod>2024-03-07</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>
+
 
   <!-- Маркетплейс -->
   <url>
     <loc>https://xn----9sbyncijf1ah6ec.xn--p1ai/marketplace</loc>
-    <lastmod>2024-03-07</lastmod>
+    <lastmod>2025-06-04</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
