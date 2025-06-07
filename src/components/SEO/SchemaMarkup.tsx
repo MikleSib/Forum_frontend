@@ -17,10 +17,10 @@ export const SchemaMarkup: React.FC<SchemaMarkupProps> = ({ type, data }) => {
         return {
           ...baseSchema,
           name: 'Рыболовный форум',
-          url: 'https://рыбный-форум.рф',
+          url: 'https://xn----9sbyncijf1ah6ec.xn--p1ai',
           potentialAction: {
             '@type': 'SearchAction',
-            target: 'https://рыбный-форум.рф/search?q={search_term_string}',
+            target: 'https://xn----9sbyncijf1ah6ec.xn--p1ai/search?q={search_term_string}',
             'query-input': 'required name=search_term_string'
           }
         };
@@ -29,7 +29,7 @@ export const SchemaMarkup: React.FC<SchemaMarkupProps> = ({ type, data }) => {
           ...baseSchema,
           name: data.title,
           description: data.description,
-          url: `https://рыбный-форум.рф/forum/${data.id}`,
+          url: `https://xn----9sbyncijf1ah6ec.xn--p1ai/forum/${data.id}`,
           datePublished: data.datePublished,
           author: {
             '@type': 'Person',

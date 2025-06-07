@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <!-- Главная страница -->
   <url>
-    <loc>https://рыбный-форум.рф/</loc>
+    <loc>https://xn----9sbyncijf1ah6ec.xn--p1ai/</loc>
     <lastmod>2024-03-07</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
@@ -10,19 +10,19 @@
 
   <!-- Новости -->
   <url>
-    <loc>https://рыбный-форум.рф/news</loc>
+    <loc>https://xn----9sbyncijf1ah6ec.xn--p1ai/news</loc>
     <lastmod>2024-03-07</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://рыбный-форум.рф/news?category=fish_species</loc>
+    <loc>https://xn----9sbyncijf1ah6ec.xn--p1ai/news?category=fish_species</loc>
     <lastmod>2024-03-07</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://рыбный-форум.рф/news?category=events</loc>
+    <loc>https://xn----9sbyncijf1ah6ec.xn--p1ai/news?category=events</loc>
     <lastmod>2024-03-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
@@ -30,25 +30,25 @@
 
   <!-- Форум -->
   <url>
-    <loc>https://рыбный-форум.рф/forum</loc>
+    <loc>https://xn----9sbyncijf1ah6ec.xn--p1ai/forum</loc>
     <lastmod>2024-03-07</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://рыбный-форум.рф/forum/category/1</loc>
+    <loc>https://xn----9sbyncijf1ah6ec.xn--p1ai/forum/category/1</loc>
     <lastmod>2024-03-07</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://рыбный-форум.рф/forum/category/2</loc>
+    <loc>https://xn----9sbyncijf1ah6ec.xn--p1ai/forum/category/2</loc>
     <lastmod>2024-03-07</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://рыбный-форум.рф/forum/category/3</loc>
+    <loc>https://xn----9sbyncijf1ah6ec.xn--p1ai/forum/category/3</loc>
     <lastmod>2024-03-07</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -56,7 +56,7 @@
 
   <!-- Маркетплейс -->
   <url>
-    <loc>https://рыбный-форум.рф/marketplace</loc>
+    <loc>https://xn----9sbyncijf1ah6ec.xn--p1ai/marketplace</loc>
     <lastmod>2024-03-07</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>

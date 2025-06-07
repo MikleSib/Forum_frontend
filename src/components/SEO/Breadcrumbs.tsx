@@ -1,13 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-interface BreadcrumbItem {
-  label: string;
-  path: string;
-}
-
 interface BreadcrumbsProps {
-  items: BreadcrumbItem[];
+  items: Array<{
+    label: string;
+    path: string;
+  }>;
 }
 
 export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ items }) => {
@@ -18,7 +16,7 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ items }) => {
       '@type': 'ListItem',
       position: index + 1,
       name: item.label,
-      item: `https://рыбный-форум.рф${item.path}`
+      item: `https://xn----9sbyncijf1ah6ec.xn--p1ai${item.path}`
     }))
   };
 

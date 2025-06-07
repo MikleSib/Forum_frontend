@@ -64,22 +64,11 @@ Disallow: /*?*search=
 Disallow: /*?*page=
 Crawl-delay: 10
 
-# Запрет для всех ботов
-User-agent: *
-Disallow: /admin/
-Disallow: /private/
-Disallow: /api/
-Disallow: /uploads/private/
-Disallow: /temp/
-Disallow: /cgi-bin/
-Disallow: /*?*sort=
-Disallow: /*?*filter=
-Disallow: /*?*search=
-Disallow: /*?*page=
+
 
 # Указание на sitemap
-Sitemap: https://рыбный-форум.рф/sitemap.xml
+Sitemap: https://xn----9sbyncijf1ah6ec.xn--p1ai/sitemap.xml
 
 # Дополнительные директивы
 Clean-param: utm_source&utm_medium&utm_campaign&utm_content&utm_term
-Host: https://рыбный-форум.рф
+Host: https://xn----9sbyncijf1ah6ec.xn--p1ai
