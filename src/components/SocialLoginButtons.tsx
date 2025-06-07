@@ -108,7 +108,7 @@ const SocialLoginButtons: React.FC<SocialLoginButtonsProps> = ({ onSuccess, onEr
 
       // Инициализация SDK в соответствии с документацией
       VKID.Config.init({
-        app: 53543107,
+        app: 53713406,
         redirectUrl: redirectUrl,
         scope: 'email',
         state: state,
