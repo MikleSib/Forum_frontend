@@ -16,13 +16,26 @@ export default defineConfig({
     outDir: 'build',
     assetsDir: 'assets',
     emptyOutDir: true,
+    chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
         manualChunks: {
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'mui-vendor': ['@mui/material', '@mui/icons-material'],
-          'utils-vendor': ['lodash', 'axios', 'date-fns'],
-          'ui-components': ['@mui/material/Button', '@mui/material/TextField', '@mui/material/Dialog']
+          'react-vendor': ['react', 'react-dom'],
+          'router-vendor': ['react-router-dom'],
+          'mui-core': ['@mui/material'],
+          'mui-icons': ['@mui/icons-material'],
+          'utils': ['lodash', 'date-fns'],
+          'api': ['axios'],
+          'ui-components': [
+            '@mui/material/Button',
+            '@mui/material/TextField',
+            '@mui/material/Dialog',
+            '@mui/material/AppBar',
+            '@mui/material/Toolbar',
+            '@mui/material/IconButton',
+            '@mui/material/Menu',
+            '@mui/material/MenuItem'
+          ],
         },
         chunkFileNames: 'assets/[name]-[hash].js',
         entryFileNames: 'assets/[name]-[hash].js',
