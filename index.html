@@ -8,6 +8,32 @@
     <link rel="icon" type="image/png" sizes="16x16" href="./logo.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="./logo.png" />
     <link rel="shortcut icon" href="./favicon.ico" />
+    
+    <!-- Предзагрузка критических ресурсов -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" as="style" />
+    <link rel="preload" href="/assets/index-CvIi1TvY.css" as="style" />
+    
+    <!-- Критические стили -->
+    <style>
+      /* Базовые стили для предотвращения FOUC */
+      body {
+        margin: 0;
+        font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        background-color: #f5f5f5;
+        color: #333;
+      }
+      #root {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+    </style>
+    
+    <!-- Асинхронная загрузка шрифтов -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" media="print" onload="this.media='all'" />
+    
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#1976d5" />
     <meta name="yandex-verification" content="d0bc285c0cf20d50" />
@@ -100,5 +126,9 @@
     <div id="root"></div>
     <!-- Отложенная загрузка основного скрипта -->
     <script type="module" src="/src/index.tsx" defer></script>
+    <!-- Fallback для шрифтов -->
+    <noscript>
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" />
+    </noscript>
   </body>
 </html> 
