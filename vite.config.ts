@@ -21,11 +21,8 @@ export default defineConfig({
         manualChunks: {
           vendor: ['react', 'react-dom', 'react-router-dom'],
           ui: ['@mui/material', '@mui/icons-material'],
-          utils: ['lodash', 'axios', 'date-fns'],
-          'ui-core': ['@mui/material/core', '@mui/material/styles'],
-          'ui-components': ['@mui/material/Button', '@mui/material/TextField', '@mui/material/Card'],
-          'ui-icons': ['@mui/icons-material'],
-        },
+          utils: ['lodash', 'axios', 'date-fns']
+        }, 
         chunkFileNames: 'assets/[name]-[hash].js',
         entryFileNames: 'assets/[name]-[hash].js',
         assetFileNames: 'assets/[name]-[hash].[ext]',
