@@ -19,10 +19,12 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom'],
-          ui: ['@mui/material', '@mui/icons-material'],
-          utils: ['lodash', 'axios', 'date-fns']
-        }, 
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'mui-vendor': ['@mui/material', '@mui/icons-material'],
+          'utils-vendor': ['lodash', 'axios', 'date-fns'],
+          'analytics': ['@yandex/metrika'],
+          'ui-components': ['@mui/material/Button', '@mui/material/TextField', '@mui/material/Dialog'],
+        },
         chunkFileNames: 'assets/[name]-[hash].js',
         entryFileNames: 'assets/[name]-[hash].js',
         assetFileNames: 'assets/[name]-[hash].[ext]',
@@ -34,9 +36,13 @@ export default defineConfig({
         drop_console: true,
         drop_debugger: true,
         pure_funcs: ['console.log', 'console.info', 'console.debug'],
-        passes: 2,
+        passes: 3,
+        dead_code: true,
+        unused: true,
       },
-      mangle: true,
+      mangle: {
+        toplevel: true,
+      },
       format: {
         comments: false,
       },

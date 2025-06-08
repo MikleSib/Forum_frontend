@@ -9,8 +9,15 @@
     <link rel="apple-touch-icon" sizes="180x180" href="./logo.png" />
     <link rel="shortcut icon" href="./favicon.ico" />
 
+    <!-- Preload критических ресурсов -->
     <link rel="preload" as="image" href="/src/assets/bg.webp" type="image/avif" fetchpriority="high" crossorigin="anonymous">
-
+    <link rel="preload" as="script" href="/src/index.tsx" type="module">
+    
+    <!-- Preconnect к внешним доменам -->
+    <link rel="preconnect" href="https://yandex.ru">
+    <link rel="preconnect" href="https://mc.yandex.ru">
+    <link rel="preconnect" href="https://top-fwz1.mail.ru">
+    
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#1976d5" />
     <meta name="yandex-verification" content="d0bc285c0cf20d50" />
@@ -47,14 +54,12 @@
     <link rel="manifest" href="./manifest.json" />
     <title>Рыболовный форум - Сообщество рыбаков России | Советы, отчеты, соревнования</title>
     
-    
-    
     <!-- Yandex.RTB -->
     <script>window.yaContextCb=window.yaContextCb||[]</script>
-    <script src="https://yandex.ru/ads/system/context.js" async></script>
+    <script src="https://yandex.ru/ads/system/context.js" async defer></script>
     
     <!-- Top.Mail.Ru counter -->
-    <script type="text/javascript">
+    <script type="text/javascript" async defer>
     var _tmr = window._tmr || (window._tmr = []);
     _tmr.push({id: "3644598", type: "pageView", start: (new Date()).getTime()});
     (function (d, w, id) {
@@ -65,27 +70,28 @@
       if (w.opera == "[object Opera]") { d.addEventListener("DOMContentLoaded", f, false); } else { f(); }
     })(document, window, "tmr-code");
     </script>
-    <!-- /Top.Mail.Ru counter -->
-     
+    
+    <!-- Yandex.Metrika counter -->
+    <script type="text/javascript" async defer>
+      (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+      m[i].l=1*new Date();
+      for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+      k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
+      (window, document, "script", "https://mc.yandex.ru/metrika/tag.js", "ym");
+
+      ym(102484854, "init", {
+           clickmap:true,
+           trackLinks:true,
+           accurateTrackBounce:true
+      });
+    </script>
   </head>
   <body>
     <noscript>Для работы приложения необходимо включить JavaScript.</noscript>
-<!-- Yandex.Metrika counter -->
-<script type="text/javascript" >
-  (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
-  m[i].l=1*new Date();
-  for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
-  k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
-  (window, document, "script", "https://mc.yandex.ru/metrika/tag.js", "ym");
-
-  ym(102484854, "init", {
-       clickmap:true,
-       trackLinks:true,
-       accurateTrackBounce:true
-  });
-</script>
-<noscript><div><img src="https://mc.yandex.ru/watch/102484854" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
-<!-- /Yandex.Metrika counter -->
+    
+    <!-- Yandex.Metrika noscript counter -->
+    <noscript><div><img src="https://mc.yandex.ru/watch/102484854" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+    
     <!-- Top.Mail.Ru noscript counter -->
     <noscript><div><img src="https://top-fwz1.mail.ru/counter?id=3644598;js=na" style="position:absolute;left:-9999px;" alt="Top.Mail.Ru" /></div></noscript>
     
@@ -103,6 +109,7 @@
     <div id="root"></div>
     <!-- Отложенная загрузка основного скрипта -->
     <script type="module" src="/src/index.tsx" defer></script>
+    
     <!-- Fallback для шрифтов -->
     <noscript>
       <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" />
