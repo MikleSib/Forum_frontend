@@ -1,66 +1,66 @@
 <!DOCTYPE html>
 <html lang="ru">
   <head>
-    <meta charset="UTF-8" />
+    <meta charset="UTF-8">
     <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="./favicon.ico" />
-    <link rel="icon" type="image/png" sizes="32x32" href="./logo.png" />
-    <link rel="icon" type="image/png" sizes="16x16" href="./logo.png" />
-    <link rel="icon" type="image/svg+xml" href="./logo.svg" />
-    <link rel="apple-touch-icon" sizes="180x180" href="./logo.png" />
-    <link rel="shortcut icon" href="./favicon.ico" />
+    <link rel="icon" type="image/x-icon" href="./favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="./logo.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="./logo.png">
+    <link rel="icon" type="image/svg+xml" href="./logo.svg">
+    <link rel="apple-touch-icon" sizes="180x180" href="./logo.png">
+    <link rel="shortcut icon" href="./favicon.ico">
 
     <!-- Preload критических ресурсов -->
     <link rel="preload" as="image" href="/src/assets/bg.webp" type="image/avif" fetchpriority="high" crossorigin="anonymous">
-    <link rel="preload" as="script" href="/src/index.tsx" type="module">
+    <link rel="preload" as="script" href="/src/index.tsx" type="text/javascript">
     
     <!-- Preconnect к внешним доменам -->
     <link rel="preconnect" href="https://yandex.ru">
     <link rel="preconnect" href="https://mc.yandex.ru">
     <link rel="preconnect" href="https://top-fwz1.mail.ru">
     
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#1976d5" />
-    <meta name="yandex-verification" content="d0bc285c0cf20d50" />
-    <meta name="vk-id-application" content="53543107"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#1976d5">
+    <meta name="yandex-verification" content="d0bc285c0cf20d50">
+    <meta name="vk-id-application" content="53543107">
     
     <!-- Основные мета-теги -->
-    <meta name="description" content="Рыболовный форум - крупнейшее сообщество рыбаков России. Обсуждение зимней и летней рыбалки, спиннинга, фидера, карпфишинга. Советы по снастям, отчеты о рыбалке, поиск рыбных мест и участие в соревнованиях. Присоединяйтесь к нам!" />
-    <meta name="keywords" content="рыболовный форум, форум рыбаков, сообщество рыболовов, зимняя рыбалка форум, летняя рыбалка форум, спиннинг форум, фидер форум, карпфишинг форум, рыболовные снасти форум, ловля щуки форум, ловля окуня форум, ловля судака форум, рыбалка в Подмосковье форум, рыбалка на Волге форум, рыбалка в Сибири форум, рыболовные снасти, спиннинговые удилища, рыболовные катушки, рыболовные приманки, эхолоты для рыбалки, лодки для рыбалки, зимние снасти, рыболовные костюмы, рыбалка на щуку, рыбалка на окуня, рыбалка на судака, рыбалка на карпа, рыбалка на сома, рыбалка на форель, рыбалка на леща, рыбалка на карася, рыбалка на жереха, рыбалка на голавля, рыбалка в Подмосковье, рыбалка в Ленинградской области, рыбалка на Волге, рыбалка на Дону, рыбалка на Оке, рыбалка в Сибири, рыбалка на Урале, рыбалка на Дальнем Востоке, рыбалка в Карелии, рыбалка на Байкале, весенняя рыбалка, осенняя рыбалка, рыбалка в дождь, рыбалка в ветер, рыбалка в жару, рыболовные соревнования, отчеты о рыбалке, рыбные места, советы рыбакам, рыболовное сообщество" />
-    <meta name="author" content="Рыболовный форум" />
-    <meta name="robots" content="index, follow" />
+    <meta name="description" content="Рыболовный форум - крупнейшее сообщество рыбаков России. Обсуждение зимней и летней рыбалки, спиннинга, фидера, карпфишинга. Советы по снастям, отчеты о рыбалке, поиск рыбных мест и участие в соревнованиях. Присоединяйтесь к нам!">
+    <meta name="keywords" content="рыболовный форум, форум рыбаков, сообщество рыболовов, зимняя рыбалка форум, летняя рыбалка форум, спиннинг форум, фидер форум, карпфишинг форум, рыболовные снасти форум, ловля щуки форум, ловля окуня форум, ловля судака форум, рыбалка в Подмосковье форум, рыбалка на Волге форум, рыбалка в Сибири форум, рыболовные снасти, спиннинговые удилища, рыболовные катушки, рыболовные приманки, эхолоты для рыбалки, лодки для рыбалки, зимние снасти, рыболовные костюмы, рыбалка на щуку, рыбалка на окуня, рыбалка на судака, рыбалка на карпа, рыбалка на сома, рыбалка на форель, рыбалка на леща, рыбалка на карася, рыбалка на жереха, рыбалка на голавля, рыбалка в Подмосковье, рыбалка в Ленинградской области, рыбалка на Волге, рыбалка на Дону, рыбалка на Оке, рыбалка в Сибири, рыбалка на Урале, рыбалка на Дальнем Востоке, рыбалка в Карелии, рыбалка на Байкале, весенняя рыбалка, осенняя рыбалка, рыбалка в дождь, рыбалка в ветер, рыбалка в жару, рыболовные соревнования, отчеты о рыбалке, рыбные места, советы рыбакам, рыболовное сообщество">
+    <meta name="author" content="Рыболовный форум">
+    <meta name="robots" content="index, follow">
     
     <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://рыболовный-форум.рф/" />
-    <meta property="og:title" content="Рыболовный форум - Сообщество рыбаков" />
-    <meta property="og:description" content="Рыболовный форум - форум для обсуждения рыбалки, обмена опытом, поиска рыбных мест и участия в соревнованиях." />
-    <meta property="og:image" content="https://рыболовный-форум.рф/og-image.jpg" />
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://рыболовный-форум.рф/">
+    <meta property="og:title" content="Рыболовный форум - Сообщество рыбаков">
+    <meta property="og:description" content="Рыболовный форум - форум для обсуждения рыбалки, обмена опытом, поиска рыбных мест и участия в соревнованиях.">
+    <meta property="og:image" content="https://рыболовный-форум.рф/og-image.jpg">
     
     <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:url" content="https://рыболовный-форум.рф/" />
-    <meta property="twitter:title" content="Рыболовный форум - Сообщество рыбаков" />
-    <meta property="twitter:description" content="Рыболовный форум - форум для обсуждения рыбалки, обмена опытом, поиска рыбных мест и участия в соревнованиях." />
-    <meta property="twitter:image" content="https://рыболовный-форум.рф/twitter-image.jpg" />
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://рыболовный-форум.рф/">
+    <meta property="twitter:title" content="Рыболовный форум - Сообщество рыбаков">
+    <meta property="twitter:description" content="Рыболовный форум - форум для обсуждения рыбалки, обмена опытом, поиска рыбных мест и участия в соревнованиях.">
+    <meta property="twitter:image" content="https://рыболовный-форум.рф/twitter-image.jpg">
     
     <!-- Дополнительные мета-теги -->
-    <meta name="format-detection" content="telephone=no" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="apple-mobile-web-app-title" content="Рыболовный форум" />
+    <meta name="format-detection" content="telephone=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Рыболовный форум">
     
-    <link rel="apple-touch-icon" href="./logo.svg" />
-    <link rel="manifest" href="./manifest.json" />
+    <link rel="apple-touch-icon" href="./logo.svg">
+    <link rel="manifest" href="./manifest.json">
     <title>Рыболовный форум - Сообщество рыбаков России | Советы, форум, соревнования</title>
     
     <!-- Yandex.RTB -->
     <script>window.yaContextCb=window.yaContextCb||[]</script>
-    <script src="https://yandex.ru/ads/system/context.js" async defer></script>
+    <script src="https://yandex.ru/ads/system/context.js" async></script>
     
     <!-- Top.Mail.Ru counter -->
-    <script type="text/javascript" async defer>
+    <script>
     var _tmr = window._tmr || (window._tmr = []);
     _tmr.push({id: "3644598", type: "pageView", start: (new Date()).getTime()});
     (function (d, w, id) {
@@ -73,7 +73,7 @@
     </script>
     
     <!-- Yandex.Metrika counter -->
-    <script type="text/javascript" async defer>
+    <script>
       (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
       m[i].l=1*new Date();
       for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
@@ -101,16 +101,16 @@
   <body>
     <noscript>Для работы приложения необходимо включить JavaScript.</noscript>
     <!-- Yandex.Metrika counter -->
-    <noscript><div><img src="https://mc.yandex.ru/watch/102484854" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+    <noscript><div><img src="https://mc.yandex.ru/watch/102484854" style="position:absolute; left:-9999px;" alt=""></div></noscript>
     
     <!-- Top.Mail.Ru noscript counter -->
-    <noscript><img src="https://top-fwz1.mail.ru/counter?id=3644598;js=na" style="position:absolute;left:-9999px;" alt="Top.Mail.Ru" /></noscript>
+    <noscript><img src="https://top-fwz1.mail.ru/counter?id=3644598;js=na" style="position:absolute;left:-9999px;" alt="Top.Mail.Ru"></noscript>
     <div id="root"></div>
     <!-- Отложенная загрузка основного скрипта -->
-    <script type="module" src="/src/index.tsx" defer></script>
+    <script type="module" src="/src/index.tsx"></script>
     <!-- Fallback для шрифтов -->
     <noscript>
-      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" />
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap">
     </noscript>
   </body>
 </html> 
