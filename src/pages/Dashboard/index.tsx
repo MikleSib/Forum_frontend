@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { Box, Container, Typography, Button, Tabs, Tab, Paper, Divider, Chip, InputBase, Grid, List, ListItem, ListItemText, ListItemButton, ListItemIcon, IconButton, TextField, Dialog, DialogActions, DialogContent, DialogTitle, Link, Tooltip, Alert, Drawer, AppBar, Toolbar } from '@mui/material';
+import { Box, Container, Typography, Button, Tabs, Tab, Paper, Divider, Chip, InputBase, Grid, List, ListItem, ListItemText, ListItemButton, ListItemIcon, IconButton, TextField, Dialog, DialogActions, DialogContent, DialogTitle, Link, Tooltip, Alert, Drawer, AppBar, Toolbar, CircularProgress } from '@mui/material';
 import { useNavigate } from 'react-router-dom'; 
 import PostCard from '../../components/PostCard';
 import AddIcon from '@mui/icons-material/Add';
@@ -188,6 +188,9 @@ const Dashboard = () => {
   const [isTrackingLocation, setIsTrackingLocation] = useState(false);
   const watchPositionRef = useRef<number | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   const topics: TopicItem[] = [
     { id: 1, name: "Новости", category: NewsCategory.NEWS },
@@ -201,24 +204,25 @@ const Dashboard = () => {
       try {
         setLoading(true);
         const [postsData, statsData] = await Promise.all([
-          getPosts(),
+          getPosts(1),
           newsApi.getCategoryStats()
         ]);
         
-        setPosts(postsData);
+        setPosts(postsData.items);
+        setHasMore(postsData.page < postsData.total_pages);
         setCategoryStats(statsData);
         
         // Обновляем статистику постов
         setStats(prev => ({
           ...prev,
-          posts: postsData.length
+          posts: postsData.total
         }));
 
         // Приоритезируем кеширование изображений из постов
-        if (postsData && postsData.length > 0) {
+        if (postsData.items && postsData.items.length > 0) {
           // Собираем URL всех изображений
           const imageUrls: string[] = [];
-          postsData.forEach(post => {
+          postsData.items.forEach(post => {
             if (post.images && Array.isArray(post.images)) {
               post.images.forEach(image => {
                 if (image && image.image_url) {
@@ -266,6 +270,43 @@ const Dashboard = () => {
       window.removeEventListener(AUTH_STATUS_CHANGED, checkAuthStatus);
     };
   }, []);
+
+  const loadMorePosts = async () => {
+    if (!hasMore || isLoadingMore) return;
+    
+    try {
+      setIsLoadingMore(true);
+      const nextPage = page + 1;
+      const response = await getPosts(nextPage);
+      
+      if (response.items.length > 0) {
+        setPosts(prevPosts => [...prevPosts, ...response.items]);
+        setPage(nextPage);
+        setHasMore(response.page < response.total_pages);
+      } else {
+        setHasMore(false);
+      }
+    } catch (err) {
+      setError('Ошибка при загрузке дополнительных постов');
+    } finally {
+      setIsLoadingMore(false);
+    }
+  };
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollHeight = document.documentElement.scrollHeight;
+      const scrollTop = window.scrollY;
+      const clientHeight = document.documentElement.clientHeight;
+      
+      if (scrollHeight - scrollTop <= clientHeight * 1.5) {
+        loadMorePosts();
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [page, hasMore, isLoadingMore]);
 
   // Переход на страницу создания поста
   const handleCreatePost = () => {
@@ -930,15 +971,15 @@ const Dashboard = () => {
                 ) : error ? (
                   <Typography color="error">{error}</Typography>
                 ) : (
-                  <Box sx={{ width: '100%' }}>
+                  <Box className={styles.postsContainer}>
                     {sortedPosts.map((post) => (
-                      <Box key={post.id} sx={{ mb: 2 }}>
-                        <PostCard
-                          post={post}
-                          onClick={() => handlePostClick(post.id)}
-                        />
-                      </Box>
+                      <PostCard key={post.id} post={post} onClick={() => handlePostClick(post.id)} />
                     ))}
+                    {isLoadingMore && (
+                      <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+                        <CircularProgress />
+                      </Box>
+                    )}
                   </Box>
                 )}
               </Paper>

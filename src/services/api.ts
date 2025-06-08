@@ -8,6 +8,14 @@ interface CustomInternalAxiosRequestConfig extends InternalAxiosRequestConfig {
   _retry?: boolean;
 }
 
+interface PaginatedResponse<T> {
+  items: T[];
+  total: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+}
+
 // Создаем инстанс axios с базовой конфигурацией
 const api = axios.create({
   baseURL: API_URL,
@@ -116,9 +124,14 @@ export const adminApi = {
 };
 
 // Получение всех постов
-export const getPosts = async (): Promise<Post[]> => {
+export const getPosts = async (page: number = 1): Promise<PaginatedResponse<Post>> => {
   try {
-    const response = await api.get('/posts');
+    const response = await api.get('/posts', {
+      params: {
+        page,
+        page_size: 2
+      }
+    });
     return response.data;
   } catch (error) {
     console.error('Ошибка при получении постов:', error);
