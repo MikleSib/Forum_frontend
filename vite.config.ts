@@ -22,8 +22,7 @@ export default defineConfig({
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
           'mui-vendor': ['@mui/material', '@mui/icons-material'],
           'utils-vendor': ['lodash', 'axios', 'date-fns'],
-          'analytics': ['@yandex/metrika'],
-          'ui-components': ['@mui/material/Button', '@mui/material/TextField', '@mui/material/Dialog'],
+          'ui-components': ['@mui/material/Button', '@mui/material/TextField', '@mui/material/Dialog']
         },
         chunkFileNames: 'assets/[name]-[hash].js',
         entryFileNames: 'assets/[name]-[hash].js',
