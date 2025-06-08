@@ -25,6 +25,8 @@ import AddProduct from './pages/Marketplace/AddProduct';
 import { userStore } from './shared/store/userStore';
 import SocialCallback from './pages/auth/SocialCallback';
 import { NotFound } from './pages/NotFound';
+import Terms from './pages/Terms';
+import Privacy from './pages/Privacy';
 
 const theme = createTheme({
   palette: {
@@ -146,7 +148,8 @@ function App() {
           <Route path="/verify-email" element={<VerifyEmail />} />
           {/* Обработка callback от соцсетей */}
           <Route path="/auth/social/:provider" element={<SocialCallback />} />
-        
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<Privacy />} />
         </Routes>
       </Router>
     </ThemeProvider>

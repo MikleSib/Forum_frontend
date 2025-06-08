@@ -13,7 +13,8 @@ const FooterContainer = styled('footer')(({ theme }) => ({
   paddingBottom: theme.spacing(3),
   marginTop: 'auto',
   boxShadow: '0 -4px 10px rgba(0, 0, 0, 0.05)',
-  borderTop: '1px solid rgba(0, 0, 0, 0.09)'
+  borderTop: '1px solid rgba(0, 0, 0, 0.09)',
+  minHeight: 180,
 }));
 
 const FooterLink = styled(Link)(({ theme }) => ({
