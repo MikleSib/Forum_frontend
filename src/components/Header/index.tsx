@@ -82,11 +82,14 @@ const Header: React.FC = () => {
         zIndex: 0,
         pointerEvents: 'none',
         overflow: 'hidden',
+        backgroundColor: '#f0f0f0', // Добавляем цвет фона на время загрузки
       }}>
         <img 
           src={bgImage} 
           alt="Фон рыбалка" 
           fetchPriority="high"
+          loading="eager"
+          decoding="async"
           style={{
             width: '100%',
             height: '100%',
@@ -94,6 +97,7 @@ const Header: React.FC = () => {
             objectPosition: 'center',
             display: 'block',
             userSelect: 'none',
+            willChange: 'transform', // Оптимизация рендеринга
           }}
         />
       </Box>
