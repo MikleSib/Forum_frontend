@@ -4,24 +4,36 @@ import { SEO } from '../components/SEO/SEO';
 import { SchemaMarkup } from '../components/SEO/SchemaMarkup';
 import { Box, Typography, Button, Container, Paper } from '@mui/material';
 import { Home as HomeIcon, Forum as ForumIcon, Newspaper as NewsIcon, ShoppingCart as MarketIcon } from '@mui/icons-material';
+import { usePageNotFound } from '../hooks/usePageNotFound';
 
 export const NotFound: React.FC = () => {
+  const { pathname } = usePageNotFound({
+    title: '404 — Страница не найдена | Рыболовный форум',
+    customMessage: 'User accessed non-existent page'
+  });
+  
   return (
     <>
       <SEO
-        title="Страница не найдена"
-        description="К сожалению, запрашиваемая страница не найдена. Вернитесь на главную страницу рыболовного форума."
-        keywords="страница не найдена, 404, рыболовный форум"
+        title="404 — Страница не найдена"
+        description="К сожалению, запрашиваемая страница не найдена. Вернитесь на главную страницу рыболовного форума или воспользуйтесь навигацией."
+        keywords="страница не найдена, 404, ошибка, рыболовный форум"
+        canonical={`https://xn----9sbd2aijefbenj3bl0hg.xn--p1ai/404`}
       />
       <SchemaMarkup
         type="WebPage"
         data={{
-          name: 'Страница не найдена',
+          name: '404 — Страница не найдена',
           description: 'К сожалению, запрашиваемая страница не найдена. Вернитесь на главную страницу рыболовного форума.',
-          url: 'https://xn----9sbd2aijefbenj3bl0hg.xn--p1ai/404'
+          url: 'https://xn----9sbd2aijefbenj3bl0hg.xn--p1ai/404',
+          isPartOf: {
+            '@type': 'WebSite',
+            name: 'Рыболовный форум',
+            url: 'https://xn----9sbd2aijefbenj3bl0hg.xn--p1ai'
+          }
         }}
       />
-      <Container maxWidth="md">
+      <Container maxWidth="md" sx={{ py: 4 }}>
         <Paper 
           elevation={3} 
           sx={{ 
@@ -32,18 +44,24 @@ export const NotFound: React.FC = () => {
             backgroundColor: 'background.paper'
           }}
         >
-          <Typography variant="h1" color="primary" sx={{ fontSize: '6rem', mb: 2 }}>
+          <Typography variant="h1" color="primary" sx={{ fontSize: '6rem', mb: 2, fontWeight: 'bold' }}>
             404
           </Typography>
-          <Typography variant="h4" color="text.primary" gutterBottom>
+          <Typography variant="h4" color="text.primary" gutterBottom sx={{ fontWeight: 600 }}>
             Страница не найдена
           </Typography>
-          <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
+          <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
             К сожалению, запрашиваемая страница не найдена.
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+            Возможно, страница была перемещена или удалена.
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 4, fontFamily: 'monospace', fontSize: '0.875rem' }}>
+            Путь: {pathname}
           </Typography>
           
           <Box sx={{ mb: 4 }}>
-            <Typography variant="h6" gutterBottom>
+            <Typography variant="h6" gutterBottom sx={{ color: 'primary.main', fontWeight: 600 }}>
               Возможно, вы ищете:
             </Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center' }}>
@@ -87,7 +105,7 @@ export const NotFound: React.FC = () => {
             variant="contained"
             color="primary"
             size="large"
-            sx={{ borderRadius: 2 }}
+            sx={{ borderRadius: 2, px: 4, py: 1.5 }}
           >
             Вернуться на главную
           </Button>

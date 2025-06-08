@@ -150,6 +150,8 @@ function App() {
           <Route path="/auth/social/:provider" element={<SocialCallback />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />
+          {/* Маршрут для 404 ошибки - должен быть последним */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </Router>
     </ThemeProvider>
