@@ -22,7 +22,7 @@ import EventIcon from '@mui/icons-material/Event';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import FiberNewIcon from '@mui/icons-material/FiberNew';
 import styles from './Dashboard.module.css';
-import { getPosts } from '../../services/api';
+import { getPosts, getUserProfile } from '../../services/api';
 import { Post } from '../../shared/types/post.types';
 import { NewsCategory } from '../../shared/types/news.types';
 import { useTheme, useMediaQuery } from '@mui/material';
@@ -246,13 +246,21 @@ const Dashboard = () => {
       }
     };
 
-    // Проверяем статус авторизации
-    const checkAuthStatus = () => {
+    // Проверяем статус авторизации и загружаем профиль
+    const checkAuthStatus = async () => {
       const token = localStorage.getItem('access_token');
       setIsAuth(!!token);
+      
+      if (token) {
+        try {
+          await getUserProfile();
+        } catch (error) {
+          console.error('Ошибка при загрузке профиля:', error);
+        }
+      }
     };
 
-    // Проверяем наличие токена в localStorage
+    // Проверяем наличие токена в localStorage и загружаем профиль
     checkAuthStatus();
 
     // Добавляем слушатель на изменение статуса авторизации
