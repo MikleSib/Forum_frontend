@@ -49,6 +49,9 @@ import { useNavigate } from 'react-router-dom';
 import { userStore } from '../../shared/store/userStore';
 import * as marketplaceApi from '../../services/marketplaceApi';
 import { Product, ProductFilters, Filters } from '../../services/marketplaceApi';
+import { SEO } from '../../components/SEO/SEO';
+import { SchemaMarkup } from '../../components/SEO/SchemaMarkup';
+import { seoConfig } from '../../config/seo.config';
 
 // Стилизованные компоненты
 const ProductCard = styled(Card)(({ theme }) => ({
@@ -514,7 +517,23 @@ const Marketplace: React.FC = () => {
   }, [searchQuery, selectedCategories, selectedStores, selectedMarketplaces, priceRange, sortOption]);
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <>
+      <SEO
+        title={seoConfig.marketplace.title}
+        description={seoConfig.marketplace.description}
+        keywords={seoConfig.marketplace.keywords}
+        canonical="https://xn----9sbd2aijefbenj3bl0hg.xn--p1ai/marketplace"
+      />
+      <SchemaMarkup
+        type="WebPage"
+        data={{
+          name: 'Маркетплейс рыболовных товаров',
+          description: seoConfig.marketplace.description,
+          url: 'https://xn----9sbd2aijefbenj3bl0hg.xn--p1ai/marketplace'
+        }}
+      />
+      
+      <Container maxWidth="lg" sx={{ py: 4 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
         <Typography variant="h4" component="h1" gutterBottom>
           Магазин рыболовных товаров
@@ -890,6 +909,7 @@ const Marketplace: React.FC = () => {
         </DialogActions>
       </Dialog>
     </Container>
+    </>
   );
 };
 

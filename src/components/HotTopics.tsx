@@ -56,7 +56,15 @@ const HotTopics = () => {
 
   if (loading) {
     return (
-      <Paper sx={{ p: 2, mb: 3, borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+      <Paper sx={{ 
+        p: 2, 
+        mb: 0, 
+        borderRadius: '8px', 
+        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        backdropFilter: 'blur(10px)',
+        border: '1px solid rgba(255, 255, 255, 0.2)'
+      }}>
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
           <LocalFireDepartmentIcon sx={{ color: 'orange', mr: 1 }} />
           <Typography variant="h6" component="h2" fontWeight="bold">
@@ -72,7 +80,15 @@ const HotTopics = () => {
 
   if (error) {
     return (
-      <Paper sx={{ p: 2, mb: 3, borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+      <Paper sx={{ 
+        p: 2, 
+        mb: 0, 
+        borderRadius: '8px', 
+        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        backdropFilter: 'blur(10px)',
+        border: '1px solid rgba(255, 255, 255, 0.2)'
+      }}>
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
           <LocalFireDepartmentIcon sx={{ color: 'orange', mr: 1 }} />
           <Typography variant="h6" component="h2" fontWeight="bold">
@@ -86,7 +102,15 @@ const HotTopics = () => {
 
   if (!topics || topics.length === 0) {
     return (
-      <Paper sx={{ p: 2, mb: 3, borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+      <Paper sx={{ 
+        p: 2, 
+        mb: 0, 
+        borderRadius: '8px', 
+        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        backdropFilter: 'blur(10px)',
+        border: '1px solid rgba(255, 255, 255, 0.2)'
+      }}>
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
           <LocalFireDepartmentIcon sx={{ color: 'orange', mr: 1 }} />
           <Typography variant="h6" component="h2" fontWeight="bold">
@@ -101,10 +125,13 @@ const HotTopics = () => {
   return (
     <Paper sx={{ 
       p: 2, 
-      mb: 3, 
+      mb: 0, 
       borderRadius: '8px', 
       boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-      overflow: 'hidden'
+      overflow: 'hidden',
+      backgroundColor: 'rgba(255, 255, 255, 0.9)',
+      backdropFilter: 'blur(10px)',
+      border: '1px solid rgba(255, 255, 255, 0.2)'
     }}>
       <Box sx={{ 
         display: 'flex', 

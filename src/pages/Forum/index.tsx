@@ -19,6 +19,9 @@ import { ForumCategory, ForumTopic } from '../../shared/types/forum.types';
 import { userStore } from '../../shared/store/userStore';
 import { formatRelativeDate } from '../../utils/dateUtils';
 import YandexAds from '../../components/YandexAds';
+import { SEO } from '../../components/SEO/SEO';
+import { SchemaMarkup } from '../../components/SEO/SchemaMarkup';
+import { seoConfig } from '../../config/seo.config';
 
 // Удаляем моковые данные и заменяем их на состояние для реальных данных
 const ForumPage: React.FC = () => {
@@ -116,14 +119,38 @@ const ForumPage: React.FC = () => {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <>
+      <SEO
+        title={seoConfig.forum.title}
+        description={seoConfig.forum.description}
+        keywords={seoConfig.forum.keywords}
+        canonical="https://xn----9sbd2aijefbenj3bl0hg.xn--p1ai/forum"
+      />
+      <SchemaMarkup
+        type="WebPage"
+        data={{
+          name: 'Форум рыболовов',
+          description: seoConfig.forum.description,
+          url: 'https://xn----9sbd2aijefbenj3bl0hg.xn--p1ai/forum'
+        }}
+      />
+      
+      <Container maxWidth="lg" sx={{ py: 4 }}>
       {/* Заголовок и поиск */}
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" component="h1" sx={{ fontWeight: 700, mb: 1, fontSize: { xs: '1.75rem', md: '2.125rem' } }}>
+      <Box sx={{ mb: 4, textAlign: 'center' }}>
+        <Typography variant="h1" component="h1" sx={{ 
+          fontWeight: 700, 
+          mb: 2, 
+          fontSize: { xs: '1.75rem', md: '2.125rem' },
+          color: 'primary.main'
+        }}>
           Форум рыболовов
         </Typography>
-        <Typography variant="subtitle1" color="text.secondary" sx={{ fontSize: { xs: '0.875rem', md: '1rem' } }}>
-          Общайтесь, делитесь опытом и задавайте вопросы другим рыбакам
+        <Typography variant="body1" sx={{ mb: 1, maxWidth: '700px', mx: 'auto' }}>
+          Обсуждение тем о рыбалке, обмен опытом между рыбаками и общение с единомышленниками.
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ maxWidth: '600px', mx: 'auto', mb: 3 }}>
+          Задавайте вопросы, делитесь советами, обсуждайте снасти и находите новых друзей среди рыболовов.
         </Typography>
         
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mt: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
@@ -488,6 +515,7 @@ const ForumPage: React.FC = () => {
         <YandexAds blockId="R-A-15369619-1" />
       </Box>
     </Container>
+    </>
   );
 };
 

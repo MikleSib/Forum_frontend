@@ -40,6 +40,10 @@ import { userStore } from '../../shared/store/userStore';
 import { formatLocalDate } from '../../utils/dateUtils';
 import NewsCard from '../../components/NewsCard';
 import YandexAds from '../../components/YandexAds';
+import { SEO } from '../../components/SEO/SEO';
+import { SchemaMarkup } from '../../components/SEO/SchemaMarkup';
+import { seoConfig } from '../../config/seo.config';
+
 
 // Типы сортировки
 type SortType = 'newest' | 'popular';
@@ -164,80 +168,126 @@ const NewsPage: React.FC = () => {
   };
 
   return (
-    <Container 
-      maxWidth={false} 
-      sx={{ 
-        maxWidth: '1600px',
-        height: '100%',
-        overflow: 'hidden',
-        p: { xs: 2, sm: 3 }
-      }}
-    >
-      <Box sx={{ 
-        display: 'flex', 
-        gap: 2, 
-        height: '100%',
-        flexDirection: { xs: 'column', md: 'row' } 
-      }}>
-        {/* Левая колонка */}
-        <Box sx={{ 
-          flex: '0 0 250px', 
-          display: { xs: 'none', md: 'block' },
-          overflow: 'auto'
-        }}>
-          <Paper sx={{ p: 2, mb: 2 }}>
-            <Typography variant="h6" sx={{ mb: 2 }}>Навигация</Typography>
-            <List>
-              {Object.entries(NEWS_CATEGORIES).map(([category, { title }]) => (
-                <ListItemButton
-                  key={category}
-                  selected={category === selectedCategory}
-                  onClick={() => handleCategorySelect(category as NewsCategory)}
-                >
-                  <ListItemIcon>
-                    {CATEGORY_ICONS[category as NewsCategory]}
-                  </ListItemIcon>
-                  <ListItemText primary={title} />
-                </ListItemButton>
-              ))}
-            </List>
-          </Paper>
+    <>
+      <SEO
+        title={seoConfig.news.title}
+        description={seoConfig.news.description}
+        keywords={seoConfig.news.keywords}
+        canonical="https://xn----9sbd2aijefbenj3bl0hg.xn--p1ai/news"
+      />
+      <SchemaMarkup
+        type="WebPage"
+        data={{
+          name: 'Новости рыболовного форума',
+          description: seoConfig.news.description,
+          url: 'https://xn----9sbd2aijefbenj3bl0hg.xn--p1ai/news'
+        }}
+      />
+      
+      <Container 
+        maxWidth={false} 
+        sx={{ 
+          maxWidth: '1600px',
+          height: '100%',
+          overflow: 'hidden',
+          p: { xs: 2, sm: 3 },
+          position: 'relative',
+          zIndex: 1
+        }}
+      >
+        {/* Заголовок страницы */}
+        <Box sx={{ textAlign: 'center', py: { xs: 1, md: 2 }, px: 2 }}>
+          <Typography variant="h1" component="h1" sx={{ 
+            fontSize: { xs: '1.75rem', md: '2.125rem' },
+            fontWeight: 700,
+            mb: 1,
+            color: 'primary.main'
+          }}>
+            Новости рыболовного форума
+          </Typography>
+          <Typography variant="body1" sx={{ mb: 1, maxWidth: '700px', mx: 'auto' }}>
+            Последние новости из мира рыбалки, отчеты о рыбалке, обзоры снастей и гайды по ловле рыбы.
+          </Typography>
+          
         </Box>
 
-        {/* Мобильное меню */}
-        <SwipeableDrawer
-          anchor="left"
-          open={mobileMenuOpen}
-          onClose={() => setMobileMenuOpen(false)}
-          onOpen={() => setMobileMenuOpen(true)}
-          sx={{ display: { xs: 'block', md: 'none' } }}
-        >
-          <Box sx={{ width: 250, p: 2 }}>
-            <Typography variant="h6" sx={{ mb: 2 }}>Навигация</Typography>
-            <List>
-              {Object.entries(NEWS_CATEGORIES).map(([category, { title }]) => (
-                <ListItemButton
-                  key={category}
-                  selected={category === selectedCategory}
-                  onClick={() => handleCategorySelect(category as NewsCategory)}
-                >
-                  <ListItemIcon>
-                    {CATEGORY_ICONS[category as NewsCategory]}
-                  </ListItemIcon>
-                  <ListItemText primary={title} />
-                </ListItemButton>
-              ))}
-            </List>
-          </Box>
-        </SwipeableDrawer>
+        <Box sx={{ mt: { xs: 0, md: 1 } }}>
+          {/* Основной контент с боковыми панелями */}
+          <Box sx={{ 
+            display: 'flex', 
+            gap: { md: 2, lg: 3 }, 
+            maxWidth: '1400px', 
+            mx: 'auto', 
+            px: 2,
+            alignItems: 'flex-start'
+          }}>
+            {/* Левая колонка */}
+            <Box sx={{ 
+              width: { md: 200, lg: 250 }, 
+              flexShrink: 0,
+              display: { xs: 'none', md: 'block' }
+            }}>
+              <Paper sx={{ 
+                p: 2, 
+                mb: 0,
+                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)'
+              }}>
+                <Typography variant="h6" sx={{ mb: 1 }}>Навигация</Typography>
+                <List>
+                  {Object.entries(NEWS_CATEGORIES).map(([category, { title }]) => (
+                    <ListItemButton
+                      key={category}
+                      selected={category === selectedCategory}
+                      onClick={() => handleCategorySelect(category as NewsCategory)}
+                    >
+                      <ListItemIcon>
+                        {CATEGORY_ICONS[category as NewsCategory]}
+                      </ListItemIcon>
+                      <ListItemText primary={title} />
+                    </ListItemButton>
+                  ))}
+                </List>
+              </Paper>
+            </Box>
 
-        {/* Центральная колонка */}
-        <Box sx={{ 
-          flex: 1,
-          overflow: 'auto',
-          height: '100%'
-        }}>
-          <Paper sx={{ p: 2, mb: 2 }}>
+            {/* Мобильное меню */}
+            <SwipeableDrawer
+              anchor="left"
+              open={mobileMenuOpen}
+              onClose={() => setMobileMenuOpen(false)}
+              onOpen={() => setMobileMenuOpen(true)}
+              sx={{ display: { xs: 'block', md: 'none' } }}
+            >
+              <Box sx={{ width: 250, p: 2 }}>
+                <Typography variant="h6" sx={{ mb: 2 }}>Навигация</Typography>
+                <List>
+                  {Object.entries(NEWS_CATEGORIES).map(([category, { title }]) => (
+                    <ListItemButton
+                      key={category}
+                      selected={category === selectedCategory}
+                      onClick={() => handleCategorySelect(category as NewsCategory)}
+                    >
+                      <ListItemIcon>
+                        {CATEGORY_ICONS[category as NewsCategory]}
+                      </ListItemIcon>
+                      <ListItemText primary={title} />
+                    </ListItemButton>
+                  ))}
+                </List>
+              </Box>
+            </SwipeableDrawer>
+
+            {/* Центральная колонка */}
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Paper sx={{ 
+            p: 2, 
+            mb: 2,
+            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255, 255, 255, 0.2)'
+          }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 {/* Кнопка бургер-меню для мобильных */}
@@ -328,21 +378,20 @@ const NewsPage: React.FC = () => {
               </Grid>
             )}
           </Paper>
-        </Box>
+            </Box>
 
-        {/* Правая колонка */}
-        <Box sx={{ 
-          flex: '0 0 300px', 
-          display: { xs: 'none', md: 'block' },
-          overflow: 'auto'
-        }}>
-          
-          {/* Рекламный блок Яндекс.РСЯ */}
-          <YandexAds blockId="R-A-15369619-1" />
-          
+            {/* Правая колонка */}
+            <Box sx={{ 
+              width: { md: 250, lg: 300 }, 
+              flexShrink: 0,
+              display: { xs: 'none', md: 'block' }
+            }}>
+              <YandexAds blockId="R-A-15369619-1" />
+            </Box>
+          </Box>
         </Box>
-      </Box>
-    </Container>
+      </Container>
+    </>
   );
 };
 

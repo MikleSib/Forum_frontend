@@ -35,6 +35,10 @@ import imageCache from '../../utils/imageCache';
 import { IMAGE_BASE_URL } from '../../config/api';
 import YandexAds from '../../components/YandexAds';
 import HotTopics from '../../components/HotTopics';
+import { SEO } from '../../components/SEO/SEO';
+import { SchemaMarkup } from '../../components/SEO/SchemaMarkup';
+import { seoConfig } from '../../config/seo.config';
+
 
 // Другие варианты карт:
 // Esri World Terrain (только природный рельеф): "https://server.arcgisonline.com/ArcGIS/rest/services/World_Terrain_Base/MapServer/tile/{z}/{y}/{x}"
@@ -595,7 +599,33 @@ const Dashboard = () => {
   const sortedPosts = useMemo(() => getSortedPosts(), [getSortedPosts]);
 
   return (
-    <Container maxWidth={false} sx={{ maxWidth: '1600px', p: 0 }}>
+    <>
+      <SEO
+        title={seoConfig.home.title}
+        description={seoConfig.home.description}
+        keywords={seoConfig.home.keywords}
+        canonical="https://xn----9sbd2aijefbenj3bl0hg.xn--p1ai/"
+      />
+      <SchemaMarkup
+        type="WebSite"
+        data={{
+          name: 'Рыболовный форум',
+          url: 'https://xn----9sbd2aijefbenj3bl0hg.xn--p1ai',
+          description: seoConfig.home.description,
+          potentialAction: {
+            '@type': 'SearchAction',
+            target: 'https://xn----9sbd2aijefbenj3bl0hg.xn--p1ai/search?q={search_term_string}',
+            'query-input': 'required name=search_term_string'
+          }
+        }}
+      />
+      
+      <Container maxWidth={false} sx={{ 
+        maxWidth: '1600px', 
+        p: 0,
+        position: 'relative',
+        zIndex: 1
+      }}>
       {/* Мобильная шапка с бургер-меню */}
       <Box sx={{ display: { xs: 'block', md: 'none' }, position: 'sticky', top: 0, zIndex: 1100 }}>
         <AppBar position="static" color="primary" elevation={0} className={styles.mobileAppBar} sx={{ borderRadius: 0 }}>
@@ -679,13 +709,47 @@ const Dashboard = () => {
         </Box>
       </Drawer>
     
-      <Box sx={{ mt: { xs: 1, md: 3 } }}>
-        {/* Основной контент */}
-        <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', md: 'row' } }}>
-          {/* Левая колонка - скрыта на мобильных */}
-          <Box sx={{ flex: '0 0 250px', display: { xs: 'none', md: 'block' } }}>
-            <Paper sx={{ p: 2, mb: 2 }}>
-              <Typography variant="h6" sx={{ mb: 2 }}>Навигация</Typography>
+      {/* Заголовок и описание */}
+      <Box sx={{ textAlign: 'center', py: { xs: 1, md: 2 }, px: 2 }}>
+        <Typography variant="h1" component="h1" sx={{ 
+          fontSize: { xs: '1.75rem', md: '2.5rem' },
+          fontWeight: 700,
+          mb: 1,
+          color: 'primary.main'
+        }}>
+          Сообщество рыбаков
+        </Typography>
+        <Typography variant="body1" sx={{ mb: 1, maxWidth: '800px', mx: 'auto', fontSize: '1.1rem' }}>
+          Добро пожаловать в крупнейшее сообщество рыболовов! Здесь вы найдете единомышленников, 
+          сможете поделиться опытом, получить советы от профессионалов и узнать о лучших рыбных местах.
+        </Typography>
+       
+      </Box>
+
+      <Box sx={{ mt: { xs: 0, md: 1 } }}>
+        {/* Основной контент с боковыми панелями */}
+        <Box sx={{ 
+          display: 'flex', 
+          gap: { md: 2, lg: 3 }, 
+          maxWidth: '1400px', 
+          mx: 'auto', 
+          px: 2,
+          alignItems: 'flex-start'
+        }}>
+          {/* Левая колонка */}
+          <Box sx={{ 
+            width: { md: 200, lg: 250 }, 
+            flexShrink: 0,
+            display: { xs: 'none', md: 'block' }
+          }}>
+            <Paper sx={{ 
+              p: 2, 
+              mb: 0,
+              backgroundColor: 'rgba(255, 255, 255, 0.9)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)'
+            }}>
+              <Typography variant="h6" sx={{ mb: 1 }}>Навигация</Typography>
               <List>
                 <ListItemButton onClick={handleHomeClick}>
                   <ListItemIcon>
@@ -699,15 +763,20 @@ const Dashboard = () => {
                   </ListItemIcon>
                   <ListItemText primary="Карта рыбных мест" />
                 </ListItemButton>
-
               </List>
             </Paper>
           </Box>
 
           {/* Центральная колонка */}
-          <Box sx={{ flex: 1 }}>
+          <Box sx={{ flex: 1, minWidth: 0 }}>
             {showMap ? (
-              <Paper sx={{ p: 2, mb: 2 }}>
+              <Paper sx={{ 
+                p: 2, 
+                mb: 1,
+                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)'
+              }}>
                 <Box sx={{ 
                   display: 'flex', 
                   flexDirection: { xs: 'column', sm: 'row' },
@@ -940,7 +1009,13 @@ const Dashboard = () => {
                 )}
               </Paper>
             ) : (
-              <Paper sx={{ p: 2, mb: 2 }}>
+              <Paper sx={{ 
+                p: 2, 
+                mb: 1,
+                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)'
+              }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                   <Typography variant="h6">Последние публикации</Typography>
                   {isAuth && (
@@ -990,12 +1065,12 @@ const Dashboard = () => {
           </Box>
 
           {/* Правая колонка */}
-          <Box sx={{ flex: '0 0 300px', display: { xs: 'none', md: 'block' } }}>
-            {/* Горячие темы форума */}
+          <Box sx={{ 
+            width: { md: 250, lg: 300 }, 
+            flexShrink: 0,
+            display: { xs: 'none', md: 'block' }
+          }}>
             <HotTopics />
-            
-            {/* Рекламный блок Яндекс.РСЯ 
-            <YandexAds blockId="R-A-15369619-1" />*/}
           </Box>
         </Box>
       </Box>
@@ -1058,6 +1133,7 @@ const Dashboard = () => {
         </DialogActions>
       </Dialog>
     </Container>
+    </>
   );
 };
 

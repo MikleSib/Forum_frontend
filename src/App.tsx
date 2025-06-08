@@ -27,6 +27,7 @@ import SocialCallback from './pages/auth/SocialCallback';
 import { NotFound } from './pages/NotFound';
 import Terms from './pages/Terms';
 import Privacy from './pages/Privacy';
+import PersistentBackground from './components/PersistentBackground';
 
 const theme = createTheme({
   palette: {
@@ -117,6 +118,7 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <GlobalStyles styles={globalStyles} />
+      <PersistentBackground />
       <Router>
         <Routes>
           {/* Главная страница и дашборд */}
