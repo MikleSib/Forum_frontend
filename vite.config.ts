@@ -22,11 +22,9 @@ export default defineConfig({
         manualChunks: {
           'react-vendor': ['react', 'react-dom'],
           'router-vendor': ['react-router-dom'],
-          'mui-core': ['@mui/material'],
-          'mui-icons': ['@mui/icons-material'],
-          'utils': ['lodash', 'date-fns'],
-          'api': ['axios'],
-          'ui-components': [
+          'mui-vendor': [
+            '@mui/material',
+            '@mui/icons-material',
             '@mui/material/Button',
             '@mui/material/TextField',
             '@mui/material/Dialog',
@@ -36,6 +34,8 @@ export default defineConfig({
             '@mui/material/Menu',
             '@mui/material/MenuItem'
           ],
+          'utils': ['lodash', 'date-fns'],
+          'api': ['axios'],
         },
         chunkFileNames: 'assets/[name]-[hash].js',
         entryFileNames: 'assets/[name]-[hash].js',
