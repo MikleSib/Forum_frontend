@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <!-- Главная страница -->
   <url>
-    <loc>https://xn----9sbd2aijefbenj3bl0hg.xn--p1ai/</loc>
+    <loc>https://рыболовный-форум.рф/</loc>
     <lastmod>2025-06-06</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
@@ -10,16 +9,16 @@
 
   <!-- Новости -->
   <url>
-    <loc>https://xn----9sbd2aijefbenj3bl0hg.xn--p1ai/news</loc>
+    <loc>https://рыболовный-форум.рф/news</loc>
     <lastmod>2025-06-07</lastmod>
     <changefreq>daily</changefreq>
-    <priority>0.9</priority>
+    <priority>0.6</priority>
   </url>
 
 
   <!-- Форум -->
   <url>
-    <loc>https://xn----9sbd2aijefbenj3bl0hg.xn--p1ai/forum</loc>
+    <loc>https://рыболовный-форум.рф/forum</loc>
     <lastmod>2025-06-05</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
