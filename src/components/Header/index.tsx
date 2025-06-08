@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AppBar, Toolbar, Box, Container, Typography, Button, Avatar } from '@mui/material';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import bgImage from '../../assets/bg.png';
+import bgImage from '../../assets/bg.avif';
 import logo from '../../assets/logo.svg';
 import { userStore } from '../../shared/store/userStore';
 import { IMAGE_BASE_URL } from '../../config/api';
