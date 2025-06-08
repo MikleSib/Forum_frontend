@@ -68,18 +68,43 @@ const Header: React.FC = () => {
     <Box 
       sx={{ 
         width: '100%',
-        background: `url(${bgImage})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
+        position: 'relative',
+        overflow: 'hidden',
         flexShrink: 0,
-        position: 'relative'
       }}
     >
+      {/* Абсолютный img для LCP */}
+      <Box sx={{
+        position: 'absolute',
+        inset: 0,
+        width: '100%',
+        height: '100%',
+        zIndex: 0,
+        pointerEvents: 'none',
+        overflow: 'hidden',
+      }}>
+        <img 
+          src={bgImage} 
+          alt="Фон рыбалка" 
+          fetchPriority="high"
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            objectPosition: 'center',
+            display: 'block',
+            userSelect: 'none',
+          }}
+        />
+      </Box>
+      {/* Контент шапки */}
       <Container 
         maxWidth={false} 
         sx={{ 
           maxWidth: '1600px',
-          px: 3
+          px: 3,
+          position: 'relative',
+          zIndex: 1,
         }}
       >
         <Toolbar 
