@@ -191,6 +191,7 @@ const Dashboard = () => {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   const topics: TopicItem[] = [
     { id: 1, name: "Новости", category: NewsCategory.NEWS },
@@ -248,6 +249,7 @@ const Dashboard = () => {
         setError('Не удалось загрузить данные');
       } finally {
         setLoading(false);
+        setIsInitialLoad(false);
       }
     };
 
@@ -295,6 +297,8 @@ const Dashboard = () => {
 
   useEffect(() => {
     const handleScroll = () => {
+      if (isInitialLoad) return; // Пропускаем обработку прокрутки при начальной загрузке
+      
       const scrollHeight = document.documentElement.scrollHeight;
       const scrollTop = window.scrollY;
       const clientHeight = document.documentElement.clientHeight;
@@ -306,7 +310,7 @@ const Dashboard = () => {
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [page, hasMore, isLoadingMore]);
+  }, [page, hasMore, isLoadingMore, isInitialLoad]);
 
   // Переход на страницу создания поста
   const handleCreatePost = () => {
