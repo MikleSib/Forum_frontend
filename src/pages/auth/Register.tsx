@@ -3,6 +3,8 @@ import { Container, Typography, TextField, Button, Box, Link, Alert } from '@mui
 import { useNavigate } from 'react-router-dom';
 import { register } from '../../services/auth';
 import styles from './Auth.module.css';
+import { SEO } from '../../components/SEO/SEO';
+import { seoConfig } from '../../config/seo.config';
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
@@ -53,7 +55,14 @@ const Register: React.FC = () => {
   };
 
   return (
-    <Container maxWidth="sm" className={styles.container}>
+    <>
+      <SEO
+        title={seoConfig.register.title}
+        description={seoConfig.register.description}
+        keywords={seoConfig.register.keywords}
+        canonical="https://xn----9sbd2aijefbenj3bl0hg.xn--p1ai/register"
+      />
+      <Container maxWidth="sm" className={styles.container}>
       <Box className={styles.formContainer}>
         <Typography variant="h4" component="h1" gutterBottom>
           Регистрация
@@ -147,6 +156,7 @@ const Register: React.FC = () => {
         </form>
       </Box>
     </Container>
+    </>
   );
 };
 

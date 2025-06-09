@@ -13,6 +13,8 @@ import {
 } from '@mui/material';
 import { authApi } from '../../services/auth';
 import SocialLoginButtons from '../../components/SocialLoginButtons';
+import { SEO } from '../../components/SEO/SEO';
+import { seoConfig } from '../../config/seo.config';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -90,7 +92,14 @@ const Login: React.FC = () => {
   };
 
   return (
-    <Container component="main" maxWidth="xs">
+    <>
+      <SEO
+        title={seoConfig.login.title}
+        description={seoConfig.login.description}
+        keywords={seoConfig.login.keywords}
+        canonical="https://xn----9sbd2aijefbenj3bl0hg.xn--p1ai/login"
+      />
+      <Container component="main" maxWidth="xs">
       <Box
         sx={{
           marginTop: 8,
@@ -173,6 +182,7 @@ const Login: React.FC = () => {
         </Paper>
       </Box>
     </Container>
+    </>
   );
 };
 

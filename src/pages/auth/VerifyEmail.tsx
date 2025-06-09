@@ -6,6 +6,8 @@ import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import { API_URL } from '../../config/api';
+import { SEO } from '../../components/SEO/SEO';
+import { seoConfig } from '../../config/seo.config';
 
 // Декларация типа для window._tmr
 declare global {
@@ -134,7 +136,14 @@ const VerifyEmail: React.FC = () => {
   };
 
   return (
-    <Container maxWidth="sm" sx={{ py: 8 }}>
+    <>
+      <SEO
+        title={seoConfig.verifyEmail.title}
+        description={seoConfig.verifyEmail.description}
+        keywords={seoConfig.verifyEmail.keywords}
+        canonical="https://xn----9sbd2aijefbenj3bl0hg.xn--p1ai/verify-email"
+      />
+      <Container maxWidth="sm" sx={{ py: 8 }}>
       <Paper elevation={3} sx={{ p: 4, borderRadius: 2 }}>
         {!success ? (
           <>
@@ -266,6 +275,7 @@ const VerifyEmail: React.FC = () => {
         )}
       </Paper>
     </Container>
+    </>
   );
 };
 

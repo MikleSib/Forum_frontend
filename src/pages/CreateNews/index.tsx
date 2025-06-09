@@ -29,6 +29,8 @@ import { adminApi } from '../../services/api';
 import { userStore } from '../../shared/store/userStore';
 import API_URL from '../../config/api';
 import { refreshToken } from '../../services/auth';
+import { SEO } from '../../components/SEO/SEO';
+import { seoConfig } from '../../config/seo.config';
 
 interface NewsContent {
   type: 'text' | 'image' | 'video';
@@ -311,7 +313,14 @@ const CreateNews: React.FC = () => {
   };
 
   return (
-    <Container maxWidth="md" sx={{ py: 4 }}>
+    <>
+      <SEO
+        title={seoConfig.createNews.title}
+        description={seoConfig.createNews.description}
+        keywords={seoConfig.createNews.keywords}
+        canonical="https://xn----9sbd2aijefbenj3bl0hg.xn--p1ai/news/create"
+      />
+      <Container maxWidth="md" sx={{ py: 4 }}>
       <Paper sx={{ p: 4 }}>
         <Typography variant="h4" gutterBottom sx={{ mb: 4 }}>
           Создание новости
@@ -464,6 +473,7 @@ const CreateNews: React.FC = () => {
         </Box>
       </Paper>
     </Container>
+    </>
   );
 };
 

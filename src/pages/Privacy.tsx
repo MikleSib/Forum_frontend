@@ -2,11 +2,20 @@ import React from 'react';
 import { Container, Typography, Box, Button, Paper } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useNavigate } from 'react-router-dom';
+import { SEO } from '../components/SEO/SEO';
+import { seoConfig } from '../config/seo.config';
 
 const Privacy: React.FC = () => {
   const navigate = useNavigate();
   return (
-    <Container maxWidth="md" sx={{ py: 6 }}>
+    <>
+      <SEO
+        title={seoConfig.privacy.title}
+        description={seoConfig.privacy.description}
+        keywords={seoConfig.privacy.keywords}
+        canonical="https://xn----9sbd2aijefbenj3bl0hg.xn--p1ai/privacy"
+      />
+      <Container maxWidth="md" sx={{ py: 6 }}>
       <Paper elevation={3} sx={{ p: { xs: 2, sm: 4 }, borderRadius: 4, mt: 4 }}>
         <Button
           startIcon={<ArrowBackIcon />}
@@ -31,6 +40,7 @@ const Privacy: React.FC = () => {
         </Box>
       </Paper>
     </Container>
+    </>
   );
 };
 

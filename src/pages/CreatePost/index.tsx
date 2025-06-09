@@ -9,6 +9,8 @@ import { CreatePostRequest } from '../../shared/types/post.types';
 import { createPost } from '../../services/api';
 import TipTapEditor from './TipTapEditor';
 import { compressMultipleImages } from '../../utils/imageCompressor';
+import { SEO } from '../../components/SEO/SEO';
+import { seoConfig } from '../../config/seo.config';
 
 // Декларация типа для window._tmr
 declare global {
@@ -184,7 +186,14 @@ const CreatePost: React.FC = () => {
   }, [previewUrls]);
 
   return (
-    <Container maxWidth="lg" className={styles.container}>
+    <>
+      <SEO
+        title={seoConfig.createPost.title}
+        description={seoConfig.createPost.description}
+        keywords={seoConfig.createPost.keywords}
+        canonical="https://xn----9sbd2aijefbenj3bl0hg.xn--p1ai/create-post"
+      />
+      <Container maxWidth="lg" className={styles.container}>
       <div className={styles.header}>
         <div className={styles.headerContent}>
           <Typography variant="h4" className={styles.title}>
@@ -342,6 +351,7 @@ const CreatePost: React.FC = () => {
         </Alert>
       </Snackbar>
     </Container>
+    </>
   );
 };
 

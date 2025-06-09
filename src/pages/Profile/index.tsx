@@ -9,6 +9,8 @@ import { authApi } from '../../services/auth';
 import { updateUserAvatar, deleteUserAvatar, updateUserProfile, changeUserPassword, getUserProfile } from '../../services/api';
 import { AUTH_STATUS_CHANGED } from '../../components/Header';
 import ImageCropper from '../../components/ImageCropper';
+import { SEO } from '../../components/SEO/SEO';
+import { seoConfig } from '../../config/seo.config';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -437,9 +439,12 @@ const Profile: React.FC = () => {
 
   return (
     <>
-      <meta name="robots" content="noindex, nofollow" />
-      <title>Профиль пользователя | Рыболовный форум</title>
-      
+      <SEO
+        title={seoConfig.profile.title}
+        description={seoConfig.profile.description}
+        keywords={seoConfig.profile.keywords}
+        canonical="https://xn----9sbd2aijefbenj3bl0hg.xn--p1ai/profile"
+      />
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
           <Typography variant="h4" component="h1" sx={{ fontWeight: 500, color: '#1A1A1A' }}>
