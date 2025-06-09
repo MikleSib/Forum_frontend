@@ -924,16 +924,17 @@ const TopicDetail: React.FC = () => {
                     sx={{ 
                       width: 80, 
                       height: 80, 
-                      bgcolor: !post.user?.avatar && !post.author_avatar 
-                        ? 'transparent'
+                      background: !post.user?.avatar && !post.author_avatar 
+                        ? generateGradientColor(
+                            post.author_id, 
+                            post.user?.username || post.author_username || ''
+                          )
                         : undefined,
+                      color: 'white',
                       fontSize: '2.2rem',
                       fontWeight: 800,
-                      border: !post.user?.avatar && !post.author_avatar ? '3px solid white' : 'none',
-                      boxShadow: !post.user?.avatar && !post.author_avatar 
-                        ? '0 4px 20px rgba(0, 0, 0, 0.15)'
-                        : '0 2px 10px rgba(0, 0, 0, 0.08)',
-                      position: 'relative',
+                      border: 'none',
+                      boxShadow: '0 2px 10px rgba(0, 0, 0, 0.08)',
                       transition: 'all 0.3s ease-in-out',
                       '&:hover': {
                         transform: 'scale(1.05)',
@@ -949,21 +950,7 @@ const TopicDetail: React.FC = () => {
                           opacity: 1,
                           transform: 'translateY(0)'
                         }
-                      },
-                      '&::before': !post.user?.avatar && !post.author_avatar ? {
-                        content: '""',
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        background: generateGradientColor(
-                          post.author_id, 
-                          post.user?.username || post.author_username || ''
-                        ),
-                        borderRadius: '50%',
-                        zIndex: -1
-                      } : {}
+                      }
                     }}
                   >
                     {(!post.user?.avatar && !post.author_avatar) && 
