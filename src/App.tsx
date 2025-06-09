@@ -3,7 +3,6 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { GlobalStyles } from '@mui/material';
-import { Helmet } from 'react-helmet-async';
 import MainLayout from './layouts/MainLayout';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/auth/Login';
@@ -114,10 +113,6 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <GlobalStyles styles={globalStyles} />
-      <Helmet>
-        <title>Рыболовный форум</title>
-        <meta name="description" content="Рыболовный форум - крупнейшее сообщество рыбаков России. Обсуждение зимней и летней рыбалки, спиннинга, фидера, карпфишинга." />
-      </Helmet>
       <Router>
         <Routes>
           {/* Главная страница и дашборд */}

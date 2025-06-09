@@ -9,7 +9,6 @@ import { authApi } from '../../services/auth';
 import { updateUserAvatar, deleteUserAvatar, updateUserProfile, changeUserPassword, getUserProfile } from '../../services/api';
 import { AUTH_STATUS_CHANGED } from '../../components/Header';
 import ImageCropper from '../../components/ImageCropper';
-import { Helmet } from 'react-helmet-async';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -438,10 +437,8 @@ const Profile: React.FC = () => {
 
   return (
     <>
-      <Helmet>
-        <meta name="robots" content="noindex, nofollow" />
-        <title>Профиль пользователя | Рыболовный форум</title>
-      </Helmet>
+      <meta name="robots" content="noindex, nofollow" />
+      <title>Профиль пользователя | Рыболовный форум</title>
       
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
