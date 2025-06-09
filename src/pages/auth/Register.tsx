@@ -62,7 +62,7 @@ const Register: React.FC = () => {
         keywords={seoConfig.register.keywords}
         canonical="https://xn----9sbd2aijefbenj3bl0hg.xn--p1ai/register"
       />
-      <Container maxWidth="sm" className={styles.container}>
+    <Container maxWidth="sm" className={styles.container}>
       <Box className={styles.formContainer}>
         <Typography variant="h4" component="h1" gutterBottom>
           Регистрация

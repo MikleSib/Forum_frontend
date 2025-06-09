@@ -99,7 +99,7 @@ const Login: React.FC = () => {
         keywords={seoConfig.login.keywords}
         canonical="https://xn----9sbd2aijefbenj3bl0hg.xn--p1ai/login"
       />
-      <Container component="main" maxWidth="xs">
+    <Container component="main" maxWidth="xs">
       <Box
         sx={{
           marginTop: 8,

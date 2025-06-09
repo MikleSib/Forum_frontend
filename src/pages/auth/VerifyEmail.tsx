@@ -143,7 +143,7 @@ const VerifyEmail: React.FC = () => {
         keywords={seoConfig.verifyEmail.keywords}
         canonical="https://xn----9sbd2aijefbenj3bl0hg.xn--p1ai/verify-email"
       />
-      <Container maxWidth="sm" sx={{ py: 8 }}>
+    <Container maxWidth="sm" sx={{ py: 8 }}>
       <Paper elevation={3} sx={{ p: 4, borderRadius: 2 }}>
         {!success ? (
           <>
