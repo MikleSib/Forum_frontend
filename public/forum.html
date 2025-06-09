@@ -12,7 +12,7 @@
 
     <!-- Preload критических ресурсов -->
     <link rel="preload" as="image" href="/assets/bg-BsQ2PN1b.webp" type="image/avif" fetchpriority="high" crossorigin="anonymous">
-    <link rel="preload" as="script" href="data:application/octet-stream;base64,aW1wb3J0IFJlYWN0IGZyb20gJ3JlYWN0JzsKaW1wb3J0IFJlYWN0RE9NIGZyb20gJ3JlYWN0LWRvbS9jbGllbnQnOwppbXBvcnQgQXBwIGZyb20gJy4vQXBwJzsKCmNvbnN0IHJvb3QgPSBSZWFjdERPTS5jcmVhdGVSb290KAogIGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdyb290JykgYXMgSFRNTEVsZW1lbnQKKTsKCnJvb3QucmVuZGVyKAogIDxBcHAgLz4KKTsK" type="text/javascript">
+    <link rel="preload" as="script" href="/assets/index-HsE-iONV.js" type="text/javascript">
     
     <!-- Preconnect к внешним доменам -->
     <link rel="preconnect" href="https://yandex.ru">
@@ -120,6 +120,15 @@
           <li>Снасти и оборудование</li>
           <li>Начинающим рыболовам</li>
         </ul>
+        
+        <h3>Обсуждения на рыболовном форуме</h3>
+        <p>Рыболовный форум объединяет тысячи любителей рыбалки со всей России и стран СНГ. Здесь опытные рыбаки делятся секретами успешной ловли, новички получают ценные советы, а все участники обмениваются актуальной информацией о клеве на различных водоемах. Форум структурирован по разделам, каждый из которых посвящен определенному виду рыболовства или тематике. Активные дискуссии ведутся круглосуточно, что позволяет получить быстрый ответ на любой вопрос.</p>
+        
+        <h3>Техники и методы рыболовства</h3>
+        <p>Спиннинговая ловля остается одним из самых популярных направлений среди участников форума. Обсуждаются различные техники проводки приманок, выбор воблеров и блесен для конкретных условий ловли, особенности ловли хищной рыбы в разные сезоны. Фидерное направление привлекает любителей точной и деликатной ловли мирной рыбы. Участники делятся рецептами прикормок, тактикой поиска рыбы, настройкой снастей. Карпфишинг как отдельное направление имеет свой раздел, где обсуждаются долгосрочные сессии, специализированное оборудование и стратегии ловли трофейных экземпляров.</p>
+        
+        <h3>Рыболовное сообщество и общение</h3>
+        <p>Форум служит площадкой для организации совместных выездов на рыбалку, обмена контактами и создания новых дружеских связей между рыболовами. Региональные разделы помогают найти единомышленников в своем городе или области. Участники активно делятся фотографиями уловов, рассказывают интересные истории с рыбалки, обсуждают экологические вопросы и проблемы сохранения рыбных ресурсов. Модераторы следят за соблюдением правил общения и помогают поддерживать дружелюбную атмосферу в сообществе.</p>
       </nav>
     </div>
 
@@ -152,13 +161,8 @@
   <!-- Roistat Counter End -->
   
     <div id="root"></div>
-    <script type="module" crossorigin src="/assets/index--YqG8Wex.js"></script>
-    <link rel="modulepreload" crossorigin href="/assets/react-vendor-DqlWlKw1.js">
-    <link rel="modulepreload" crossorigin href="/assets/router-vendor-ixPL58-W.js">
-    <link rel="modulepreload" crossorigin href="/assets/mui-vendor-ce5d7STL.js">
-    <link rel="modulepreload" crossorigin href="/assets/api-B10hkIRg.js">
-    <link rel="modulepreload" crossorigin href="/assets/utils-BnOKlV4n.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-Iz4RH0xn.css">
+    <!-- Отложенная загрузка основного скрипта -->
+    <script type="module" src="/src/index.tsx"></script>
     <!-- Fallback для шрифтов -->
     <noscript>
       <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap">

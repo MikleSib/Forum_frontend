@@ -5,7 +5,7 @@ Allow: /
 Allow: /news
 Allow: /forum
 Allow: /marketplace
-Allow: /profile
+Disallow: /profile
 
 # Запрещенные директории
 Disallow: /admin/
