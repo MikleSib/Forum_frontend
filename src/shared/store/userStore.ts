@@ -30,13 +30,26 @@ class UserStore {
 
   private constructor() {
     // Загружаем данные из localStorage при инициализации
-    const savedAuth = localStorage.getItem('auth');
-    if (savedAuth) {
-      const auth: AuthResponse = JSON.parse(savedAuth);
-      this._user = auth.user;
-      this._isAdmin = auth.user.is_admin;
-      this._accessToken = auth.access_token;
-      this._refreshToken = auth.refresh_token;
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const savedAuth = localStorage.getItem('auth');
+      if (savedAuth) {
+        try {
+          const auth: AuthResponse = JSON.parse(savedAuth);
+          if (auth && auth.user && typeof auth.user === 'object') {
+            this._user = auth.user;
+            this._isAdmin = auth.user.is_admin || false;
+            this._accessToken = auth.access_token || null;
+            this._refreshToken = auth.refresh_token || null;
+          } else {
+            // Если данные повреждены, очищаем localStorage
+            localStorage.removeItem('auth');
+          }
+        } catch (error) {
+          console.error('Ошибка при загрузке данных аутентификации:', error);
+          // Если не удается разобрать JSON, очищаем localStorage
+          localStorage.removeItem('auth');
+        }
+      }
     }
   }
 
@@ -48,13 +61,20 @@ class UserStore {
   }
 
   public setAuth(auth: AuthResponse) {
+    if (!auth || !auth.user) {
+      console.error('Некорректные данные аутентификации');
+      return;
+    }
+    
     this._user = auth.user;
-    this._isAdmin = auth.user.is_admin;
-    this._accessToken = auth.access_token;
-    this._refreshToken = auth.refresh_token;
+    this._isAdmin = auth.user.is_admin || false;
+    this._accessToken = auth.access_token || null;
+    this._refreshToken = auth.refresh_token || null;
     
     // Сохраняем в localStorage
-    localStorage.setItem('auth', JSON.stringify(auth));
+    if (typeof window !== 'undefined' && window.localStorage) {
+      localStorage.setItem('auth', JSON.stringify(auth));
+    }
   }
 
   public clear() {
@@ -62,7 +82,9 @@ class UserStore {
     this._isAdmin = false;
     this._accessToken = null;
     this._refreshToken = null;
-    localStorage.removeItem('auth');
+    if (typeof window !== 'undefined' && window.localStorage) {
+      localStorage.removeItem('auth');
+    }
   }
 
   public updateUser(userData: Partial<User>) {

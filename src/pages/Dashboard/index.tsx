@@ -38,6 +38,7 @@ import HotTopics from '../../components/HotTopics';
 import { SEO } from '../../components/SEO/SEO';
 import { SchemaMarkup } from '../../components/SEO/SchemaMarkup';
 import { seoConfig } from '../../config/seo.config';
+import WeatherWidget from '../../components/WeatherWidget';
 
 
 // Другие варианты карт:
@@ -707,6 +708,10 @@ const Dashboard = () => {
             ))}
           </List>
         </Box>
+        <Divider />
+        <Box sx={{ p: 2 }}>
+          <WeatherWidget userLocation={userLocation} />
+        </Box>
       </Drawer>
     
       {/* Заголовок и описание */}
@@ -744,7 +749,7 @@ const Dashboard = () => {
           }}>
             <Paper sx={{ 
               p: 2, 
-              mb: 0,
+              mb: 2,
               backgroundColor: 'rgba(255, 255, 255, 0.9)',
               backdropFilter: 'blur(10px)',
               border: '1px solid rgba(255, 255, 255, 0.2)'
@@ -765,6 +770,9 @@ const Dashboard = () => {
                 </ListItemButton>
               </List>
             </Paper>
+            
+            {/* Виджет погоды для рыбалки */}
+            <WeatherWidget userLocation={userLocation} />
           </Box>
 
           {/* Центральная колонка */}
