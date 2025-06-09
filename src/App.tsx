@@ -27,6 +27,7 @@ import SocialCallback from './pages/auth/SocialCallback';
 import { NotFound } from './pages/NotFound';
 import Terms from './pages/Terms';
 import Privacy from './pages/Privacy';
+import PersistentBackground from './components/PersistentBackground';
 
 const theme = createTheme({
   palette: {
@@ -104,7 +105,7 @@ const globalStyles = {
   },
   '*': {
     scrollbarWidth: 'none',
-    '-ms-overflow-style': 'none',
+    msOverflowStyle: 'none',
   }
 };
 
@@ -114,6 +115,7 @@ function App() {
       <CssBaseline />
       <GlobalStyles styles={globalStyles} />
       <Router>
+        <PersistentBackground />
         <Routes>
           {/* Главная страница и дашборд */}
           <Route path="/" element={<MainLayout />}>
