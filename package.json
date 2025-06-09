@@ -44,10 +44,12 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "tsc && vite build && node update-html-assets.js",
+    "build:prod": "npm run build && cp -r public/* build/",
     "preview": "vite preview",
     "test": "vitest",
-    "deploy": "npm run build && rsync -avz --delete dist/ user@your-server:/usr/share/nginx/html/"
+    "deploy": "npm run build:prod && rsync -avz --delete build/ user@your-server:/usr/share/nginx/html/",
+    "update-html": "node update-html-assets.js"
   },
   "eslintConfig": {
     "extends": [
