@@ -41,10 +41,11 @@ function updateHtmlFile(filePath, pageTitle, pageDescription) {
     }
 
     let content = fs.readFileSync(filePath, 'utf8');
+    const originalContent = content;
     
     // Исправляем проблемный base64 preload
     content = content.replace(
-        /href="data:application\/octet-stream;base64,[^"]+"/,
+        /href="data:application\/octet-stream;base64,[^"]+"/g,
         `href="${jsPath}"`
     );
     
@@ -70,16 +71,15 @@ function updateHtmlFile(filePath, pageTitle, pageDescription) {
         `href="${cssPath}"`
     );
     
-    // Обновляем vendor файлы
+    // Обновляем vendor файлы более надежно
     vendorPaths.forEach((vendorPath, index) => {
-        const vendorType = vendorPath.includes('react-vendor') ? 'react-vendor' :
-                          vendorPath.includes('router-vendor') ? 'router-vendor' :
-                          vendorPath.includes('mui-vendor') ? 'mui-vendor' : 'vendor';
-        
-        content = content.replace(
-            new RegExp(`href="\/assets\/${vendorType}-[^"]+\.js"`, 'g'),
-            `href="${vendorPath}"`
-        );
+        if (vendorPath.includes('react-vendor')) {
+            content = content.replace(/href="\/assets\/react-vendor-[^"]+\.js"/g, `href="${vendorPath}"`);
+        } else if (vendorPath.includes('router-vendor')) {
+            content = content.replace(/href="\/assets\/router-vendor-[^"]+\.js"/g, `href="${vendorPath}"`);
+        } else if (vendorPath.includes('mui-vendor')) {
+            content = content.replace(/href="\/assets\/mui-vendor-[^"]+\.js"/g, `href="${vendorPath}"`);
+        }
     });
     
     // Обновляем API файл
@@ -98,8 +98,26 @@ function updateHtmlFile(filePath, pageTitle, pageDescription) {
         );
     }
     
+    // Показываем что изменилось
+    if (content !== originalContent) {
+        console.log(`\nИзменения в ${path.basename(filePath)}:`);
+        console.log(`- Исправлен base64 preload: ${originalContent.includes('data:application/octet-stream')}`);
+        console.log(`- Обновлен JS файл: ${jsPath}`);
+        console.log(`- Обновлен CSS файл: ${cssPath}`);
+        vendorPaths.forEach(vendorPath => {
+            console.log(`- Обновлен vendor: ${vendorPath}`);
+        });
+    }
+    
     fs.writeFileSync(filePath, content);
     console.log(`Обновлен файл: ${filePath}`);
+    
+    // Всегда создаем/обновляем .gz файл
+    const gzPath = filePath + '.gz';
+    const zlib = require('zlib');
+    const gzContent = zlib.gzipSync(content);
+    fs.writeFileSync(gzPath, gzContent);
+    console.log(`Создан/обновлен .gz файл: ${gzPath}`);
 }
 
 // Обновляем все HTML файлы в public и build
