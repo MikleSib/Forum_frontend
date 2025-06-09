@@ -13,12 +13,14 @@ export const SEO: React.FC<SEOProps> = ({
   title,
   description,
   keywords,
-  ogImage = '/logo.svg',
+  ogImage = 'https://xn----9sbd2aijefbenj3bl0hg.xn--p1ai/logo.svg',
   ogType = 'website',
   canonical,
 }) => {
   const siteTitle = 'Рыболовный форум';
   const fullTitle = `${title} | ${siteTitle}`;
+  const baseUrl = 'https://xn----9sbd2aijefbenj3bl0hg.xn--p1ai';
+  const fullCanonical = canonical || window.location.href;
 
   return (
     <Helmet>
@@ -30,7 +32,9 @@ export const SEO: React.FC<SEOProps> = ({
       <meta property="og:title" content={fullTitle} />
       <meta property="og:description" content={description} />
       <meta property="og:type" content={ogType} />
+      <meta property="og:url" content={fullCanonical} />
       <meta property="og:image" content={ogImage} />
+      <meta property="og:site_name" content={siteTitle} />
       
       {/* Twitter Card */}
       <meta name="twitter:card" content="summary_large_image" />
