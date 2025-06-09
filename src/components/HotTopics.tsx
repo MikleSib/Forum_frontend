@@ -5,49 +5,45 @@ import WhatshotIcon from '@mui/icons-material/Whatshot';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import ForumIcon from '@mui/icons-material/Forum';
 import LocalFireDepartmentIcon from '@mui/icons-material/LocalFireDepartment';
-
-interface Topic {
-  id: number;
-  title: string;
-  author_username: string;
-  author_avatar: string;
-  views_count: number;
-  posts_count: number;
-  tags: string[];
-}
+import { forumApi } from '../services/forumApi';
+import { ForumTopic, ForumCategory } from '../shared/types/forum.types';
 
 const HotTopics = () => {
-  const [topics, setTopics] = useState<Topic[]>([]);
+  const [topics, setTopics] = useState<ForumTopic[]>([]);
+  const [categories, setCategories] = useState<ForumCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
+  // Функция для получения названия категории по ID
+  const getCategoryTitle = (categoryId: number): string => {
+    const category = categories.find(cat => cat.id === categoryId);
+    return category ? category.title : `Категория ${categoryId}`;
+  };
+
   useEffect(() => {
-    // API запрос для получения горячих тем
-    fetch('https://xn----9sbd2aijefbenj3bl0hg.xn--p1ai/api/forum/active-topics?limit=5')
-      .then(response => response.json())
-      .then(data => {
-        console.log('Данные горячих тем получены:', data);
-        setTopics(data);
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        
+        // Загружаем категории и активные темы параллельно
+        const [categoriesData, topicsData] = await Promise.all([
+          forumApi.getCategories(),
+          forumApi.getActiveTopics(5)
+        ]);
+        
+        setCategories(categoriesData);
+        setTopics(topicsData);
+        setError('');
+      } catch (err) {
+        console.error('Ошибка при получении данных горячих тем:', err);
+        setError('Не удалось загрузить горячие темы');
+      } finally {
         setLoading(false);
-      })
-      .catch(error => {
-        console.error('Ошибка при получении горячих тем:', error);
-        // Пример данных, если API недоступен
-        const testData = [
-          {
-            id: 8,
-            title: "Мужики первый раз на рыбалке, подскажите что подойдет щас весной для Щучки?",
-            author_username: "Mishatrof007@mail.ru",
-            author_avatar: "/files/374211c0-838e-433e-850c-ac195b0f2ae7",
-            views_count: 17,
-            posts_count: 1,
-            tags: ["Рыбалка", "Снасти"]
-          }
-        ];
-        setTopics(testData);
-        setLoading(false);
-      });
+      }
+    };
+
+    fetchData();
   }, []);
 
   const handleTopicClick = (id: number) => {
@@ -181,7 +177,7 @@ const HotTopics = () => {
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
                   <Avatar 
                     src={topic.author_avatar ? `https://xn----9sbd2aijefbenj3bl0hg.xn--p1ai${topic.author_avatar}` : undefined}
-                    alt={topic.author_username}
+                    alt={topic.author_username || 'Неизвестный'}
                     sx={{ 
                       width: 28, 
                       height: 28, 
@@ -189,11 +185,16 @@ const HotTopics = () => {
                       border: '2px solid rgba(0,0,0,0.08)'
                     }}
                   >
-                    {topic.author_username?.[0]}
+                    {(topic.author_username || 'Неизвестный')[0]}
                   </Avatar>
-                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem' }}>
-                    {topic.author_username}
-                  </Typography>
+                  <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem' }}>
+                      {topic.author_username || 'Неизвестный'}
+                    </Typography>
+                    <Typography variant="caption" color="primary" sx={{ fontSize: '0.75rem' }}>
+                      {getCategoryTitle(topic.category_id)}
+                    </Typography>
+                  </Box>
                   
                   {/* Иконка горячей темы при большом количестве просмотров */}
                   {topic.views_count > 10 && (
@@ -237,7 +238,7 @@ const HotTopics = () => {
                 
                 {topic.tags && topic.tags.length > 0 && (
                   <Box sx={{ display: 'flex', gap: 0.7, mt: 0.8, flexWrap: 'wrap' }}>
-                    {topic.tags.map(tag => (
+                    {topic.tags.map((tag: string) => (
                       <Chip 
                         key={tag} 
                         label={tag} 

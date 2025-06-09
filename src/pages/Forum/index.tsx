@@ -39,6 +39,12 @@ const ForumPage: React.FC = () => {
   const [topicsLoading, setTopicsLoading] = useState(true);
   const [topicsError, setTopicsError] = useState<string | null>(null);
 
+  // Функция для получения названия категории по ID
+  const getCategoryTitle = (categoryId: number): string => {
+    const category = categories.find(cat => cat.id === categoryId);
+    return category ? category.title : `Категория ${categoryId}`;
+  };
+
   // Загружаем категории и активные темы при монтировании компонента
   useEffect(() => {
     const fetchData = async () => {
@@ -395,10 +401,10 @@ const ForumPage: React.FC = () => {
                     onClick={() => handleTopicClick(topic.id)}
                   >
                     <Avatar 
-                      src={topic.last_post_author_avatar || topic.author_avatar} 
+                      src={topic.author_avatar} 
                       sx={{ width: { xs: 36, sm: 40 }, height: { xs: 36, sm: 40 }, alignSelf: { xs: 'center', sm: 'flex-start' } }}
                     >
-                      {!topic.last_post_author_avatar && !topic.author_avatar && ((topic.last_post_author_username || topic.author_username)?.[0] || '?')}
+                      {!topic.author_avatar && ((topic.author_username)?.[0] || '?')}
                     </Avatar>
                     <Box sx={{ flex: 1, width: '100%' }}>
                       <Box sx={{ 
@@ -416,13 +422,13 @@ const ForumPage: React.FC = () => {
                           py: { xs: 0.25, sm: 0 },
                           borderRadius: 1
                         }}>
-                          {topic.category_title || `Категория ${topic.category_id}`}
+                          {getCategoryTitle(topic.category_id)}
                         </Typography>
                         <Typography variant="body2" color="text.secondary" sx={{ 
                           display: { xs: 'block', sm: 'block' },
                           fontSize: '0.75rem'
                         }}>
-                          {topic.last_post_author_username || topic.author_username || `Пользователь ${topic.last_post_author_id || topic.author_id}`}
+                          {topic.author_username || 'Неизвестный'}
                         </Typography>
                       </Box>
                       <Typography variant="subtitle1" sx={{ 
