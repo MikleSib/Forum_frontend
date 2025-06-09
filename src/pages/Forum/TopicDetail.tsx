@@ -991,7 +991,7 @@ const TopicDetail: React.FC = () => {
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
                       <Typography variant="caption" color="text.secondary">Сообщений:</Typography>
                       <Typography variant="caption" fontWeight={500}>
-                        {post.user?.posts_count || post.author_post_count || '—'}
+                        {post.user?.posts_count !== undefined ? post.user.posts_count : (post.author_post_count !== undefined ? post.author_post_count : '—')}
                   </Typography>
                     </Box>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 0.5 }}>

@@ -45,6 +45,39 @@ const ForumPage: React.FC = () => {
     return category ? category.title : `Категория ${categoryId}`;
   };
 
+  // Функция для генерации цветного градиента для аватара
+  const generateGradientColor = (userId: number, username: string) => {
+    // Используем комбинацию ID и имени для создания уникального хеша
+    const hash = userId.toString() + (username || 'user');
+    let hashValue = 0;
+    
+    // Простая хеш-функция для преобразования строки в число
+    for (let i = 0; i < hash.length; i++) {
+      hashValue = ((hashValue << 5) - hashValue) + hash.charCodeAt(i);
+      hashValue = hashValue & hashValue; // Convert to 32bit integer
+    }
+    
+    // Массив с парами цветов для градиентов
+    const gradients = [
+      ['#1976d2', '#64b5f6'], // Синий
+      ['#388e3c', '#81c784'], // Зеленый
+      ['#d32f2f', '#e57373'], // Красный
+      ['#7b1fa2', '#ba68c8'], // Фиолетовый
+      ['#f57c00', '#ffb74d'], // Оранжевый
+      ['#0097a7', '#4dd0e1'], // Циан
+      ['#5d4037', '#a1887f'], // Коричневый
+      ['#616161', '#bdbdbd'], // Серый
+      ['#827717', '#c0ca33'], // Лаймовый
+      ['#c2185b', '#f06292']  // Розовый
+    ];
+    
+    // Выбираем градиент на основе хеша
+    const index = Math.abs(hashValue) % gradients.length;
+    const [color1, color2] = gradients[index];
+    
+    return `linear-gradient(135deg, ${color1} 0%, ${color2} 100%)`;
+  };
+
   // Загружаем категории и активные темы при монтировании компонента
   useEffect(() => {
     const fetchData = async () => {
@@ -402,7 +435,16 @@ const ForumPage: React.FC = () => {
                   >
                     <Avatar 
                       src={topic.author_avatar} 
-                      sx={{ width: { xs: 36, sm: 40 }, height: { xs: 36, sm: 40 }, alignSelf: { xs: 'center', sm: 'flex-start' } }}
+                      sx={{ 
+                        width: { xs: 36, sm: 40 }, 
+                        height: { xs: 36, sm: 40 }, 
+                        alignSelf: { xs: 'center', sm: 'flex-start' },
+                        background: !topic.author_avatar 
+                          ? generateGradientColor(topic.author_id, topic.author_username || '')
+                          : undefined,
+                        color: 'white',
+                        fontWeight: 600
+                      }}
                     >
                       {!topic.author_avatar && ((topic.author_username)?.[0] || '?')}
                     </Avatar>
