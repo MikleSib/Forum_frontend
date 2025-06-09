@@ -42,21 +42,31 @@ function updateHtmlFile(filePath, pageTitle, pageDescription) {
 
     let content = fs.readFileSync(filePath, 'utf8');
     
+    // Исправляем проблемный base64 preload
+    content = content.replace(
+        /href="data:application\/octet-stream;base64,[^"]+"/,
+        `href="${jsPath}"`
+    );
+    
     // Обновляем путь к фоновому изображению
     content = content.replace(
         /href="\/assets\/bg-[^"]+\.webp"/,
         `href="${bgPath}"`
     );
     
-    // Обновляем основной JS файл
+    // Обновляем основной JS файл (все варианты)
     content = content.replace(
-        /src="\/assets\/index-[^"]+\.js"/,
+        /src="\/assets\/index-[^"]+\.js"/g,
         `src="${jsPath}"`
+    );
+    content = content.replace(
+        /href="\/assets\/index-[^"]+\.js"/g,
+        `href="${jsPath}"`
     );
     
     // Обновляем CSS файл
     content = content.replace(
-        /href="\/assets\/index-[^"]+\.css"/,
+        /href="\/assets\/index-[^"]+\.css"/g,
         `href="${cssPath}"`
     );
     
@@ -67,7 +77,7 @@ function updateHtmlFile(filePath, pageTitle, pageDescription) {
                           vendorPath.includes('mui-vendor') ? 'mui-vendor' : 'vendor';
         
         content = content.replace(
-            new RegExp(`href="\/assets\/${vendorType}-[^"]+\.js"`),
+            new RegExp(`href="\/assets\/${vendorType}-[^"]+\.js"`, 'g'),
             `href="${vendorPath}"`
         );
     });
@@ -75,7 +85,7 @@ function updateHtmlFile(filePath, pageTitle, pageDescription) {
     // Обновляем API файл
     if (apiPath) {
         content = content.replace(
-            /href="\/assets\/api-[^"]+\.js"/,
+            /href="\/assets\/api-[^"]+\.js"/g,
             `href="${apiPath}"`
         );
     }
@@ -83,7 +93,7 @@ function updateHtmlFile(filePath, pageTitle, pageDescription) {
     // Обновляем Utils файл  
     if (utilsPath) {
         content = content.replace(
-            /href="\/assets\/utils-[^"]+\.js"/,
+            /href="\/assets\/utils-[^"]+\.js"/g,
             `href="${utilsPath}"`
         );
     }
@@ -92,8 +102,9 @@ function updateHtmlFile(filePath, pageTitle, pageDescription) {
     console.log(`Обновлен файл: ${filePath}`);
 }
 
-// Обновляем все HTML файлы в public
+// Обновляем все HTML файлы в public и build
 const publicDir = path.join(__dirname, 'public');
+const buildDir = path.join(__dirname, 'build');
 const htmlFiles = [
     'news.html',
     'forum.html', 
@@ -101,9 +112,18 @@ const htmlFiles = [
     'profile.html'
 ];
 
+// Обновляем файлы в public
 htmlFiles.forEach(filename => {
     const filePath = path.join(publicDir, filename);
     updateHtmlFile(filePath);
 });
+
+// Обновляем файлы в build (если папка существует)
+if (fs.existsSync(buildDir)) {
+    htmlFiles.forEach(filename => {
+        const filePath = path.join(buildDir, filename);
+        updateHtmlFile(filePath);
+    });
+}
 
 console.log('Все HTML файлы обновлены с актуальными путями к assets!'); 
