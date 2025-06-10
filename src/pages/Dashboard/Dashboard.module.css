@@ -249,33 +249,7 @@ body {
   border: none;
 }
 
-/* Контейнер с постами */
-.postsContainer {
-  background-color: white;
-  border-radius: 12px;
-  padding: 24px !important;
-  box-shadow: var(--card-shadow);
-  margin-top: 0 !important;
-  border: none;
-}
 
-.postsContainer::-webkit-scrollbar {
-  width: 8px;
-}
-
-.postsContainer::-webkit-scrollbar-track {
-  background: #f0f0f0;
-  border-radius: 4px;
-}
-
-.postsContainer::-webkit-scrollbar-thumb {
-  background-color: var(--primary-color);
-  border-radius: 4px;
-}
-
-.postsContainer::-webkit-scrollbar-thumb:hover {
-  background-color: var(--accent-color);
-}
 
 /* Боковая панель */
 .sidebarContainer {
@@ -361,9 +335,7 @@ body {
   }
 }
 
-.postsContainer > * {
-  animation: fadeIn 0.4s ease-out forwards;
-}
+
 
 .postCard {
   border-radius: 12px;
@@ -529,7 +501,7 @@ body {
     padding: 12px;
   }
   
-  .postsContainer, .sidebarPanel {
+  .sidebarPanel {
     padding: 16px !important;
     border-radius: 8px;
   }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { Box, Container, Typography, Button, Tabs, Tab, Paper, Divider, Chip, InputBase, Grid, List, ListItem, ListItemText, ListItemButton, ListItemIcon, IconButton, TextField, Dialog, DialogActions, DialogContent, DialogTitle, Link, Tooltip, Alert, Drawer, AppBar, Toolbar, CircularProgress } from '@mui/material';
+import { Box, Container, Typography, Button, Tabs, Tab, Paper, Divider, InputBase, Grid, List, ListItem, ListItemText, ListItemButton, ListItemIcon, IconButton, TextField, Dialog, DialogActions, DialogContent, DialogTitle, Link, Tooltip, Alert, Drawer, AppBar, Toolbar, CircularProgress } from '@mui/material';
 import { useNavigate } from 'react-router-dom'; 
 import PostCard from '../../components/PostCard';
 import AddIcon from '@mui/icons-material/Add';
@@ -19,8 +19,6 @@ import CloseIcon from '@mui/icons-material/Close';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import PetsIcon from '@mui/icons-material/Pets';
 import EventIcon from '@mui/icons-material/Event';
-import TrendingUpIcon from '@mui/icons-material/TrendingUp';
-import FiberNewIcon from '@mui/icons-material/FiberNew';
 import styles from './Dashboard.module.css';
 import { getPosts, getUserProfile } from '../../services/api';
 import { Post } from '../../shared/types/post.types';
@@ -49,7 +47,7 @@ import WeatherWidget from '../../components/WeatherWidget';
 // Thunderforest Outdoors: "https://{s}.tile.thunderforest.com/outdoors/{z}/{x}/{y}.png"
 
 // Типы сортировки
-type SortType = 'newest' | 'popular';
+
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -166,8 +164,8 @@ const Dashboard = () => {
     fish_species: 0
   });
   
-  // Сортировка по умолчанию - новые (newest)
-  const [sortType, setSortType] = useState<SortType>('newest');
+  // Всегда сортируем по новым постам
+  const sortType = 'newest';
   
   // Состояние для отображения карты или публикаций
   const [showMap, setShowMap] = useState(false);
@@ -581,20 +579,12 @@ const Dashboard = () => {
     };
   };
 
-  // Сортировка постов в зависимости от выбранного типа
+  // Сортировка постов по дате (новые вверху)
   const getSortedPosts = useCallback(() => {
-    if (sortType === 'newest') {
-      // Сортировка по дате (новые вверху)
-      return [...posts].sort((a, b) => 
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      );
-    } else {
-      // Сортировка по популярности (по лайкам и комментариям)
-      return [...posts].sort((a, b) => 
-        ((b.likes?.length || 0) + (b.comments?.length || 0)) - ((a.likes?.length || 0) + (a.comments?.length || 0))
-      );
-    }
-  }, [posts, sortType]);
+    return [...posts].sort((a, b) => 
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
+  }, [posts]);
 
   // Отсортированный список постов
   const sortedPosts = useMemo(() => getSortedPosts(), [getSortedPosts]);
@@ -806,34 +796,8 @@ const Dashboard = () => {
                       width: { xs: '100%', sm: 'auto' },
                       gap: 1 
                     }}>
-                      <Button
-                        variant="outlined"
-                        startIcon={<MyLocationIcon />}
-                        onClick={getUserLocation}
-                        disabled={locationLoading}
-                        size={isMobile ? "small" : "medium"}
-                        sx={{ 
-                          flex: { xs: 1, sm: 'none' },
-                          minWidth: { xs: 0, sm: '140px' }
-                        }}
-                      >
-                        {locationLoading ? 'Определяем...' : isMobile ? 'Моя позиция' : 'Мое местоположение'}
-                      </Button>
-                      <Button
-                        variant="outlined"
-                        color={isTrackingLocation ? "secondary" : "primary"}
-                        onClick={toggleLocationTracking}
-                        disabled={locationLoading}
-                        size={isMobile ? "small" : "medium"}
-                        sx={{ 
-                          flex: { xs: 1, sm: 'none' },
-                          minWidth: { xs: 0, sm: '180px' }
-                        }}
-                      >
-                        {isTrackingLocation 
-                          ? (isMobile ? 'Выкл слежение' : 'Остановить слежение')
-                          : (isMobile ? 'Вкл слежение' : 'Следить за положением')}
-                      </Button>
+   
+           
                     </Box>
                     <Button
                       variant="contained"
@@ -1026,38 +990,38 @@ const Dashboard = () => {
               }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                   <Typography variant="h6">Последние публикации</Typography>
-                  {isAuth && (
-                    <Button
-                      variant="contained"
-                      startIcon={<AddIcon />}
-                      onClick={handleCreatePost}
-                    >
-                      Создать пост
-                    </Button>
-                  )}
-                </Box>
-                <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-                  <Chip 
-                    icon={<TrendingUpIcon />} 
-                    label="Популярные" 
-                    onClick={() => setSortType('popular')} 
-                    color={sortType === 'popular' ? 'primary' : 'default'}
-                    variant={sortType === 'popular' ? 'filled' : 'outlined'}
-                  />
-                  <Chip 
-                    icon={<FiberNewIcon />} 
-                    label="Новые" 
-                    onClick={() => setSortType('newest')} 
-                    color={sortType === 'newest' ? 'primary' : 'default'}
-                    variant={sortType === 'newest' ? 'filled' : 'outlined'}
-                  />
+                  <Button
+                    variant="contained"
+                    startIcon={<AddIcon />}
+                    onClick={isAuth ? handleCreatePost : handleLogin}
+                    sx={{
+                      background: 'linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%)',
+                      borderRadius: '12px',
+                      fontWeight: 600,
+                      fontSize: '0.95rem',
+                      textTransform: 'none',
+                      padding: '10px 20px',
+                      boxShadow: '0 4px 15px rgba(76, 175, 80, 0.3)',
+                      transition: 'all 0.3s ease',
+                      '&:hover': {
+                        transform: 'translateY(-2px)',
+                        boxShadow: '0 8px 25px rgba(76, 175, 80, 0.4)',
+                        background: 'linear-gradient(135deg, #66BB6A 0%, #4CAF50 100%)',
+                      },
+                      '&:active': {
+                        transform: 'translateY(0px)',
+                      }
+                    }}
+                  >
+                    Создать пост
+                  </Button>
                 </Box>
                 {loading ? (
                   <Typography>Загрузка...</Typography>
                 ) : error ? (
                   <Typography color="error">{error}</Typography>
                 ) : (
-                  <Box className={styles.postsContainer}>
+                  <>
                     {sortedPosts.map((post) => (
                       <PostCard key={post.id} post={post} onClick={() => handlePostClick(post.id)} />
                     ))}
@@ -1066,7 +1030,7 @@ const Dashboard = () => {
                         <CircularProgress />
                       </Box>
                     )}
-                  </Box>
+                  </>
                 )}
               </Paper>
             )}

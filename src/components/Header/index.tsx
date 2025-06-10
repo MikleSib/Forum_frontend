@@ -396,11 +396,9 @@ const Header: React.FC = () => {
             color: 'white',
             mt: { xs: 2, md: 0 }
           }}>
-            <Typography variant="body2" sx={{ lineHeight: '32px', fontWeight: 700 }}>2 поста</Typography>
+            <Typography variant="body2" sx={{ lineHeight: '32px', fontWeight: 700 }}>11 постов</Typography>
             <Typography variant="body2" sx={{ mx: 1, lineHeight: '32px', fontWeight: 700 }}>|</Typography>
-            <Typography variant="body2" sx={{ lineHeight: '32px', fontWeight: 700 }}>45 участников</Typography>
-            <Typography variant="body2" sx={{ mx: 1, lineHeight: '32px', fontWeight: 700 }}>|</Typography>
-            <Typography variant="body2" sx={{ color: '#E09609', lineHeight: '32px', fontWeight: 700 }}>2 новых</Typography>
+            <Typography variant="body2" sx={{ lineHeight: '32px', fontWeight: 700 }}>1102 участников</Typography>
           </Box>
         </Toolbar>
       </Container>
