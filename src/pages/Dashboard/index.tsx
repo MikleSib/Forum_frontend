@@ -1193,8 +1193,7 @@ const Dashboard = () => {
                             }
                           }}
                           onClick={() => {
-                            // Здесь будет переход к детальному просмотру галереи
-                            console.log('Open gallery:', gallery.id);
+                            navigate(`/gallery/${gallery.id}`);
                           }}
                         >
                           {gallery.preview_image ? (

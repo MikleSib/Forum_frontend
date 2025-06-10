@@ -43,13 +43,25 @@ export interface Gallery {
   images?: GalleryImage[];
 }
 
+export interface GalleryCommentAuthor {
+  id: number;
+  username: string;
+  fullname: string;
+  avatar?: string;
+  registration_date: string;
+  posts_count: number;
+  role: string;
+}
+
 export interface GalleryComment {
   id: number;
-  content: string;
+  gallery_id: number;
   author_id: number;
-  author_username: string;
-  author_avatar?: string;
+  content: string;
   created_at: string;
+  updated_at: string;
+  is_edited: boolean;
+  author: GalleryCommentAuthor;
 }
 
 export interface CreateGalleryData {
@@ -257,6 +269,18 @@ export const galleryApi = {
     }
     
     return uploadedImages;
+  },
+
+  // Удаление галереи (требует токен и права администратора)
+  async deleteGallery(galleryId: number): Promise<{ message: string }> {
+    const response = await apiClient.delete(`/galleries/${galleryId}`);
+    return response.data;
+  },
+
+  // Удаление комментария (требует токен и права администратора)
+  async deleteComment(galleryId: number, commentId: number): Promise<{ message: string }> {
+    const response = await apiClient.delete(`/galleries/${galleryId}/comments/${commentId}`);
+    return response.data;
   }
 };
 

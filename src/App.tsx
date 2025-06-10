@@ -11,6 +11,7 @@ import VerifyEmail from './pages/auth/VerifyEmail';
 import Profile from './pages/Profile';
 import CreatePost from './pages/CreatePost';
 import CreatePhoto from './pages/CreatePhoto';
+import GalleryDetail from './pages/GalleryDetail';
 import PostDetail from './pages/PostDetail/index';
 import NewsPage from './pages/News';
 import NewsDetail from './pages/News/NewsDetail';
@@ -124,6 +125,7 @@ function App() {
             <Route path="profile" element={<Profile />} />
             <Route path="create-post" element={<CreatePost />} />
             <Route path="create-photo" element={<CreatePhoto />} />
+            <Route path="gallery/:id" element={<GalleryDetail />} />
             <Route path="post/:id" element={<PostDetail />} />
             <Route path="news" element={<NewsPage />} />
             <Route path="news/:id" element={<NewsDetail />} />
