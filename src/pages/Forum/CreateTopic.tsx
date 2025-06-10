@@ -222,7 +222,7 @@ const CreateTopic: React.FC = () => {
       
       // Отправляем метрику после успешного создания топика на форуме
       if (window._tmr) {
-        window._tmr.push({ type: 'reachGoal', id: 3644598, goal: 'CREATE_TOPIC'});
+        window._tmr.push({ type: 'reachGoal', value: 2, id: 3658346, goal: 'CREATE_TOPIC'});
       }
       
       // После успешного создания перенаправляем на страницу категории

@@ -165,7 +165,7 @@ const PostDetail: React.FC = () => {
         
         // Отправляем метрику при успешной отправке комментария
         if (window._tmr) {
-          window._tmr.push({ type: 'reachGoal', id: 3644598, goal: 'SEND_MSG_POST'});
+          window._tmr.push({ type: 'reachGoal', id: 3658346, goal: 'SEND_MSG_POST'});
         }
         
         setComments(prevComments => [...prevComments, newComment]);

@@ -65,7 +65,7 @@ const VerifyEmail: React.FC = () => {
         setSuccess(true);
         // Отправляем метрику успешной регистрации
         if (window._tmr) {
-          window._tmr.push({ type: 'reachGoal', id: 3644598, goal: 'REG_SUCCESS'});
+          window._tmr.push({ type: 'reachGoal', value: 1, id: 3658346, goal: 'REG_SUCCESS'});
         }
       } else {
         setError('Получен некорректный ответ от сервера');

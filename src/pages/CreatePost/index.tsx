@@ -158,7 +158,7 @@ const CreatePost: React.FC = () => {
       
       // Отправляем метрику создания поста
       if (window._tmr) {
-        window._tmr.push({ type: 'reachGoal', id: 3644598, goal: 'CREATE_POST'});
+        window._tmr.push({ type: 'reachGoal', id: 3658346, value: 2, goal: 'CREATE_POST'});
       }
       
       // Показываем сообщение об успехе

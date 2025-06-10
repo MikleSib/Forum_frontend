@@ -612,7 +612,7 @@ const TopicDetail: React.FC = () => {
       
       // Отправляем метрику успешной отправки сообщения на форуме
       if (window._tmr) {
-        window._tmr.push({ type: 'reachGoal', id: 3644598, goal: 'SEND_MSG_FORUM'});
+        window._tmr.push({ type: 'reachGoal', id: 3658346, goal: 'SEND_MSG_FORUM'});
       }
       
       // Обновляем тему, если нужно (только счетчик сообщений)
