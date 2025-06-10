@@ -186,7 +186,9 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, baseUrl = IMAGE_BAS
                 objectFit: 'contain',
                 borderRadius: '4px',
               }}
-              placeholderSrc="/placeholder-image.jpg"
+              showSkeleton={true}
+              skeletonHeight={150}
+              placeholderSrc="/placeholder-image.svg"
               imageId={image.id}
             />
           </Box>
@@ -236,6 +238,8 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, baseUrl = IMAGE_BAS
               maxHeight: 'calc(100vh - 96px)',
               objectFit: 'contain',
             }}
+            showSkeleton={true}
+            skeletonHeight={400}
             imageId={images[activeStep].id}
           />
         </DialogContent>

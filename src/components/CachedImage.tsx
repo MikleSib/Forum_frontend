@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Box } from '@mui/material';
 import imageCache from '../utils/imageCache';
 import { IMAGE_CACHE_OPTIONS } from '../config/api';
+import ImageSkeleton from './ImageSkeleton';
 
 // Стандартное изображение при ошибке загрузки
-const DEFAULT_ERROR_IMAGE = '/placeholder-error.jpg';
+const DEFAULT_ERROR_IMAGE = '/placeholder-error.svg';
 
 // Проверка поддержки Cache API
 const isCacheAPISupported = 'caches' in window;
@@ -17,6 +19,8 @@ interface CachedImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   onLoad?: () => void;
   onError?: () => void;
   imageId?: number | string;
+  showSkeleton?: boolean;
+  skeletonHeight?: number;
 }
 
 /**
@@ -31,6 +35,8 @@ const CachedImage: React.FC<CachedImageProps> = ({
   onLoad,
   onError,
   imageId,
+  showSkeleton = true,
+  skeletonHeight = 200,
   ...props
 }) => {
   const [imageSrc, setImageSrc] = useState<string>(placeholderSrc || '');
@@ -133,23 +139,60 @@ const CachedImage: React.FC<CachedImageProps> = ({
     }
   };
 
+  // Если показываем skeleton во время загрузки
+  if (isLoading && showSkeleton && !hasError) {
+    return (
+      <ImageSkeleton 
+        width="100%" 
+        height={skeletonHeight} 
+        borderRadius={props.style?.borderRadius || 1}
+      />
+    );
+  }
+
   // Если нет источника изображения и нет плейсхолдера
   if (!imageSrc && !placeholderSrc) {
-    return null;
+    return showSkeleton ? (
+      <ImageSkeleton 
+        width="100%" 
+        height={skeletonHeight} 
+        borderRadius={props.style?.borderRadius || 1}
+      />
+    ) : null;
   }
 
   return (
-    <img
-      src={imageSrc}
-      alt={alt}
-      onLoad={handleLoad}
-      onError={handleError}
-      style={{
-        ...(isLoading && { filter: 'blur(5px)' }),
-        transition: 'filter 0.3s ease-in-out',
-      }}
-      {...props}
-    />
+    <Box sx={{ position: 'relative', overflow: 'hidden' }}>
+      <img
+        src={imageSrc}
+        alt={alt}
+        onLoad={handleLoad}
+        onError={handleError}
+        style={{
+          opacity: isLoading ? 0 : 1,
+          transition: 'opacity 0.3s ease-in-out',
+          ...props.style,
+        }}
+        {...props}
+      />
+      {isLoading && imageSrc && showSkeleton && (
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+          }}
+        >
+          <ImageSkeleton 
+            width="100%" 
+            height="100%" 
+            borderRadius={props.style?.borderRadius || 1}
+          />
+        </Box>
+      )}
+    </Box>
   );
 };
 

@@ -51,8 +51,11 @@ const PostCard = ({ post, onClick }: Props): React.ReactElement => {
               width: '100%',
               height: '100%',
               objectFit: 'cover',
+              borderRadius: '4px',
             }}
-            placeholderSrc="/placeholder-image.jpg"
+            showSkeleton={true}
+            skeletonHeight={200}
+            placeholderSrc="/placeholder-image.svg"
           />
         </Box>
       )}

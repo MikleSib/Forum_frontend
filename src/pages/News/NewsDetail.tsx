@@ -134,9 +134,12 @@ const NewsDetail: React.FC = () => {
               style={{
                 width: '100%',
                 maxHeight: '600px',
-                objectFit: 'contain'
+                objectFit: 'contain',
+                borderRadius: '8px',
               }}
-              placeholderSrc="/images/placeholder-image.jpg"
+              showSkeleton={true}
+              skeletonHeight={400}
+              placeholderSrc="/images/placeholder-image.svg"
             />
           </Box>
         );

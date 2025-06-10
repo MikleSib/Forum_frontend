@@ -116,8 +116,11 @@ const NewsCard: React.FC<NewsCardProps> = ({ news, onClick }) => {
               width: '100%',
               height: '100%',
               objectFit: 'cover',
+              borderRadius: '4px',
             }}
-            placeholderSrc="/images/placeholder-image.jpg"
+            showSkeleton={true}
+            skeletonHeight={200}
+            placeholderSrc="/images/placeholder-image.svg"
           />
         </Box>
       )}

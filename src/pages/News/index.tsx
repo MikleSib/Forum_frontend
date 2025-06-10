@@ -184,17 +184,12 @@ const NewsPage: React.FC = () => {
         }}
       />
       
-      <Container 
-        maxWidth={false} 
-        sx={{ 
-          maxWidth: '1600px',
-          height: '100%',
-          overflow: 'hidden',
-          p: { xs: 2, sm: 3 },
-          position: 'relative',
-          zIndex: 1
-        }}
-      >
+      <Container maxWidth={false} sx={{ 
+        maxWidth: '1600px', 
+        p: 0,
+        position: 'relative',
+        zIndex: 1
+      }}>
         {/* Заголовок страницы */}
         <Box sx={{ textAlign: 'center', py: { xs: 1, md: 2 }, px: 2 }}>
           <Typography variant="h1" component="h1" sx={{ 
@@ -216,7 +211,7 @@ const NewsPage: React.FC = () => {
           <Box sx={{ 
             display: 'flex', 
             gap: { md: 2, lg: 3 }, 
-            maxWidth: '1400px', 
+            maxWidth: '1600px', 
             mx: 'auto', 
             px: 2,
             alignItems: 'flex-start'
