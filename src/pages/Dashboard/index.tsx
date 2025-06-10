@@ -7,6 +7,7 @@ import PersonIcon from '@mui/icons-material/Person';
 import FeedIcon from '@mui/icons-material/Feed';
 import MapIcon from '@mui/icons-material/Map';
 import NewspaperIcon from '@mui/icons-material/Newspaper';
+import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
 import SearchIcon from '@mui/icons-material/Search';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
@@ -167,8 +168,8 @@ const Dashboard = () => {
   // Всегда сортируем по новым постам
   const sortType = 'newest';
   
-  // Состояние для отображения карты или публикаций
-  const [showMap, setShowMap] = useState(false);
+  // Состояние для отображения контента
+  const [activeView, setActiveView] = useState<'posts' | 'map' | 'gallery'>('posts');
   
   // Состояния для работы с картой
   const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number }>({ lat: 55.7558, lng: 37.6173 }); // Москва по умолчанию
@@ -425,12 +426,22 @@ const Dashboard = () => {
 
   // Обработчик клика по пункту меню "Карта рыбных мест"
   const handleFishingMapClick = () => {
-    setShowMap(true);
+    setActiveView('map');
   };
 
   // Обработчик клика по пункту меню "Главная"
   const handleHomeClick = () => {
-    setShowMap(false);
+    setActiveView('posts');
+  };
+
+  // Обработчик клика по пункту меню "Фотогалерея"
+  const handleGalleryClick = () => {
+    setActiveView('gallery');
+  };
+
+  // Переход на страницу создания фото
+  const handleCreatePhoto = () => {
+    navigate('/create-photo');
   };
 
   // Функция для создания новой метки
@@ -560,11 +571,11 @@ const Dashboard = () => {
   
   // Запрос геолокации при первом отображении карты
   useEffect(() => {
-    if (showMap && !locationRequested && !locationLoading) {
+    if (activeView === 'map' && !locationRequested && !locationLoading) {
       // Запрашиваем геолокацию напрямую - браузер сам покажет необходимый интерфейс
       getUserLocation();
     }
-  }, [showMap, locationRequested, locationLoading]);
+  }, [activeView, locationRequested, locationLoading]);
 
   // Обработчик открытия и закрытия мобильного меню
   const toggleMobileMenu = () => {
@@ -657,21 +668,30 @@ const Dashboard = () => {
         <List className={styles.mobileMenuList}>
           <ListItemButton 
             onClick={handleMobileNavClick(handleHomeClick)} 
-            className={!showMap ? styles.mobileMenuItem + ' ' + styles.active : styles.mobileMenuItem}
+            className={activeView === 'posts' ? styles.mobileMenuItem + ' ' + styles.active : styles.mobileMenuItem}
           >
             <ListItemIcon>
-              <FeedIcon color={!showMap ? "primary" : "inherit"} />
+              <FeedIcon color={activeView === 'posts' ? "primary" : "inherit"} />
             </ListItemIcon>
             <ListItemText primary="Лента новостей" />
           </ListItemButton>
           <ListItemButton 
             onClick={handleMobileNavClick(handleFishingMapClick)}
-            className={showMap ? styles.mobileMenuItem + ' ' + styles.active : styles.mobileMenuItem}
+            className={activeView === 'map' ? styles.mobileMenuItem + ' ' + styles.active : styles.mobileMenuItem}
           >
             <ListItemIcon>
-              <MapIcon color={showMap ? "primary" : "inherit"} />
+              <MapIcon color={activeView === 'map' ? "primary" : "inherit"} />
             </ListItemIcon>
             <ListItemText primary="Карта рыбных мест" />
+          </ListItemButton>
+          <ListItemButton 
+            onClick={handleMobileNavClick(handleGalleryClick)}
+            className={activeView === 'gallery' ? styles.mobileMenuItem + ' ' + styles.active : styles.mobileMenuItem}
+          >
+            <ListItemIcon>
+              <PhotoLibraryIcon color={activeView === 'gallery' ? "primary" : "inherit"} />
+            </ListItemIcon>
+            <ListItemText primary="Фотогалерея" />
           </ListItemButton>
 
         </List>
@@ -726,7 +746,7 @@ const Dashboard = () => {
         <Box sx={{ 
           display: 'flex', 
           gap: { md: 2, lg: 3 }, 
-          maxWidth: '1400px', 
+          maxWidth: '1600px', 
           mx: 'auto', 
           px: 2,
           alignItems: 'flex-start'
@@ -748,15 +768,21 @@ const Dashboard = () => {
               <List>
                 <ListItemButton onClick={handleHomeClick}>
                   <ListItemIcon>
-                    <FeedIcon color={!showMap ? "primary" : "inherit"} />
+                    <FeedIcon color={activeView === 'posts' ? "primary" : "inherit"} />
                   </ListItemIcon>
                   <ListItemText primary="Лента новостей" />
                 </ListItemButton>
                 <ListItemButton onClick={handleFishingMapClick}>
                   <ListItemIcon>
-                    <MapIcon color={showMap ? "primary" : "inherit"} />
+                    <MapIcon color={activeView === 'map' ? "primary" : "inherit"} />
                   </ListItemIcon>
                   <ListItemText primary="Карта рыбных мест" />
+                </ListItemButton>
+                <ListItemButton onClick={handleGalleryClick}>
+                  <ListItemIcon>
+                    <PhotoLibraryIcon color={activeView === 'gallery' ? "primary" : "inherit"} />
+                  </ListItemIcon>
+                  <ListItemText primary="Фотогалерея" />
                 </ListItemButton>
               </List>
             </Paper>
@@ -767,7 +793,7 @@ const Dashboard = () => {
 
           {/* Центральная колонка */}
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            {showMap ? (
+            {activeView === 'map' ? (
               <Paper sx={{ 
                 p: 2, 
                 mb: 1,
@@ -979,6 +1005,72 @@ const Dashboard = () => {
                     </List>
                   </Box>
                 )}
+              </Paper>
+            ) : activeView === 'gallery' ? (
+              <Paper sx={{ 
+                p: 2, 
+                mb: 1,
+                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)'
+              }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                  <Typography variant="h6">Фотогалерея</Typography>
+                  <Button
+                    variant="contained"
+                    startIcon={<AddIcon />}
+                    onClick={isAuth ? handleCreatePhoto : handleLogin}
+                    sx={{
+                      background: 'linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%)',
+                      borderRadius: '12px',
+                      fontWeight: 600,
+                      fontSize: '0.95rem',
+                      textTransform: 'none',
+                      padding: '10px 20px',
+                      boxShadow: '0 4px 15px rgba(76, 175, 80, 0.3)',
+                      transition: 'all 0.3s ease',
+                      '&:hover': {
+                        transform: 'translateY(-2px)',
+                        boxShadow: '0 8px 25px rgba(76, 175, 80, 0.4)',
+                        background: 'linear-gradient(135deg, #66BB6A 0%, #4CAF50 100%)',
+                      },
+                      '&:active': {
+                        transform: 'translateY(0px)',
+                      }
+                    }}
+                  >
+                    Добавить фото
+                  </Button>
+                </Box>
+                
+                {/* Вкладки фильтрации */}
+                <Box sx={{ mb: 2, borderBottom: 1, borderColor: 'divider' }}>
+                  <Tabs value={0} variant="scrollable" scrollButtons="auto">
+                    <Tab label="Новые" />
+                    <Tab label="Лучшие" />
+                    <Tab label="Обсуждаемые" />
+                  </Tabs>
+                </Box>
+                
+                {/* Сетка с фотографиями */}
+                <Box sx={{ 
+                  display: 'grid',
+                  gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(4, 1fr)' },
+                  gap: 2
+                }}>
+                  {/* Здесь будут фотографии */}
+                  <Box sx={{ 
+                    aspectRatio: '1',
+                    background: 'linear-gradient(45deg, #f0f0f0, #e0e0e0)',
+                    borderRadius: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'text.secondary'
+                  }}>
+                    Загрузка...
+                  </Box>
+                </Box>
               </Paper>
             ) : (
               <Paper sx={{ 
