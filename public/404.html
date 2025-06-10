@@ -103,7 +103,7 @@
             // Сохраняем текущий путь
             const currentPath = window.location.pathname + window.location.search;
             // Перенаправляем на React приложение с параметром
-            window.location.href = '/?redirect_from=' + encodeURIComponent(currentPath);
+            window.location.href = '/';
         }, 3000);
 
         // Если пользователь кликнет куда-то раньше, отменяем таймер
