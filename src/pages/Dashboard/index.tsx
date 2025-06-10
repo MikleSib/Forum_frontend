@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Box, Container, Typography, Button, Tabs, Tab, Paper, Divider, InputBase, Grid, List, ListItem, ListItemText, ListItemButton, ListItemIcon, IconButton, TextField, Dialog, DialogActions, DialogContent, DialogTitle, Link, Tooltip, Alert, Drawer, AppBar, Toolbar, CircularProgress } from '@mui/material';
-import { useNavigate } from 'react-router-dom'; 
+import { useNavigate, useLocation } from 'react-router-dom';
+import { galleryApi, Gallery } from '../../services/galleryApi'; 
 import PostCard from '../../components/PostCard';
 import AddIcon from '@mui/icons-material/Add';
 import PersonIcon from '@mui/icons-material/Person';
@@ -8,6 +9,7 @@ import FeedIcon from '@mui/icons-material/Feed';
 import MapIcon from '@mui/icons-material/Map';
 import NewspaperIcon from '@mui/icons-material/Newspaper';
 import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
+import PhotoIcon from '@mui/icons-material/Photo';
 import SearchIcon from '@mui/icons-material/Search';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
@@ -191,6 +193,15 @@ const Dashboard = () => {
   const [hasMore, setHasMore] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
+  // Состояния для галереи
+  const [galleries, setGalleries] = useState<Gallery[]>([]);
+  const [galleryLoading, setGalleryLoading] = useState(false);
+  const [galleryError, setGalleryError] = useState<string | null>(null);
+  const [galleryPage, setGalleryPage] = useState(1);
+  const [galleryHasMore, setGalleryHasMore] = useState(true);
+  const [gallerySortBy, setGallerySortBy] = useState<'newest' | 'popular' | 'most_commented'>('newest');
+  const [galleryTabValue, setGalleryTabValue] = useState(0);
+
   const topics: TopicItem[] = [
     { id: 1, name: "Новости", category: NewsCategory.NEWS },
     { id: 2, name: "Гайды", category: NewsCategory.GUIDES },
@@ -277,6 +288,30 @@ const Dashboard = () => {
       window.removeEventListener(AUTH_STATUS_CHANGED, checkAuthStatus);
     };
   }, []);
+
+  // Обработка состояния навигации (для возврата из создания фото)
+  useEffect(() => {
+    const state = (location as any).state;
+    if (state?.activeView) {
+      setActiveView(state.activeView);
+      // Очищаем состояние навигации
+      window.history.replaceState({}, document.title);
+    }
+  }, [(location as any).state]);
+
+  // Загрузка галерей при переходе на вкладку галереи
+  useEffect(() => {
+    if (activeView === 'gallery' && galleries.length === 0 && !galleryLoading) {
+      loadGalleries(1, true);
+    }
+  }, [activeView]); // Убираем galleries.length и galleryLoading из зависимостей
+
+  // Перезагрузка галерей при смене сортировки
+  useEffect(() => {
+    if (activeView === 'gallery' && galleries.length === 0 && !galleryLoading) {
+      loadGalleries(1, true);
+    }
+  }, [gallerySortBy]);
 
   const loadMorePosts = async () => {
     if (!hasMore || isLoadingMore) return;
@@ -442,6 +477,64 @@ const Dashboard = () => {
   // Переход на страницу создания фото
   const handleCreatePhoto = () => {
     navigate('/create-photo');
+  };
+
+  // Загрузка галерей
+  const loadGalleries = async (page: number = 1, reset: boolean = false) => {
+    if (galleryLoading) return;
+    
+    try {
+      setGalleryLoading(true);
+      setGalleryError(null);
+      
+      const response = await galleryApi.getGalleries(page, 12, gallerySortBy);
+      
+      if (reset) {
+        setGalleries(response.items);
+      } else {
+        setGalleries(prev => [...prev, ...response.items]);
+      }
+      
+      setGalleryPage(page);
+      setGalleryHasMore(response.page < response.total_pages);
+    } catch (err: any) {
+      console.error('Ошибка при загрузке галерей:', err);
+      setGalleryError('Не удалось загрузить галереи');
+    } finally {
+      setGalleryLoading(false);
+    }
+  };
+
+  // Загрузка дополнительных галерей
+  const loadMoreGalleries = () => {
+    if (galleryHasMore && !galleryLoading) {
+      loadGalleries(galleryPage + 1, false);
+    }
+  };
+
+  // Обработчик изменения вкладки галереи
+  const handleGalleryTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    setGalleryTabValue(newValue);
+    let newSortBy: 'newest' | 'popular' | 'most_commented' = 'newest';
+    
+    switch (newValue) {
+      case 0:
+        newSortBy = 'newest';
+        break;
+      case 1:
+        newSortBy = 'popular';
+        break;
+      case 2:
+        newSortBy = 'most_commented';
+        break;
+    }
+    
+    if (newSortBy !== gallerySortBy) {
+      setGallerySortBy(newSortBy);
+      setGalleryPage(1);
+      setGalleryHasMore(true);
+      setGalleries([]); // Очищаем текущие галереи
+    }
   };
 
   // Функция для создания новой метки
@@ -1045,32 +1138,144 @@ const Dashboard = () => {
                 
                 {/* Вкладки фильтрации */}
                 <Box sx={{ mb: 2, borderBottom: 1, borderColor: 'divider' }}>
-                  <Tabs value={0} variant="scrollable" scrollButtons="auto">
+                  <Tabs value={galleryTabValue} onChange={handleGalleryTabChange} variant="scrollable" scrollButtons="auto">
                     <Tab label="Новые" />
                     <Tab label="Лучшие" />
                     <Tab label="Обсуждаемые" />
                   </Tabs>
                 </Box>
                 
+                {/* Отображение ошибки */}
+                {galleryError && (
+                  <Alert severity="error" sx={{ mb: 2 }}>
+                    {galleryError}
+                  </Alert>
+                )}
+                
                 {/* Сетка с фотографиями */}
-                <Box sx={{ 
-                  display: 'grid',
-                  gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(4, 1fr)' },
-                  gap: 2
-                }}>
-                  {/* Здесь будут фотографии */}
+                {galleryLoading && galleries.length === 0 ? (
+                  <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+                    <CircularProgress />
+                  </Box>
+                ) : galleries.length === 0 ? (
                   <Box sx={{ 
-                    aspectRatio: '1',
-                    background: 'linear-gradient(45deg, #f0f0f0, #e0e0e0)',
-                    borderRadius: '8px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
+                    textAlign: 'center', 
+                    p: 4,
                     color: 'text.secondary'
                   }}>
-                    Загрузка...
+                    <Typography variant="h6" sx={{ mb: 1 }}>
+                      Галереи не найдены
+                    </Typography>
+                    <Typography variant="body2">
+                      Станьте первым, кто поделится фотографиями!
+                    </Typography>
                   </Box>
-                </Box>
+                ) : (
+                  <>
+                    <Box sx={{ 
+                      display: 'grid',
+                      gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(4, 1fr)' },
+                      gap: 2,
+                      mb: 2
+                    }}>
+                      {galleries.map((gallery) => (
+                        <Box
+                          key={gallery.id}
+                          sx={{
+                            aspectRatio: '1',
+                            borderRadius: '8px',
+                            overflow: 'hidden',
+                            cursor: 'pointer',
+                            position: 'relative',
+                            transition: 'transform 0.2s ease',
+                            '&:hover': {
+                              transform: 'scale(1.02)',
+                            }
+                          }}
+                          onClick={() => {
+                            // Здесь будет переход к детальному просмотру галереи
+                            console.log('Open gallery:', gallery.id);
+                          }}
+                        >
+                          {gallery.preview_image ? (
+                            <>
+                              <img
+                                src={gallery.preview_image.thumbnail_url || gallery.preview_image.image_url}
+                                alt={gallery.title}
+                                style={{
+                                  width: '100%',
+                                  height: '100%',
+                                  objectFit: 'cover'
+                                }}
+                                loading="lazy"
+                              />
+                              
+                              {/* Оверлей с информацией */}
+                              <Box sx={{
+                                position: 'absolute',
+                                bottom: 0,
+                                left: 0,
+                                right: 0,
+                                background: 'linear-gradient(transparent, rgba(0,0,0,0.7))',
+                                color: 'white',
+                                p: 1
+                              }}>
+                                <Typography variant="caption" sx={{ 
+                                  display: 'block',
+                                  fontWeight: 600,
+                                  mb: 0.5,
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  whiteSpace: 'nowrap'
+                                }}>
+                                  {gallery.title}
+                                </Typography>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                  <Typography variant="caption" sx={{ fontSize: '0.7rem' }}>
+                                    {gallery.images_count} фото
+                                  </Typography>
+                                  <Typography variant="caption" sx={{ fontSize: '0.7rem' }}>
+                                    ❤️ {gallery.likes_count}
+                                  </Typography>
+                                </Box>
+                              </Box>
+                            </>
+                          ) : (
+                            <Box sx={{
+                              width: '100%',
+                              height: '100%',
+                              background: 'linear-gradient(45deg, #f0f0f0, #e0e0e0)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              flexDirection: 'column',
+                              color: 'text.secondary'
+                            }}>
+                              <PhotoIcon sx={{ fontSize: 48, mb: 1 }} />
+                              <Typography variant="caption">
+                                {gallery.title}
+                              </Typography>
+                            </Box>
+                          )}
+                        </Box>
+                      ))}
+                    </Box>
+                    
+                    {/* Кнопка "Загрузить еще" */}
+                    {galleryHasMore && (
+                      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+                        <Button
+                          variant="outlined"
+                          onClick={loadMoreGalleries}
+                          disabled={galleryLoading}
+                          startIcon={galleryLoading ? <CircularProgress size={16} /> : undefined}
+                        >
+                          {galleryLoading ? 'Загрузка...' : 'Загрузить еще'}
+                        </Button>
+                      </Box>
+                    )}
+                  </>
+                )}
               </Paper>
             ) : (
               <Paper sx={{ 

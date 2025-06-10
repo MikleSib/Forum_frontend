@@ -19,6 +19,7 @@ import {
   Photo as PhotoIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import { galleryApi, CreateGalleryData } from '../../services/galleryApi';
 
 interface PhotoFile {
   id: string;
@@ -136,21 +137,39 @@ const CreatePhoto: React.FC = () => {
     setError('');
 
     try {
-      // Здесь будет отправка на бекенд
-      console.log('Отправка фотографий:', {
-        title: title.trim(),
-        photos: photos.map(p => p.file)
-      });
+      // 1. Загружаем изображения на сервер
+      const files = photos.map(photo => photo.file);
+      const uploadedImages = await galleryApi.uploadImages(files);
 
-      // Имитация отправки
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // 2. Создаем галерею с загруженными изображениями
+      const galleryData: CreateGalleryData = {
+        title: title.trim(),
+        description: '', // Пока без описания, только название
+        images: uploadedImages
+      };
+
+      const newGallery = await galleryApi.createGallery(galleryData);
       
       // Очищаем previews
       photos.forEach(photo => URL.revokeObjectURL(photo.preview));
       
-      navigate('/');
-    } catch (err) {
-      setError('Ошибка при загрузке фотографий. Попробуйте еще раз.');
+      // Переходим обратно к галерее в дашборде
+      navigate('/', { state: { activeView: 'gallery', newGalleryId: newGallery.id } });
+    } catch (err: any) {
+      console.error('Ошибка при создании галереи:', err);
+      
+      // Обработка различных типов ошибок
+      if (err.response?.status === 401) {
+        setError('Необходимо войти в систему для создания галереи');
+      } else if (err.response?.status === 413) {
+        setError('Размер файлов слишком большой. Максимум 8MB на файл');
+      } else if (err.response?.status === 422) {
+        setError('Неподдерживаемый формат файла. Используйте JPG, PNG, GIF или WebP');
+      } else if (err.response?.data?.detail) {
+        setError(err.response.data.detail);
+      } else {
+        setError('Ошибка при загрузке фотографий. Попробуйте еще раз.');
+      }
     } finally {
       setIsSubmitting(false);
     }
