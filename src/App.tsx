@@ -30,6 +30,7 @@ import { NotFound } from './pages/NotFound';
 import Terms from './pages/Terms';
 import Privacy from './pages/Privacy';
 import PersistentBackground from './components/PersistentBackground';
+import AchievementsPage from './components/Achievements/AchievementsPage';
 
 const theme = createTheme({
   palette: {
@@ -136,6 +137,7 @@ function App() {
             <Route path="forum/category/:categoryId/create-topic" element={<CreateTopic />} />
             <Route path="marketplace" element={<Marketplace />} />
             <Route path="marketplace/product/:productId" element={<ProductDetail />} />
+            <Route path="achievements" element={<AchievementsPage />} />
             {userStore.isAdmin && (
               <>
                 <Route path="news/create" element={<CreateNews />} />

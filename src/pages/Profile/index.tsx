@@ -9,8 +9,8 @@ import { authApi } from '../../services/auth';
 import { updateUserAvatar, deleteUserAvatar, updateUserProfile, changeUserPassword, getUserProfile } from '../../services/api';
 import { AUTH_STATUS_CHANGED } from '../../components/Header';
 import ImageCropper from '../../components/ImageCropper';
-import { SEO } from '../../components/SEO/SEO';
-import { seoConfig } from '../../config/seo.config';
+import UserBadgesMini from '../../components/Achievements/UserBadgesMini';
+import { useAchievements } from '../../hooks/useAchievements';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -69,6 +69,9 @@ const Profile: React.FC = () => {
     about_me: '',
     avatar: ''
   });
+
+  // Подключаем данные достижений
+  const { userBadges, userStats, userLevel } = useAchievements();
 
   useEffect(() => {
     const fetchProfileData = async () => {
@@ -439,12 +442,9 @@ const Profile: React.FC = () => {
 
   return (
     <>
-      <SEO
-        title={seoConfig.profile.title}
-        description={seoConfig.profile.description}
-        keywords={seoConfig.profile.keywords}
-        canonical="https://xn----9sbd2aijefbenj3bl0hg.xn--p1ai/profile"
-      />
+      <meta name="robots" content="noindex, nofollow" />
+      <title>Профиль пользователя | Рыболовный форум</title>
+      
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
           <Typography variant="h4" component="h1" sx={{ fontWeight: 500, color: '#1A1A1A' }}>
@@ -572,6 +572,17 @@ const Profile: React.FC = () => {
             <Typography variant="body2" color="text.secondary" sx={{ mt: 2, textAlign: 'center' }}>
               Вы можете загрузить фотографию профиля в формате JPG, PNG или GIF размером до 5 МБ
             </Typography>
+            
+            {/* Виджет достижений */}
+            <Box sx={{ mt: 3 }}>
+              <UserBadgesMini 
+                badges={userBadges}
+                totalPoints={userStats?.totalPoints || 0}
+                userLevel={userLevel?.title || "Новичок"}
+                levelColor={userLevel?.color || "#1976d2"}
+                maxDisplay={6}
+              />
+            </Box>
           </Paper>
 
           {/* Правая колонка с деталями */}

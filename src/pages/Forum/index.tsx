@@ -177,20 +177,7 @@ const ForumPage: React.FC = () => {
       <Container maxWidth="lg" sx={{ py: 4 }}>
       {/* Заголовок и поиск */}
       <Box sx={{ mb: 4, textAlign: 'center' }}>
-        <Typography variant="h1" component="h1" sx={{ 
-          fontWeight: 700, 
-          mb: 2, 
-          fontSize: { xs: '1.75rem', md: '2.125rem' },
-          color: 'primary.main'
-        }}>
-          Форум рыболовов
-        </Typography>
-        <Typography variant="body1" sx={{ mb: 1, maxWidth: '700px', mx: 'auto' }}>
-          Обсуждение тем о рыбалке, обмен опытом между рыбаками и общение с единомышленниками.
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ maxWidth: '600px', mx: 'auto', mb: 3 }}>
-          Задавайте вопросы, делитесь советами, обсуждайте снасти и находите новых друзей среди рыболовов.
-        </Typography>
+         
         
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mt: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
           <Box component="form" onSubmit={handleSearch} sx={{ flex: 1, minWidth: '200px' }}>
@@ -560,7 +547,7 @@ const ForumPage: React.FC = () => {
         display: { xs: 'none', md: 'block' }
       }}>
         {/* Рекламный блок Яндекс.РСЯ */}
-        <YandexAds blockId="R-A-15369619-1" />
+     
       </Box>
     </Container>
     </>

@@ -721,6 +721,12 @@ const Dashboard = () => {
         position: 'relative',
         zIndex: 1
       }}>
+        {/* Заголовок страницы */}
+        <Box sx={{ textAlign: 'center', py: { xs: 1, md: 2 }, px: 2 }}>
+        
+          
+        </Box>
+
       {/* Мобильная шапка с бургер-меню */}
       <Box sx={{ display: { xs: 'block', md: 'none' }, position: 'sticky', top: 0, zIndex: 1100 }}>
         <AppBar position="static" color="primary" elevation={0} className={styles.mobileAppBar} sx={{ borderRadius: 0 }}>
@@ -817,22 +823,7 @@ const Dashboard = () => {
         </Box>
       </Drawer>
     
-      {/* Заголовок и описание */}
-      <Box sx={{ textAlign: 'center', py: { xs: 1, md: 2 }, px: 2 }}>
-        <Typography variant="h1" component="h1" sx={{ 
-          fontSize: { xs: '1.75rem', md: '2.5rem' },
-          fontWeight: 700,
-          mb: 1,
-          color: 'primary.main'
-        }}>
-          Сообщество рыбаков
-        </Typography>
-        <Typography variant="body1" sx={{ mb: 1, maxWidth: '800px', mx: 'auto', fontSize: '1.1rem' }}>
-          Добро пожаловать в крупнейшее сообщество рыболовов! Здесь вы найдете единомышленников, 
-          сможете поделиться опытом, получить советы от профессионалов и узнать о лучших рыбных местах.
-        </Typography>
-       
-      </Box>
+
 
       <Box sx={{ mt: { xs: 0, md: 1 } }}>
         {/* Основной контент с боковыми панелями */}

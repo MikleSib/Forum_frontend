@@ -13,6 +13,7 @@ import HomeIcon from '@mui/icons-material/Home';
 import NewspaperIcon from '@mui/icons-material/Article';
 import ForumIcon from '@mui/icons-material/Forum';
 import StoreIcon from '@mui/icons-material/Storefront';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import Divider from '@mui/material/Divider';
 
 // Создаем пользовательское событие для обновления статуса авторизации
@@ -166,6 +167,7 @@ const Header: React.FC = () => {
                   <Typography sx={{ color: '#222', fontWeight: 500 }}>Маркетплейс</Typography>
                 </Box>
               </Link>
+             
             </Box>
           </Drawer>
           <Box sx={{ 
@@ -385,6 +387,7 @@ const Header: React.FC = () => {
                 Маркетплейс
               </Button>
             </Link>
+            
           </Box>
           <Box sx={{ 
             position: { xs: 'static', md: 'absolute' }, 

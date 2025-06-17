@@ -192,17 +192,7 @@ const NewsPage: React.FC = () => {
       }}>
         {/* Заголовок страницы */}
         <Box sx={{ textAlign: 'center', py: { xs: 1, md: 2 }, px: 2 }}>
-          <Typography variant="h1" component="h1" sx={{ 
-            fontSize: { xs: '1.75rem', md: '2.125rem' },
-            fontWeight: 700,
-            mb: 1,
-            color: 'primary.main'
-          }}>
-            Новости рыболовного форума
-          </Typography>
-          <Typography variant="body1" sx={{ mb: 1, maxWidth: '700px', mx: 'auto' }}>
-            Последние новости из мира рыбалки, отчеты о рыбалке, обзоры снастей и гайды по ловле рыбы.
-          </Typography>
+        
           
         </Box>
 
@@ -381,7 +371,7 @@ const NewsPage: React.FC = () => {
               flexShrink: 0,
               display: { xs: 'none', md: 'block' }
             }}>
-              <YandexAds blockId="R-A-15369619-1" />
+              
             </Box>
           </Box>
         </Box>
