@@ -177,43 +177,54 @@ const Header: React.FC = () => {
             gap: 2,
             mb: { xs: 3, md: 0 }
           }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Box 
-                component="img" 
-                src={logo} 
-                alt="Logo" 
-                sx={{ 
-                  width: { xs: 40, md: 60 }, 
-                  height: { xs: 40, md: 60 }, 
-                  filter: 'brightness(0) invert(1)' 
-                }} 
-              />
-              <Box>
-                <Typography
-                  variant="h1"
-                  component="h1"
-                  sx={{
-                    color: 'white',
-                    fontWeight: 700,
-                    fontSize: { xs: '1.5rem', md: '2.5rem' },
-                    lineHeight: 1.2,
-                    margin: 0
-                  }}
-                >
-                  Рыболовный форум
-                </Typography>
-                <Typography
-                  variant="subtitle1"
-                  sx={{
-                    color: 'white',
-                    opacity: 0.8,
-                    fontSize: { xs: '0.875rem', md: '1rem' }
-                  }}
-                >
-                  Сообщество увлеченных рыбалкой
-                </Typography>
+            <Link to="/" style={{ textDecoration: 'none' }}>
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: 2,
+                cursor: 'pointer',
+                '&:hover': {
+                  opacity: 0.8
+                },
+                transition: 'opacity 0.2s'
+              }}>
+                <Box 
+                  component="img" 
+                  src={logo} 
+                  alt="Logo" 
+                  sx={{ 
+                    width: { xs: 40, md: 60 }, 
+                    height: { xs: 40, md: 60 }, 
+                    filter: 'brightness(0) invert(1)' 
+                  }} 
+                />
+                <Box>
+                  <Typography
+                    variant="h1"
+                    component="h1"
+                    sx={{
+                      color: 'white',
+                      fontWeight: 700,
+                      fontSize: { xs: '1.5rem', md: '2.5rem' },
+                      lineHeight: 1.2,
+                      margin: 0
+                    }}
+                  >
+                    Рыболовный форум
+                  </Typography>
+                  <Typography
+                    variant="subtitle1"
+                    sx={{
+                      color: 'white',
+                      opacity: 0.8,
+                      fontSize: { xs: '0.875rem', md: '1rem' }
+                    }}
+                  >
+                    Сообщество увлеченных рыбалкой
+                  </Typography>
+                </Box>
               </Box>
-            </Box>
+            </Link>
             {/* Кнопка "Войти" для мобильной версии */}
             {!isAuth && (
               <Box sx={{ display: { xs: 'block', md: 'none' }, width: '100%' }}>
