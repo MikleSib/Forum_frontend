@@ -108,7 +108,6 @@ const Footer: React.FC = () => {
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
               <FooterLink href="/forum" variant="body2">Форум</FooterLink>
               <FooterLink href="/news" variant="body2">Новости</FooterLink>
-              <FooterLink href="/maps" variant="body2">Карта рыбных мест</FooterLink>
             </Box>
           </Grid>
         </Grid>
