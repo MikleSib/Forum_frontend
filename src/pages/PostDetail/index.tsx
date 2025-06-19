@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
   Container, 
@@ -55,6 +55,16 @@ const PostDetail: React.FC = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteCommentId, setDeleteCommentId] = useState<number | null>(null);
   const [isLikeProcessing, setIsLikeProcessing] = useState(false);
+
+  // Ref для блока комментариев
+  const commentsRef = useRef<HTMLDivElement>(null);
+
+  // Плавный скролл к комментариям
+  const handleScrollToComments = () => {
+    if (commentsRef.current) {
+      commentsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
 
   useEffect(() => {
     // Проверяем авторизацию и права администратора
@@ -238,21 +248,19 @@ const PostDetail: React.FC = () => {
   }
 
   return (
-    <Container maxWidth="md" className={styles.container}>
-      {/* Кнопка назад */}
-      <Box sx={{ mb: 3 }}>
-        <Button 
-          variant="text" 
-          startIcon={<ArrowBackIcon />} 
-          onClick={handleGoBack}
-          sx={{ color: 'var(--primary-color)' }}
-        >
-          Вернуться к списку
-        </Button>
-      </Box>
-      
-      {/* Основной контент поста */}
+    <Container maxWidth={false} className={styles.container} sx={{ maxWidth: 'none', p: 0 }}>
       <Paper elevation={0} className={styles.postPaper}>
+        {/* Кнопка назад слева сверху */}
+        <Box sx={{ mb: 2 }}>
+          <Button
+            variant="text"
+            startIcon={<ArrowBackIcon />}
+            onClick={handleGoBack}
+            sx={{ color: 'var(--primary-color)' }}
+          >
+            Вернуться
+          </Button>
+        </Box>
         {/* Шапка поста */}
         <Box className={styles.postHeader}>
           <Typography variant="h4" className={styles.postTitle}>
@@ -290,20 +298,59 @@ const PostDetail: React.FC = () => {
               </Box>
             </Box>
             
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Chip 
-                icon={<FavoriteIcon sx={{ fontSize: 16 }} />} 
-                label={likesCount.toString()}
-                color={liked ? "primary" : "default"}
-                size="small"
-                sx={{ mr: 1 }}
-              />
-              <Chip 
-                icon={<CommentIcon sx={{ fontSize: 16 }} />} 
-                label={comments.length.toString()}
-                size="small"
-                color="secondary"
-              />
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Button
+                variant="contained"
+                disableElevation
+                startIcon={<FavoriteIcon sx={{ fontSize: 22 }} />}
+                sx={{
+                  minWidth: 0,
+                  px: 2,
+                  py: 1,
+                  borderRadius: '999px',
+                  fontWeight: 600,
+                  fontSize: '1rem',
+                  backgroundColor: liked ? '#43a047' : '#e8f5e9',
+                  color: liked ? '#fff' : '#43a047',
+                  boxShadow: '0 2px 8px rgba(60,60,60,0.06)',
+                  transition: 'background 0.2s, color 0.2s, transform 0.15s',
+                  '&:hover': {
+                    backgroundColor: '#43a047',
+                    color: '#fff',
+                    transform: 'scale(1.07)'
+                  }
+                }}
+                disabled={!isAuth || isLikeProcessing}
+                onClick={handleLikeToggle}
+              >
+                {likesCount}
+              </Button>
+              <Button
+                variant="contained"
+                disableElevation
+                startIcon={<CommentIcon sx={{ fontSize: 22 }} />}
+                sx={{
+                  minWidth: 0,
+                  px: 2,
+                  py: 1,
+                  borderRadius: '999px',
+                  fontWeight: 600,
+                  fontSize: '1rem',
+                  backgroundColor: '#e3f2fd',
+                  color: '#1976d2',
+                  boxShadow: '0 2px 8px rgba(60,60,60,0.06)',
+                  transition: 'background 0.2s, color 0.2s, transform 0.15s',
+                  '&:hover': {
+                    backgroundColor: '#1976d2',
+                    color: '#fff',
+                    transform: 'scale(1.07)'
+                  }
+                }}
+                onClick={handleScrollToComments}
+                tabIndex={-1}
+              >
+                {comments.length}
+              </Button>
               {isAdmin && (
                 <IconButton 
                   color="error" 
@@ -350,7 +397,7 @@ const PostDetail: React.FC = () => {
       </Paper>
       
       {/* Секция комментариев */}
-      <Paper elevation={0} className={styles.commentsPaper}>
+      <Paper elevation={0} className={styles.commentsPaper} ref={commentsRef}>
         <Typography variant="h6" gutterBottom>
           Комментарии ({comments.length})
         </Typography>

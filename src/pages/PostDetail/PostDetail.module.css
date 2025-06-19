@@ -1,14 +1,28 @@
 .container {
-  padding-top: 40px;
+  margin-top: 40px;
+  /* max-width убран для полной ширины */
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 0;
+  padding-right: 0;
   padding-bottom: 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: translateX(-25px);
 }
 
-.postPaper {
+.postPaper, .commentsPaper {
   background-color: white;
   border-radius: 16px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
   padding: 24px;
   margin-bottom: 32px;
+  width: 100%;
+  max-width: 922px;
+  margin-left: auto;
+  margin-right: auto;
+  box-sizing: border-box;
 }
 
 .postHeader {
@@ -86,13 +100,6 @@
   flex-wrap: wrap;
 }
 
-.commentsPaper {
-  background-color: white;
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-  padding: 24px;
-}
-
 .commentsList {
   display: flex;
   flex-direction: column;
@@ -113,11 +120,17 @@
 
 @media (max-width: 600px) {
   .container {
-    padding-top: 20px;
+    margin-top: 0;
+    padding-left: 8px;
+    padding-right: 8px;
+    padding-bottom: 32px;
   }
   
   .postPaper, .commentsPaper {
     padding: 16px;
+    margin-left: 0;
+    margin-right: 0;
+    width: 100%;
   }
   
   .postTitle {
@@ -135,5 +148,13 @@
   
   .postActions button {
     width: 100%;
+  }
+}
+
+@media (max-width: 1000px) {
+  .postPaper, .commentsPaper {
+    max-width: 100%;
+    width: 100%;
+    min-width: 0;
   }
 } 

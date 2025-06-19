@@ -701,6 +701,19 @@ const Dashboard = () => {
   // Отсортированный список постов
   const sortedPosts = useMemo(() => getSortedPosts(), [getSortedPosts]);
 
+  // Сброс скролла и очистка контента при смене вкладки
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    if (activeView === 'map' || activeView === 'gallery') {
+      setPosts([]);
+      setLoading(false); // чтобы не мигал лоадер
+    }
+    if (activeView === 'posts') {
+      setGalleries([]);
+      setGalleryLoading(false);
+    }
+  }, [activeView]);
+
   return (
     <>
       <SEO
