@@ -11,6 +11,8 @@ import CachedImage from './CachedImage';
 import { IMAGE_BASE_URL } from '../config/api';
 import { likePost, unlikePost } from '../services/api';
 import { userStore } from '../shared/store/userStore';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { useTheme } from '@mui/material/styles';
 
 interface PostCardPropsDetailed {
   title: string;
@@ -43,14 +45,9 @@ type PostCardProps = PostCardPropsDetailed | PostCardPropsUnified;
 const StyledCard = styled(Card)(() => ({
   overflow: 'hidden',
   borderRadius: '12px',
-  transition: 'all 0.3s ease',
   background: 'var(--card-bg)',
   border: '1px solid #eef2f6',
   boxShadow: '0 2px 10px rgba(0, 0, 0, 0.05)',
-  '&:hover': {
-    transform: 'translateY(-5px)',
-    boxShadow: '0 10px 30px rgba(0, 0, 0, 0.1)',
-  },
 }));
 
 const PostCard: React.FC<PostCardProps> = (props) => {
@@ -88,6 +85,7 @@ const PostCard: React.FC<PostCardProps> = (props) => {
   const [likesCount, setLikesCount] = useState(likes.length);
   const [isLikeProcessing, setIsLikeProcessing] = useState(false);
   const [isAuth] = useState(!!localStorage.getItem('access_token'));
+  const [showMore, setShowMore] = useState(false);
   
   // Проверяем, поставил ли текущий пользователь лайк
   useEffect(() => {
@@ -167,9 +165,11 @@ const PostCard: React.FC<PostCardProps> = (props) => {
 
   const cleanContent = stripHtml(content || '');
 
-  // Обработчик клика на кнопку "Читать"
-  const handleReadButtonClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Предотвращаем всплытие события
+  // Обработчик перехода к посту
+  const handleGoToPost = (e?: React.MouseEvent | React.KeyboardEvent) => {
+    if (e) {
+      e.stopPropagation();
+    }
     if (onClick) onClick();
   };
 
@@ -193,104 +193,98 @@ const PostCard: React.FC<PostCardProps> = (props) => {
     return undefined;
   };
 
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
   return (
-    <StyledCard className={styles.postCard} onClick={onClick} sx={{ cursor: onClick ? 'pointer' : 'default' }}>
-      {/* Отображение изображений в блочном формате */}
-      {images.length > 0 && (
-        <Box sx={{ position: 'relative' }}>
-          {images.length === 1 ? (
-            <Box
-              sx={{ 
-                height: { xs: '200px', sm: '600px' },
-                overflow: 'hidden',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            >
-              <CachedImage
-                src={getImagePath(images[0])}
-                baseUrl={IMAGE_BASE_URL}
-                alt={title}
-                imageId={getImageId(images[0])}
-                style={{ 
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'cover'
-                }}
-              />
-            </Box>
-          ) : (
-            <Grid container spacing={0.5} sx={{ mt: 0 }}>
-              {images.map((image, index) => (
-                <Grid 
-                  size={{xs: images.length === 2 ? 6 : 4}}
-                  key={index}
-                >
-                  <Box 
-                    sx={{
-                      height: { xs: '150px', sm: '600px' },
-                      overflow: 'hidden',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    }}
-                  >
-                    <CachedImage
-                      src={getImagePath(image)}
-                      baseUrl={IMAGE_BASE_URL}
-                      alt={`${title} - изображение ${index + 1}`}
-                      imageId={getImageId(image)}
-                      style={{ 
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                        borderRadius: index === 0 ? '12px 0 0 0' : 
-                                  (index === 1 && images.length === 2) ? '0 12px 0 0' :
-                                  (index === 1) ? '0 0 0 0' :
-                                  '0 12px 0 0'
-                      }}
-                    />
-                  </Box>
-                </Grid>
-              ))}
-            </Grid>
-          )}
-        </Box>
-      )}
+    <StyledCard
+      className={styles.postCard}
+      onClick={isMobile ? onClick : undefined}
+      sx={{ cursor: isMobile && onClick ? 'pointer' : 'default' }}
+    >
       <CardContent className={styles.postCardContent}>
-        <Typography variant="h6" className={styles.postCardTitle}>
-          {title}
-        </Typography>
-        
-        <Typography variant="body2" className={styles.postCardExcerpt}>
-          {cleanContent}
-        </Typography>
-        
-        <Box className={styles.postCardFooter}>
-          <Box className={styles.postCardAuthor}>
-            <Box className={styles.authorAvatar}>
-              {isUnifiedProps && props.post.author.avatar ? (
-                <img 
-                  src={getFooterAvatarUrl(props.post.author.avatar)} 
-                  alt={author} 
-                  style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
-                />
-              ) : (
-                getInitials(author)
-              )}
-            </Box>
-            <Box>
-              <Typography variant="subtitle2">{author}</Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <AccessTimeIcon sx={{ fontSize: 14, color: 'rgba(44, 51, 51, 0.6)' }} />
-                <Typography className={styles.postCardDate}>
-                  {formatDate(date)}
-                </Typography>
-              </Box>
+        {/* Блок пользователя */}
+        <Box className={styles.postCardUser}>
+          <Box className={styles.authorAvatar}>
+            {isUnifiedProps && props.post.author.avatar ? (
+              <img 
+                src={getFooterAvatarUrl(props.post.author.avatar)} 
+                alt={author} 
+                style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+              />
+            ) : (
+              getInitials(author)
+            )}
+          </Box>
+          <Box>
+            <Typography variant="subtitle2" className={styles.postCardUserName}>{author}</Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <AccessTimeIcon sx={{ fontSize: 14, color: 'rgba(44, 51, 51, 0.6)' }} />
+              <Typography className={styles.postCardDate}>{formatDate(date)}</Typography>
             </Box>
           </Box>
-          
+        </Box>
+        {/* Заголовок */}
+        <h1
+          className={styles.postCardTitleH1}
+          role="button"
+          tabIndex={0}
+          aria-label="Открыть пост"
+          onClick={handleGoToPost}
+          onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') handleGoToPost(e); }}
+          style={{ cursor: 'pointer' }}
+        >
+          {title}
+        </h1>
+        {/* Описание */}
+        <Box sx={{ position: 'relative' }}>
+          <div
+            className={showMore ? styles.postCardExcerpt : styles.postCardExcerptClamp}
+            dangerouslySetInnerHTML={{ __html: content || '' }}
+          />
+          {!showMore && (
+            <span className={styles.postCardExcerptGradient}></span>
+          )}
+        </Box>
+        {/* Кнопка показать полностью */}
+        {(cleanContent.length > 200) && (
+          !showMore ? (
+            <button
+              className={styles.showMoreBtn}
+              onClick={e => { e.stopPropagation(); setShowMore(true); }}
+            >
+              показать полностью...
+            </button>
+          ) : (
+            <button
+              className={styles.showMoreBtn}
+              onClick={e => { e.stopPropagation(); setShowMore(false); }}
+            >
+              скрыть
+            </button>
+          )
+        )}
+        {/* Фото (если есть) */}
+        {images.length > 0 && (
+          <Box className={styles.postCardImagesRow}>
+            {images.map((image, index) => (
+              <Box
+                key={index}
+                className={images.length === 1 ? `${styles.postCardImageWrapper} ${styles.singleImage}` : styles.postCardImageWrapper}
+              >
+                <CachedImage
+                  src={getImagePath(image)}
+                  baseUrl={IMAGE_BASE_URL}
+                  alt={`${title} - изображение ${index + 1}`}
+                  imageId={getImageId(image)}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              </Box>
+            ))}
+          </Box>
+        )}
+        {/* Лайки, комментарии, кнопка 'Читать' */}
+        <Box className={styles.postCardFooter}>
           <Box sx={{ 
             display: 'flex', 
             gap: '12px',
@@ -379,7 +373,7 @@ const PostCard: React.FC<PostCardProps> = (props) => {
                 }
               }} 
               variant="outlined"
-              onClick={handleReadButtonClick}
+              onClick={handleGoToPost}
             >
               Читать
             </Button>
