@@ -218,7 +218,11 @@ const Dashboard = () => {
           newsApi.getCategoryStats()
         ]);
         
-        setPosts(postsData.items);
+        setPosts(prevPosts => {
+          const existingIds = new Set(prevPosts.map(p => p.id));
+          const newItems = postsData.items.filter(item => !existingIds.has(item.id));
+          return [...prevPosts, ...newItems];
+        });
         setHasMore(postsData.page < postsData.total_pages);
         setCategoryStats(statsData);
         
@@ -322,7 +326,11 @@ const Dashboard = () => {
       const response = await getPosts(nextPage);
       
       if (response.items.length > 0) {
-        setPosts(prevPosts => [...prevPosts, ...response.items]);
+        setPosts(prevPosts => {
+          const existingIds = new Set(prevPosts.map(p => p.id));
+          const newItems = response.items.filter(item => !existingIds.has(item.id));
+          return [...prevPosts, ...newItems];
+        });
         setPage(nextPage);
         setHasMore(response.page < response.total_pages);
       } else {
