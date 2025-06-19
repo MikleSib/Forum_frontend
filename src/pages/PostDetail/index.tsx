@@ -16,7 +16,9 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions
+  DialogActions,
+  useTheme,
+  useMediaQuery
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import FavoriteIcon from '@mui/icons-material/Favorite';
@@ -65,6 +67,9 @@ const PostDetail: React.FC = () => {
       commentsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   };
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   useEffect(() => {
     // Проверяем авторизацию и права администратора
@@ -266,7 +271,13 @@ const PostDetail: React.FC = () => {
           <Typography variant="h4" className={styles.postTitle}>
             {post.title}
           </Typography>
-          
+          {/* Дата под тайтлом на мобилке */}
+          {isMobile && (
+            <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary', mt: 0.5, mb: 1 }}>
+              <AccessTimeIcon sx={{ fontSize: 14, mr: 0.5 }} />
+              {formatLocalDate(post.created_at)}
+            </Typography>
+          )}
           <Box sx={{ display: 'flex', alignItems: 'center', mt: 2, mb: 3 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
               <Avatar 
@@ -284,17 +295,20 @@ const PostDetail: React.FC = () => {
                 <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
                   {post.author.username}
                 </Typography>
-                <Typography 
-                  variant="caption" 
-                  sx={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    color: 'text.secondary' 
-                  }}
-                >
-                  <AccessTimeIcon sx={{ fontSize: 14, mr: 0.5 }} />
-                  {formatLocalDate(post.created_at)}
-                </Typography>
+                {/* Скрываем дату в шапке на мобилке */}
+                {!isMobile && (
+                  <Typography 
+                    variant="caption" 
+                    sx={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      color: 'text.secondary'
+                    }}
+                  >
+                    <AccessTimeIcon sx={{ fontSize: 14, mr: 0.5 }} />
+                    {formatLocalDate(post.created_at)}
+                  </Typography>
+                )}
               </Box>
             </Box>
             

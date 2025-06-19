@@ -742,15 +742,10 @@ const Dashboard = () => {
         position: 'relative',
         zIndex: 1
       }}>
-        {/* Заголовок страницы */}
-        <Box sx={{ textAlign: 'center', py: { xs: 1, md: 2 }, px: 2 }}>
-        
-          
-        </Box>
 
       {/* Мобильная шапка с бургер-меню */}
       <Box sx={{ display: { xs: 'block', md: 'none' }, position: 'sticky', top: 0, zIndex: 1100 }}>
-        <AppBar position="static" color="primary" elevation={0} className={styles.mobileAppBar} sx={{ borderRadius: 0 }}>
+        <AppBar position="static" color="primary" elevation={0} className={styles.mobileAppBar} sx={{ borderRadius: 0, mt: { xs: 0, md: 2 } }}>
           <Toolbar>
             <IconButton
               edge="start"
@@ -902,6 +897,7 @@ const Dashboard = () => {
               <Paper sx={{ 
                 p: 2, 
                 mb: 1,
+                mt: { xs: 2, md: 0 },
                 backgroundColor: 'rgba(255, 255, 255, 0.9)',
                 backdropFilter: 'blur(10px)',
                 border: '1px solid rgba(255, 255, 255, 0.2)'
@@ -1115,6 +1111,7 @@ const Dashboard = () => {
               <Paper sx={{ 
                 p: 2, 
                 mb: 1,
+                mt: { xs: 2, md: 0 },
                 backgroundColor: 'rgba(255, 255, 255, 0.9)',
                 backdropFilter: 'blur(10px)',
                 border: '1px solid rgba(255, 255, 255, 0.2)'
@@ -1292,6 +1289,7 @@ const Dashboard = () => {
               <Paper sx={{ 
                 p: 2, 
                 mb: 1,
+                mt: { xs: 2, md: 0 },
                 backgroundColor: 'rgba(255, 255, 255, 0.9)',
                 backdropFilter: 'blur(10px)',
                 border: '1px solid rgba(255, 255, 255, 0.2)'
@@ -1300,15 +1298,16 @@ const Dashboard = () => {
                   <Typography variant="h6">Последние публикации</Typography>
                   <Button
                     variant="contained"
-                    startIcon={<AddIcon />}
+                    startIcon={<AddIcon sx={{ fontSize: { xs: 18, sm: 20, md: 22 } }} />}
                     onClick={isAuth ? handleCreatePost : handleLogin}
                     sx={{
                       background: 'linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%)',
-                      borderRadius: '12px',
+                      borderRadius: { xs: '10px', sm: '12px' },
                       fontWeight: 600,
-                      fontSize: '0.95rem',
+                      fontSize: { xs: '0.85rem', sm: '0.95rem' },
                       textTransform: 'none',
-                      padding: '10px 20px',
+                      padding: { xs: '6px 12px', sm: '10px 20px' },
+                      minWidth: 0,
                       boxShadow: '0 4px 15px rgba(76, 175, 80, 0.3)',
                       transition: 'all 0.3s ease',
                       '&:hover': {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, CardContent, Typography, CardActions, Button, Avatar, Box, IconButton } from '@mui/material';
+import { Card, CardContent, Typography, CardActions, Button, Avatar, Box, IconButton, useMediaQuery, useTheme } from '@mui/material';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import CommentIcon from '@mui/icons-material/Comment';
 import ShareIcon from '@mui/icons-material/Share';
@@ -39,24 +39,58 @@ const PostCard = ({ post, onClick }: Props): React.ReactElement => {
     return '';
   };
 
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
   return (
     <Card className={styles.postCard} onClick={onClick} sx={{ cursor: onClick ? 'pointer' : 'default' }}>
-      {post.images?.[0] && (
-        <Box className={styles.imageContainer} sx={{ height: '200px', position: 'relative', overflow: 'hidden' }}>
-          <CachedImage
-            src={post.images[0].image_url}
-            baseUrl={baseUrl}
-            alt={post.title}
-            style={{ 
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              borderRadius: '4px',
-            }}
-            showSkeleton={true}
-            skeletonHeight={200}
-            placeholderSrc="/placeholder-image.svg"
-          />
+      {post.images && post.images.length > 0 && (
+        <Box
+          sx={{
+            display: post.images.length > 1 ? 'flex' : 'block',
+            flexDirection: 'row',
+            gap: post.images.length > 1 ? 1 : 0,
+            overflowX: post.images.length > 1 ? 'auto' : 'visible',
+            height: 200,
+            mb: 1,
+            background: isMobile ? 'none' : undefined,
+          }}
+        >
+          {post.images.slice(0, 5).map((img, idx) => (
+            <Box
+              key={img.image_url + idx}
+              sx={{
+                minWidth: post.images.length > 1 ? 200 : '100%',
+                width: post.images.length > 1 ? 200 : '100%',
+                height: 200,
+                borderRadius: 2,
+                overflow: 'hidden',
+                flex: post.images.length > 1 ? '0 0 auto' : '1 1 100%',
+                mr: post.images.length > 1 && idx !== post.images.length - 1 ? 1 : 0,
+                background: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                p: 0,
+              }}
+            >
+              <CachedImage
+                src={img.image_url}
+                baseUrl={baseUrl}
+                alt={post.title}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  borderRadius: 8,
+                  display: 'block',
+                }}
+                showSkeleton={true}
+                skeletonHeight={200}
+                placeholderSrc="/placeholder-image.svg"
+              />
+            </Box>
+          ))}
         </Box>
       )}
       <CardContent className={styles.postContent}>

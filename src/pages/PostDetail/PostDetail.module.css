@@ -9,7 +9,12 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  transform: translateX(-25px);
+}
+
+@media (min-width: 601px) {
+  .container {
+    transform: translateX(-25px);
+  }
 }
 
 .postPaper, .commentsPaper {
@@ -120,34 +125,46 @@
 
 @media (max-width: 600px) {
   .container {
-    margin-top: 0;
-    padding-left: 8px;
-    padding-right: 8px;
-    padding-bottom: 32px;
+    transform: none;
   }
-  
   .postPaper, .commentsPaper {
-    padding: 16px;
-    margin-left: 0;
-    margin-right: 0;
+    margin-left: 8px;
+    margin-right: 8px;
     width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
   }
-  
-  .postTitle {
-    font-size: 1.5rem;
+  .postHeader {
+    flex-wrap: wrap;
+    gap: 6px;
   }
-  
-  .postContent {
-    font-size: 1rem;
+  .postHeader .MuiAvatar-root {
+    width: 36px !important;
+    height: 36px !important;
+    margin-right: 8px !important;
   }
-  
-  .postActions {
-    flex-direction: column;
-    gap: 12px;
+  .postHeader .MuiTypography-root,
+  .postHeader .MuiTypography-caption {
+    font-size: 0.85rem !important;
+    line-height: 1.1 !important;
   }
-  
-  .postActions button {
-    width: 100%;
+  .postHeader .MuiTypography-caption {
+    font-size: 0.78rem !important;
+    color: #888 !important;
+  }
+  .postHeader .MuiBox-root {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+  }
+  .postActions button, .postActions .MuiButton-root {
+    font-size: 0.8rem !important;
+    padding: 3px 8px !important;
+    min-width: 0 !important;
+    border-radius: 14px !important;
+  }
+  .postActions svg {
+    font-size: 16px !important;
   }
 }
 
