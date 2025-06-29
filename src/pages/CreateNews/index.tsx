@@ -357,7 +357,6 @@ const CreateNews: React.FC = () => {
               required
             >
               <MenuItem value={NewsCategory.NEWS}>Новости</MenuItem>
-              <MenuItem value={NewsCategory.GUIDES}>Гайды</MenuItem>
               <MenuItem value={NewsCategory.FISH_SPECIES}>Виды рыб</MenuItem>
               <MenuItem value={NewsCategory.EVENTS}>События</MenuItem>
             </Select>

@@ -87,13 +87,11 @@ interface TopicItem {
 
 interface CategoryStats {
   news: number;
-  guides: number;
   fish_species: number;
 }
 
 const TOPIC_ICONS: Record<NewsCategory, React.ReactElement> = {
   [NewsCategory.NEWS]: <NewspaperIcon sx={{ color: 'var(--primary-color)' }} />,
-  [NewsCategory.GUIDES]: <MenuBookIcon sx={{ color: 'var(--primary-color)' }} />,
   [NewsCategory.FISH_SPECIES]: <PetsIcon sx={{ color: 'var(--primary-color)' }} />,
   [NewsCategory.EVENTS]: <EventIcon sx={{ color: 'var(--primary-color)' }} />
 };
@@ -163,7 +161,6 @@ const Dashboard = () => {
   });
   const [categoryStats, setCategoryStats] = useState<CategoryStats>({
     news: 0,
-    guides: 0,
     fish_species: 0
   });
   
@@ -204,9 +201,8 @@ const Dashboard = () => {
 
   const topics: TopicItem[] = [
     { id: 1, name: "Новости", category: NewsCategory.NEWS },
-    { id: 2, name: "Гайды", category: NewsCategory.GUIDES },
-    { id: 3, name: "Виды рыб", category: NewsCategory.FISH_SPECIES },
-    { id: 4, name: "События", category: NewsCategory.EVENTS },
+    { id: 2, name: "Виды рыб", category: NewsCategory.FISH_SPECIES },
+    { id: 3, name: "События", category: NewsCategory.EVENTS },
   ];
 
   useEffect(() => {
@@ -390,8 +386,6 @@ const Dashboard = () => {
     switch (category) {
       case NewsCategory.NEWS:
         return categoryStats.news;
-      case NewsCategory.GUIDES:
-        return categoryStats.guides;
       case NewsCategory.FISH_SPECIES:
         return categoryStats.fish_species;
       case NewsCategory.EVENTS:

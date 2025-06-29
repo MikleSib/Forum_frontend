@@ -26,7 +26,6 @@ export interface NewsItem {
 
 export enum NewsCategory {
   NEWS = 'news',
-  GUIDES = 'guides',
   FISH_SPECIES = 'fish_species',
   EVENTS = 'events'
 }

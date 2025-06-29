@@ -50,7 +50,6 @@ type SortType = 'newest' | 'popular';
 
 const CATEGORY_ICONS = {
   [NewsCategory.NEWS]: <NewspaperIcon sx={{ color: 'primary.main' }} />,
-  [NewsCategory.GUIDES]: <MenuBookIcon sx={{ color: 'primary.main' }} />,
   [NewsCategory.FISH_SPECIES]: <PetsIcon sx={{ color: 'primary.main' }} />,
   [NewsCategory.EVENTS]: <EventIcon sx={{ color: 'primary.main' }} />
 };
