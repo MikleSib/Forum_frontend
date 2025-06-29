@@ -36,10 +36,6 @@ export const NEWS_CATEGORIES = {
     title: 'Новости',
     description: 'Последние новости от администраторов'
   },
-  [NewsCategory.GUIDES]: {
-    title: 'Гайды',
-    description: 'Полезные советы, обзоры снастей и секреты рыбалки'
-  },
   [NewsCategory.FISH_SPECIES]: {
     title: 'Виды рыб',
     description: 'Информация о различных видах рыб'

@@ -3,7 +3,7 @@ import {
   Container, Box, Typography, Paper, Divider, Button, 
   Avatar, Grid, TextField, InputAdornment, Chip,
   Card, CardContent, CardHeader, CardActions,
-  CircularProgress, Alert
+  CircularProgress, Alert, useTheme, useMediaQuery, IconButton
 } from '@mui/material';
 import { useNavigate, Link } from 'react-router-dom';
 import SearchIcon from '@mui/icons-material/Search';
@@ -26,6 +26,10 @@ import { seoConfig } from '../../config/seo.config';
 // Удаляем моковые данные и заменяем их на состояние для реальных данных
 const ForumPage: React.FC = () => {
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isSmallMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  
   const [searchQuery, setSearchQuery] = useState('');
   const [bookmarkedTopics, setBookmarkedTopics] = useState<number[]>([]);
   
@@ -140,6 +144,14 @@ const ForumPage: React.FC = () => {
   };
 
   const handleCreateTopic = () => {
+    // Проверяем авторизацию пользователя
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+      // Если пользователь не авторизован, перенаправляем на страницу входа
+      navigate('/login');
+      return;
+    }
+    
     console.log('Создание новой темы');
     navigate('/forum/create-topic');
   };
@@ -156,6 +168,8 @@ const ForumPage: React.FC = () => {
         : [...prev, topicId]
     );
   };
+
+  const isAuth = !!localStorage.getItem('access_token');
 
   return (
     <>
@@ -174,13 +188,41 @@ const ForumPage: React.FC = () => {
         }}
       />
       
-      <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Container maxWidth="lg" sx={{ py: { xs: 2, md: 4 }, px: { xs: 1, md: 3 } }}>
       {/* Заголовок и поиск */}
-      <Box sx={{ mb: 4, textAlign: 'center' }}>
-         
+      <Box sx={{ mb: { xs: 3, md: 4 }, textAlign: 'center' }}>
+        <Typography 
+          variant="h3" 
+          component="h1" 
+          sx={{ 
+            fontWeight: 'bold', 
+            color: 'primary.main', 
+            mb: 1,
+            fontSize: { xs: '1.8rem', md: '3rem' }
+          }}
+        >
+          🎣 Форум рыболовов
+        </Typography>
+        <Typography 
+          variant="h6" 
+          color="text.secondary" 
+          sx={{ 
+            mb: { xs: 2, md: 3 },
+            fontSize: { xs: '1rem', md: '1.25rem' }
+          }}
+        >
+          Обсуждение рыбалки, обмен опытом и советы от профессионалов
+        </Typography>
         
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mt: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
-          <Box component="form" onSubmit={handleSearch} sx={{ flex: 1, minWidth: '200px' }}>
+        <Box sx={{ 
+          display: 'flex', 
+          flexWrap: 'wrap', 
+          gap: { xs: 1.5, md: 2 }, 
+          mt: 2, 
+          flexDirection: { xs: 'column', sm: 'row' },
+          alignItems: 'center'
+        }}>
+          <Box component="form" onSubmit={handleSearch} sx={{ flex: 1, minWidth: '200px', width: { xs: '100%', sm: 'auto' } }}>
             <TextField
               fullWidth
               size="small"
@@ -204,16 +246,25 @@ const ForumPage: React.FC = () => {
             />
           </Box>
           
-          <Box sx={{ display: 'flex', gap: 1, flexDirection: { xs: 'column', sm: 'row' }, width: { xs: '100%', sm: 'auto' } }}>
+          <Box sx={{ 
+            display: 'flex', 
+            gap: { xs: 1, md: 1 }, 
+            flexDirection: { xs: 'column', sm: 'row' }, 
+            width: { xs: '100%', sm: 'auto' } 
+          }}>
             <Button 
               variant="contained" 
               color="primary"
               startIcon={<AddIcon />}
               onClick={handleCreateTopic}
-              fullWidth={true}
-              sx={{ minHeight: { xs: '40px', sm: 'auto' } }}
+              fullWidth={isSmallMobile}
+              sx={{ 
+                minHeight: { xs: '44px', sm: 'auto' },
+                fontSize: { xs: '0.9rem', md: '1rem' }
+              }}
+              title={!isAuth ? 'Войдите, чтобы создать тему' : 'Создать новую тему'}
             >
-              Новая тема
+              {!isAuth ? 'Войти и создать тему' : 'Новая тема'}
             </Button>
             
             {userStore.isAdmin && (
@@ -222,10 +273,13 @@ const ForumPage: React.FC = () => {
                 color="primary"
                 startIcon={<AddIcon />}
                 onClick={handleCreateCategory}
-                fullWidth={true}
-                sx={{ minHeight: { xs: '40px', sm: 'auto' } }}
+                fullWidth={isSmallMobile}
+                sx={{ 
+                  minHeight: { xs: '44px', sm: 'auto' },
+                  fontSize: { xs: '0.9rem', md: '1rem' }
+                }}
               >
-                Создать категорию
+                {isMobile ? 'Категория' : 'Создать категорию'}
               </Button>
             )}
           </Box>
@@ -235,7 +289,7 @@ const ForumPage: React.FC = () => {
       {/* Категории форума */}
       <Paper elevation={0} 
         sx={{ 
-          mb: 4, 
+          mb: { xs: 3, md: 4 }, 
           overflow: 'hidden',
           border: '1px solid',
           borderColor: 'divider',
@@ -249,7 +303,8 @@ const ForumPage: React.FC = () => {
             bgcolor: 'primary.main', 
             color: 'white',
             fontWeight: 600,
-            fontSize: { xs: '1rem', sm: '1.25rem' }
+            fontSize: { xs: '1rem', sm: '1.25rem' },
+            textAlign: 'center'
           }}
         >
           Категории форума
@@ -272,51 +327,82 @@ const ForumPage: React.FC = () => {
                     transition: 'all 0.2s',
                     '&:hover': {
                       bgcolor: 'action.hover',
+                      transform: isMobile ? 'none' : 'translateY(-2px)',
                     },
+                    '&:active': isMobile ? {
+                      bgcolor: 'action.selected',
+                      transform: 'scale(0.98)',
+                    } : {},
                     display: 'flex',
                     alignItems: 'flex-start',
                     gap: { xs: 1.5, sm: 2 },
-                    flexDirection: { xs: 'column', sm: 'row' }
+                    flexDirection: { xs: 'column', sm: 'row' },
+                    justifyContent: 'space-between'
                   }}
                   onClick={() => handleCategoryClick(category.id)}
                 >
-                  <Box
-                    sx={{
-                      width: { xs: 40, sm: 50 },
-                      height: { xs: 40, sm: 50 },
-                      borderRadius: 2,
-                      bgcolor: 'primary.light',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: { xs: 20, sm: 24 },
-                      flexShrink: 0
-                    }}
-                  >
-                    {category.icon || '📋'}
-                  </Box>
                   <Box sx={{ 
-                    flex: 1,
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: { xs: 1.5, sm: 2 }, 
                     width: { xs: '100%', sm: 'auto' },
-                    mb: { xs: 1, sm: 0 }
+                    flex: { xs: 'none', sm: 1 }
                   }}>
-                    <Typography variant="h6" sx={{ 
-                      fontWeight: 600,
-                      fontSize: { xs: '1rem', sm: '1.25rem' }
+                    <Box
+                      sx={{
+                        width: { xs: 40, sm: 50 },
+                        height: { xs: 40, sm: 50 },
+                        borderRadius: 2,
+                        bgcolor: 'primary.light',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: { xs: 20, sm: 24 },
+                        flexShrink: 0
+                      }}
+                    >
+                      {category.icon || '📋'}
+                    </Box>
+                    <Box sx={{ 
+                      flex: 1,
+                      width: { xs: '100%', sm: 'auto' },
+                      mb: { xs: 1, sm: 0 }
                     }}>
-                      {category.title}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {category.description}
-                    </Typography>
+                      <Typography variant="h6" sx={{ 
+                        fontWeight: 600,
+                        fontSize: { xs: '1rem', sm: '1.25rem' },
+                        mb: 0.5
+                      }}>
+                        {category.title}
+                      </Typography>
+                      <Typography 
+                        variant="body2" 
+                        color="text.secondary"
+                        sx={{ 
+                          fontSize: { xs: '0.85rem', sm: '0.875rem' },
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          display: '-webkit-box',
+                          WebkitLineClamp: { xs: 2, sm: 1 },
+                          WebkitBoxOrient: 'vertical'
+                        }}
+                      >
+                        {category.description}
+                      </Typography>
+                    </Box>
                   </Box>
+                  
                   <Box sx={{ 
                     display: 'flex',
-                    flexDirection: 'row',
-                    gap: { xs: 1, sm: 2 },
+                    flexDirection: { xs: 'row', sm: 'row' },
+                    gap: { xs: 1, sm: 3 },
                     alignItems: 'center',
                     width: { xs: '100%', sm: 'auto' },
-                    justifyContent: { xs: 'space-between', sm: 'flex-end' }
+                    justifyContent: { xs: 'space-between', sm: 'flex-end' },
+                    bgcolor: { xs: 'action.hover', sm: 'transparent' },
+                    borderRadius: { xs: 1, sm: 0 },
+                    p: { xs: 1, sm: 0 },
+                    minWidth: { xs: 'auto', sm: '200px' }
                   }}>
                     <Box sx={{
                       display: 'flex',
@@ -331,7 +417,7 @@ const ForumPage: React.FC = () => {
                       <Typography variant="h6" fontWeight="bold" fontSize={{ xs: '1rem', sm: '1.25rem' }}>
                         {category.topics_count}
                       </Typography>
-                      <Typography variant="caption">
+                      <Typography variant="caption" sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' } }}>
                         Тем
                       </Typography>
                     </Box>
@@ -348,7 +434,7 @@ const ForumPage: React.FC = () => {
                       <Typography variant="h6" fontWeight="bold" fontSize={{ xs: '1rem', sm: '1.25rem' }}>
                         {category.messages_count}
                       </Typography>
-                      <Typography variant="caption">
+                      <Typography variant="caption" sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' } }}>
                         Сообщений
                       </Typography>
                     </Box>
@@ -372,7 +458,7 @@ const ForumPage: React.FC = () => {
       {/* Активные темы */}
       <Paper elevation={0} 
         sx={{ 
-          mt: 4,
+          mt: { xs: 3, md: 4 },
           mb: 2,
           overflow: 'hidden',
           border: '1px solid',
@@ -412,7 +498,12 @@ const ForumPage: React.FC = () => {
                       transition: 'all 0.2s',
                       '&:hover': {
                         bgcolor: 'action.hover',
+                        transform: isMobile ? 'none' : 'translateY(-2px)',
                       },
+                      '&:active': isMobile ? {
+                        bgcolor: 'action.selected',
+                        transform: 'scale(0.98)',
+                      } : {},
                       display: 'flex',
                       flexDirection: { xs: 'column', sm: 'row' },
                       alignItems: { xs: 'flex-start', sm: 'center' },
@@ -420,110 +511,121 @@ const ForumPage: React.FC = () => {
                     }}
                     onClick={() => handleTopicClick(topic.id)}
                   >
-                    <Avatar 
-                      src={topic.author_avatar} 
-                      sx={{ 
-                        width: { xs: 36, sm: 40 }, 
-                        height: { xs: 36, sm: 40 }, 
-                        alignSelf: { xs: 'center', sm: 'flex-start' },
-                        background: !topic.author_avatar 
-                          ? generateGradientColor(topic.author_id, topic.author_username || '')
-                          : undefined,
-                        color: 'white',
-                        fontWeight: 600
-                      }}
-                    >
-                      {!topic.author_avatar && ((topic.author_username)?.[0] || '?')}
-                    </Avatar>
-                    <Box sx={{ flex: 1, width: '100%' }}>
-                      <Box sx={{ 
-                        display: 'flex', 
-                        gap: 1, 
-                        mb: 0.5,
-                        flexDirection: { xs: 'column', sm: 'row' },
-                        width: '100%',
-                        alignItems: { xs: 'center', sm: 'flex-start' }
-                      }}>
-                        <Typography variant="body2" color="primary" sx={{ 
-                          fontWeight: 'medium',
-                          bgcolor: { xs: 'primary.50', sm: 'transparent' },
-                          px: { xs: 1, sm: 0 },
-                          py: { xs: 0.25, sm: 0 },
-                          borderRadius: 1
+                    <Box sx={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: { xs: 1.5, sm: 2 }, 
+                      width: { xs: '100%', sm: 'auto' } 
+                    }}>
+                      <Avatar 
+                        src={topic.author_avatar} 
+                        sx={{ 
+                          width: { xs: 36, sm: 40 }, 
+                          height: { xs: 36, sm: 40 }, 
+                          alignSelf: { xs: 'flex-start', sm: 'center' },
+                          background: !topic.author_avatar 
+                            ? generateGradientColor(topic.author_id, topic.author_username || '')
+                            : undefined,
+                          color: 'white',
+                          fontWeight: 600,
+                          flexShrink: 0
+                        }}
+                      >
+                        {!topic.author_avatar && ((topic.author_username)?.[0] || '?')}
+                      </Avatar>
+                      <Box sx={{ flex: 1, width: '100%', minWidth: 0 }}>
+                        <Box sx={{ 
+                          display: 'flex', 
+                          gap: 1, 
+                          mb: 0.5,
+                          flexDirection: { xs: 'column', sm: 'row' },
+                          width: '100%',
+                          alignItems: { xs: 'flex-start', sm: 'center' }
                         }}>
-                          {getCategoryTitle(topic.category_id)}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary" sx={{ 
-                          display: { xs: 'block', sm: 'block' },
-                          fontSize: '0.75rem'
+                          <Typography variant="body2" color="primary" sx={{ 
+                            fontWeight: 'medium',
+                            bgcolor: { xs: 'primary.50', sm: 'transparent' },
+                            px: { xs: 1, sm: 0 },
+                            py: { xs: 0.25, sm: 0 },
+                            borderRadius: 1,
+                            fontSize: { xs: '0.8rem', sm: '0.875rem' }
+                          }}>
+                            {getCategoryTitle(topic.category_id)}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary" sx={{ 
+                            display: { xs: 'block', sm: 'block' },
+                            fontSize: { xs: '0.7rem', sm: '0.75rem' }
+                          }}>
+                            {topic.author_username || 'Неизвестный'}
+                          </Typography>
+                        </Box>
+                        
+                        <Typography variant="subtitle1" sx={{ 
+                          fontWeight: 500,
+                          fontSize: { xs: '0.9rem', sm: '1rem' },
+                          textAlign: { xs: 'left', sm: 'left' },
+                          mb: { xs: 1, sm: 0.5 },
+                          color: 'text.primary',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          display: '-webkit-box',
+                          WebkitLineClamp: { xs: 2, sm: 1 },
+                          WebkitBoxOrient: 'vertical'
                         }}>
-                          {topic.author_username || 'Неизвестный'}
+                          {topic.title}
                         </Typography>
-                      </Box>
-                      <Typography variant="subtitle1" sx={{ 
-                        fontWeight: 500,
-                        fontSize: { xs: '0.95rem', sm: '1rem' },
-                        textAlign: { xs: 'center', sm: 'left' },
-                        mb: { xs: 1, sm: 0 },
-                        color: 'text.primary',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        display: '-webkit-box',
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: 'vertical'
-                      }}>
-                        {topic.title}
-                      </Typography>
-                      <Box sx={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        gap: { xs: 2, sm: 2 }, 
-                        mt: 0.5, 
-                        flexWrap: 'wrap',
-                        justifyContent: { xs: 'center', sm: 'flex-start' },
-                        bgcolor: { xs: 'action.hover', sm: 'transparent' },
-                        borderRadius: 1,
-                        py: { xs: 0.5, sm: 0 }
-                      }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          <CommentIcon sx={{ fontSize: { xs: 14, sm: 16 }, mr: 0.5, color: 'text.secondary' }} />
-                          <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
-                            {topic.posts_count - 1 >= 0 ? topic.posts_count - 1 : 0}
-                          </Typography>
-                        </Box>
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          <VisibilityIcon sx={{ fontSize: { xs: 14, sm: 16 }, mr: 0.5, color: 'text.secondary' }} />
-                          <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
-                            {topic.views_count}
-                          </Typography>
-                        </Box>
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          <AccessTimeIcon sx={{ fontSize: { xs: 14, sm: 16 }, mr: 0.5, color: 'text.secondary' }} />
-                          <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
-                            {topic.last_post_date ? formatRelativeDate(topic.last_post_date) : formatRelativeDate(topic.created_at)}
-                          </Typography>
-                        </Box>
                       </Box>
                     </Box>
-                    <Box
-                      sx={{ 
-                        cursor: 'pointer',
-                        display: 'block',
-                        textAlign: { xs: 'center', sm: 'right' },
-                        mt: { xs: 1, sm: 0 },
-                        alignSelf: 'center',
-                        width: 'auto'
-                      }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleBookmark(topic.id);
-                      }}
-                    >
-                      {bookmarkedTopics.includes(topic.id) ? (
-                        <BookmarkIcon color="primary" />
-                      ) : (
-                        <BookmarkBorderIcon color="action" />
-                      )}
+                    
+                    <Box sx={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: { xs: 2, sm: 2 }, 
+                      mt: { xs: 0.5, sm: 0 }, 
+                      flexWrap: 'wrap',
+                      justifyContent: { xs: 'space-between', sm: 'flex-end' },
+                      bgcolor: { xs: 'action.hover', sm: 'transparent' },
+                      borderRadius: 1,
+                      py: { xs: 0.5, sm: 0 },
+                      px: { xs: 1, sm: 0 },
+                      width: { xs: '100%', sm: 'auto' },
+                      minWidth: { xs: 'auto', sm: '200px' }
+                    }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <CommentIcon sx={{ fontSize: { xs: 14, sm: 16 }, mr: 0.5, color: 'text.secondary' }} />
+                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
+                          {topic.posts_count - 1 >= 0 ? topic.posts_count - 1 : 0}
+                        </Typography>
+                      </Box>
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <VisibilityIcon sx={{ fontSize: { xs: 14, sm: 16 }, mr: 0.5, color: 'text.secondary' }} />
+                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
+                          {topic.views_count}
+                        </Typography>
+                      </Box>
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <AccessTimeIcon sx={{ fontSize: { xs: 14, sm: 16 }, mr: 0.5, color: 'text.secondary' }} />
+                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' } }}>
+                          {formatRelativeDate(topic.created_at)}
+                        </Typography>
+                      </Box>
+                      <IconButton
+                        size="small"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleBookmark(topic.id);
+                        }}
+                        sx={{ 
+                          p: 0.5,
+                          color: bookmarkedTopics.includes(topic.id) ? 'primary.main' : 'action.disabled' 
+                        }}
+                      >
+                        {bookmarkedTopics.includes(topic.id) ? (
+                          <BookmarkIcon fontSize="small" />
+                        ) : (
+                          <BookmarkBorderIcon fontSize="small" />
+                        )}
+                      </IconButton>
                     </Box>
                   </Box>
                   {index < activeTopics.length - 1 && <Divider />}
@@ -532,7 +634,7 @@ const ForumPage: React.FC = () => {
             ) : (
               <Box sx={{ p: { xs: 3, sm: 4 }, textAlign: 'center' }}>
                 <Typography variant="body1" color="text.secondary" sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>
-                  Активных тем пока нет
+                  Активные темы не найдены
                 </Typography>
               </Box>
             )}
@@ -540,15 +642,7 @@ const ForumPage: React.FC = () => {
         )}
       </Paper>
 
-      {/* Боковая колонка с рекламой */}
-      <Box sx={{ 
-        width: '300px', 
-        flexShrink: 0,
-        display: { xs: 'none', md: 'block' }
-      }}>
-        {/* Рекламный блок Яндекс.РСЯ */}
-     
-      </Box>
+    
     </Container>
     </>
   );

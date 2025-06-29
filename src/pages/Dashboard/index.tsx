@@ -841,7 +841,7 @@ const Dashboard = () => {
     
 
 
-      <Box sx={{ mt: { xs: 0, md: 1 } }}>
+      <Box sx={{ mt: { xs: 0, md: 3 } }}>
         {/* Основной контент с боковыми панелями */}
         <Box sx={{ 
           display: 'flex', 
